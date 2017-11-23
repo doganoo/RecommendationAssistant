@@ -19,5 +19,9 @@
  *
  */
 
-$app = new \OCA\DoganMachineLearning\AppInfo\Application();
-$app->register();
+//$app = new \OCA\DoganMachineLearning\AppInfo\Application();
+//$app->register();
+
+if ((@include_once __DIR__ . '/../vendor/autoload.php') === false) {
+	throw new AutoloaderNotFoundException('No vendor/autoload.php found. Have you installed composer?');
+}

@@ -25,11 +25,15 @@
 		<nextcloud min-version="13" max-version="13" />
 	</dependencies>
 
-	<navigations>
-		<navigation>
-			<name>Machine Learning</name>
-			<route>dogan_machine_learning.frontend.show</route>
-			<order>100</order>
-		</navigation>
-	</navigations>
+	<background-jobs>
+		<job>OCA\DoganMachineLearning\BackgroundJob\RecommenderJob</job>
+	</background-jobs>
+
+	<!--<navigations>-->
+		<!--<navigation>-->
+			<!--<name>Machine Learning</name>-->
+			<!--<route>dogan_machine_learning.frontend.show</route>-->
+			<!--<order>100</order>-->
+		<!--</navigation>-->
+	<!--</navigations>-->
 </info>

@@ -27,6 +27,9 @@ use OCP\Util;
 
 class Application extends App {
 
+	public const APPNAME = "RecommenderJob";
+	public const RECOMMENDER_JOB_NAME = "OCA\DoganMachineLearning\Service\RecommenderService";
+
 	public function __construct() {
 		parent::__construct('dogan_machine_learning');
 	}
