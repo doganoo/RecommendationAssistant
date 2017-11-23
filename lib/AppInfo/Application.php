@@ -19,19 +19,18 @@
  *
  */
 
-namespace OCA\DoganMachineLearning\AppInfo;
+namespace OCA\RecommendationAssistant\AppInfo;
 
-use OCA\DoganMachineLearning\Listener;
+use OCA\RecommendationAssistant\Listener;
 use OCP\AppFramework\App;
 use OCP\Util;
 
 class Application extends App {
-
 	public const APPNAME = "RecommenderJob";
 	public const RECOMMENDER_JOB_NAME = "OCA\DoganMachineLearning\Service\RecommenderService";
 
 	public function __construct() {
-		parent::__construct('dogan_machine_learning');
+		parent::__construct('recommendation_assistant');
 	}
 
 	public function register() {

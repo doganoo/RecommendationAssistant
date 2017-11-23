@@ -1,7 +1,7 @@
 <?xml version="1.0"?>
 <info>
-	<id>dogan_machine_learning</id>
-	<name>Dogan's Machine Learning</name>
+	<id>recommendation_assistant</id>
+	<name>Recommendation assistant</name>
 	<summary>Playground for Dogan's Machine Learning master thesis</summary>
 	<description><![CDATA[Playground for Dogan's Machine Learning master thesis]]></description>
 
@@ -10,12 +10,12 @@
 
 	<category>tools</category>
 
-	<website>https://github.com/nextcloud-gmbh/dogan_machine_learning</website>
-	<bugs>https://github.com/nextcloud-gmbh/dogan_machine_learning/issues</bugs>
-	<repository type="git">https://github.com/nextcloud-gmbh/dogan_machine_learning.git</repository>
+	<website>https://github.com/nextcloud-gmbh/recommendation_assistant</website>
+	<bugs>https://github.com/nextcloud-gmbh/recommendation_assistant/issues</bugs>
+	<repository type="git">https://github.com/nextcloud-gmbh/recommendation_assistant.git</repository>
 
 	<version>0.1.0</version>
-	<namespace>DoganMachineLearning</namespace>
+	<namespace>RecommendationAssistant</namespace>
 
 	<types>
 		<filesystem/>
@@ -30,10 +30,10 @@
 	</background-jobs>
 
 	<!--<navigations>-->
-		<!--<navigation>-->
-			<!--<name>Machine Learning</name>-->
-			<!--<route>dogan_machine_learning.frontend.show</route>-->
-			<!--<order>100</order>-->
-		<!--</navigation>-->
+	<!--<navigation>-->
+	<!--<name>Machine Learning</name>-->
+	<!--<route>dogan_machine_learning.frontend.show</route>-->
+	<!--<order>100</order>-->
+	<!--</navigation>-->
 	<!--</navigations>-->
 </info>

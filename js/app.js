@@ -7,10 +7,12 @@
  * later. See the COPYING file.
  */
 
-(function(OC, OCA, _) {
+(function(OC, OCA, _, $) {
+	"use strict";
+
 	OCA = OCA || {};
 
-	OCA.DoganMachineLearning = {
+	OCA.RecommendationAssistant = {
 
 		initialise: function() {
 			this._loadData();
@@ -18,7 +20,7 @@
 
 		_loadData: function() {
 			$.ajax({
-				url: OC.linkToOCS('apps/dogan_machine_learning', 2) + 'api',
+				url: OC.linkToOCS('apps/recommendation_assistant', 2) + 'api',
 				beforeSend: function (request) {
 					request.setRequestHeader('Accept', 'application/json');
 				},
@@ -28,13 +30,13 @@
 					});
 				},
 				error: function() {
-					OC.Notification. showTemporary(t('dogan_machine_learning', 'Failed to load data'));
+					OC.Notification. showTemporary(t('recommendation_assistant', 'Failed to load data'));
 				}
 			});
 		}
 	};
-})(OC, OCA, _);
+})(OC, OCA, _, $);
 
 $(document).ready(function () {
-	OCA.DoganMachineLearning.initialise();
+	OCA.RecommendationAssistant.initialise();
 });
