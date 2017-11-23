@@ -1,5 +1,5 @@
 <!--
-Thanks for reporting issues back to Nextcloud! This is the issue tracker of the Machine Learning app, if you have any support question please check out https://help.nextcloud.com/
+Thanks for reporting issues back to Nextcloud! This is the issue tracker of the Recommendation assistant app, if you have any support question please check out https://help.nextcloud.com/
 
 Find other components at https://github.com/nextcloud/server/blob/master/CONTRIBUTING.md#guidelines
 

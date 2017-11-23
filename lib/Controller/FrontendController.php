@@ -19,7 +19,7 @@
  *
  */
 
-namespace OCA\DoganMachineLearning\Controller;
+namespace OCA\RecommendationAssistant\Controller;
 
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http\TemplateResponse;
@@ -38,7 +38,7 @@ class FrontendController extends Controller {
 	 * @return TemplateResponse
 	 */
 	public function show() {
-		return new TemplateResponse('dogan_machine_learning', 'index', [
+		return new TemplateResponse('recommendation_assistant', 'index', [
 		]);
 	}
 }

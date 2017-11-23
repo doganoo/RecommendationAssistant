@@ -19,5 +19,5 @@
  *
  */
 
-$app = new \OCA\DoganMachineLearning\AppInfo\Application();
+$app = new \OCA\RecommendationAssistant\AppInfo\Application();
 $app->register();

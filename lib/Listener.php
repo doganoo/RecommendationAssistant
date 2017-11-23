@@ -19,7 +19,7 @@
  *
  */
 
-namespace OCA\DoganMachineLearning;
+namespace OCA\RecommendationAssistant;
 
 use OCP\Files\IAppData;
 use OCP\Files\NotFoundException;

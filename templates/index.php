@@ -20,7 +20,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
  */
-script('dogan_machine_learning', 'dogan_machine_learning');
+script('recommendation_assistant', 'app');
 
 /** @var $l \OCP\IL10N */
 /** @var $_ array */

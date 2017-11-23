@@ -19,16 +19,16 @@
  *
  */
 
-namespace OCA\DoganMachineLearning\AppInfo;
+namespace OCA\RecommendationAssistant\AppInfo;
 
-use OCA\DoganMachineLearning\Listener;
+use OCA\RecommendationAssistant\Listener;
 use OCP\AppFramework\App;
 use OCP\Util;
 
 class Application extends App {
 
 	public function __construct() {
-		parent::__construct('dogan_machine_learning');
+		parent::__construct('recommendation_assistant');
 	}
 
 	public function register() {

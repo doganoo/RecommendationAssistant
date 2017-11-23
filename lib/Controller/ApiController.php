@@ -19,7 +19,7 @@
  *
  */
 
-namespace OCA\DoganMachineLearning\Controller;
+namespace OCA\RecommendationAssistant\Controller;
 
 use OCP\AppFramework\Http\DataResponse;
 use OCP\AppFramework\OCSController;
