@@ -20,18 +20,36 @@
  */
 
 namespace OCA\RecommendationAssistant\Interfaces;
+
+use OCP\Files\File;
+
 /**
- * Interface IComputable implemented by all objects
- * that provide similarity measurement.
+ * Interface IContentReader implemented by all objects
+ * that reads file content.
  *
  * @package OCA\RecommendationAssistant\Interfaces
  * @since 1.0.0
  */
-interface IComputable {
+interface IContentReader {
+	public const TXT = "text/plain";
+	public const HTML = "text/html";
+	public const PDF = "application/pdf";
+	public const JSON = "application/json";
+	public const XML = "application/xml";
+	public const DOC = "application/msword";
+	public const DOCX = "application/vnd.openxmlformats-officedocument.wordprocessingml.document";
+	public const RTF = "application/rtf";
+	public const XLS = "application/vnd.ms-excel";
+	public const PPT = 'application/vnd.ms-powerpoint';
+	public const ODT = 'application/vnd.oasis.opendocument.text';
+	public const ODS = 'application/vnd.oasis.opendocument.spreadsheet';
+
 	/**
-	 * Computes similiarty between two or more items
+	 * reads the file content
 	 *
+	 * @param File $file the actual file
+	 * @return string file content
 	 * @since 1.0.0
 	 */
-	public function compute();
+	public function read(File $file): string;
 }

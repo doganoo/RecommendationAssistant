@@ -1,6 +1,6 @@
 <?php
 /**
- * @copyright Copyright (c) 2017 Joas Schilling <coding@schilljs.com>
+ * @copyright Copyright (c) 2017, Dogan Ucar (dogan@dogan-ucar.de)
  *
  * @license GNU AGPL version 3 or any later version
  *

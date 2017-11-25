@@ -1,22 +1,36 @@
 <?php
 /**
- * Created by PhpStorm.
- * User: dogano
- * Date: 08.11.17
- * Time: 15:52
+ * @copyright Copyright (c) 2017, Dogan Ucar (dogan@dogan-ucar.de)
+ *
+ * @license GNU AGPL version 3 or any later version
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as
+ * published by the Free Software Foundation, either version 3 of the
+ * License, or (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ *
  */
 
-namespace OCA\DoganMachineLearning\Service;
+namespace OCA\RecommendationAssistant\Service;
 
 
-use OCA\DoganMachineLearning\AppInfo\Application;
-use OCA\DoganMachineLearning\ContentReader\DocReader;
-use OCA\DoganMachineLearning\ContentReader\ObjectFactory;
-use OCA\DoganMachineLearning\Objects\Item;
-use OCA\DoganMachineLearning\Objects\ItemList;
-use OCA\DoganMachineLearning\Objects\Rater;
-use OCA\DoganMachineLearning\Recommendation\PearsonComputer;
-use OCA\DoganMachineLearning\Recommendation\Sport1Computer;
+use OCA\RecommendationAssistant\AppInfo\Application;
+use OCA\RecommendationAssistant\ContentReader\DocxReader;
+use OCA\RecommendationAssistant\Objects\Item;
+use OCA\RecommendationAssistant\Objects\ItemList;
+use OCA\RecommendationAssistant\Objects\Logger;
+use OCA\RecommendationAssistant\Objects\ObjectFactory;
+use OCA\RecommendationAssistant\Objects\Rater;
+use OCA\RecommendationAssistant\Recommendation\PearsonComputer;
+use OCA\RecommendationAssistant\Recommendation\Sport1Computer;
 use OCP\Files\File;
 use OCP\Files\Folder;
 use OCP\Files\IRootFolder;
@@ -76,19 +90,25 @@ class RecommenderService {
 	}
 
 	private function handleFile(File $file, IUser $currentUser) {
+		if (strpos($file->getName(), "demo") !== false) {
+			$this->debug("file: " . $file->getName());
+		}
 		if ($this->isIndexed($file)) {
+			$this->debug("is already indexed");
 			return false;
 		}
 		if ($file->isEncrypted()) {
+			$this->debug("is encrpyted");
 			return false;
 		}
 		if (!$file->isReadable()) {
+			$this->debug("is not readable");
 			return false;
 		}
 		$item = new Item();
 		$item->setId($file->getId());
 		$item->setName($file->getName());
-		$isSharedStorage = $file->getStorage()->instanceOfStorage('\OCA\Files_Sharing\SharedStorage'); //TODO extract to constant!
+		$isSharedStorage = $file->getStorage()->instanceOfStorage(Application::SHARED_INSTANCE_STORAGE);
 
 		//if the file is a shared one, then we do not need to process the content
 		//because it is already processed. We just need the rating of the user
@@ -103,14 +123,13 @@ class RecommenderService {
 
 		$contentReader = ObjectFactory::getContentReader($file->getMimeType());
 		$content = $contentReader->read($file);
-
-		if ($contentReader instanceof DocReader) {
-			$this->debug("Content: " . $content);
-		}
-
 		$textProcessor = new TextProcessor($content);
 		$array = $textProcessor->getTextAsArray();
 		$item->setKeywords($array);
+
+		if ($contentReader instanceof DocxReader) {
+			Logger::debug($content);
+		}
 
 		$isFavorite = $this->checkForFavorite($file->getOwner(), $file->getId());
 		$rater = $this->getRater($file->getOwner(), $isFavorite);

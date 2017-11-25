@@ -21,27 +21,52 @@
 
 namespace OCA\RecommendationAssistant\ContentReader;
 
+
 use OCA\RecommendationAssistant\Interfaces\IContentReader;
 use OCP\Files\File;
 
 /**
- * EmptyReader class that is used whenever an unsupported mimetype is processed.
- * Class implements IContentReader interface and returns an empty string.
+ * ContentReader class that is responsible for Microsoft Word .docx documents.
+ * Class implements IContentReader interface.
  *
  * @package OCA\RecommendationAssistant\ContentReader
  * @since 1.0.0
  */
-class EmptyReader implements IContentReader {
+class DocxReader implements IContentReader {
 
 	/**
 	 * Method implementation that is declared in the interface IContentReader.
-	 * This method returns an empty string.
+	 * This method unzips the .docx MS Word document and reads the XML document
+	 * within the zip located at word/document.xml. The XML document is parsed with
+	 * the PHP internal \DOMDocument class.
 	 *
 	 * @param File $file the file whose content is to be read
 	 * @since 1.0.0
-	 * @return string empty string
+	 * @return string the file content
 	 */
 	public function read(File $file): string {
-		return "";
+		$dataDir = \OC::$server->getConfig()->getSystemValue('datadirectory', '');
+		$filePath = $dataDir . "/" . $file->getPath();
+		if (!is_file($filePath)) {
+			return "";
+		}
+
+		if (is_dir($file->getId())) {
+			system("rm -rf " . $file->getId());
+		}
+
+		$archive = new \ZipArchive();
+		$opened = $archive->open($filePath);
+		$textContent = "";
+		if (true === $opened) {
+			$archive->extractTo($file->getId());
+			$contentDocument = $file->getId() . "/word/document.xml";
+			$content = file_get_contents($contentDocument);
+			$dom = new \DOMDocument();
+			$dom->loadXML($content);
+			$textContent = $dom->textContent;
+		}
+		return $textContent;
 	}
+
 }

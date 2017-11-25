@@ -1,8 +1,6 @@
 <?php
 /**
- * @copyright Copyright (c) 2017 Joas Schilling <coding@schilljs.com>
- *
- * @author Joas Schilling <coding@schilljs.com>
+ * @copyright Copyright (c) 2017, Dogan Ucar (dogan@dogan-ucar.de)
  *
  * @license GNU AGPL version 3 or any later version
  *
@@ -20,7 +18,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
  */
-script('recommendation_assistant', 'app');
+script(\OCA\RecommendationAssistant\AppInfo\Application::APPID, 'app');
 
 /** @var $l \OCP\IL10N */
 /** @var $_ array */

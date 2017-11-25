@@ -1,6 +1,6 @@
 <?php
 /**
- * @copyright Copyright (c) 2017 Joas Schilling <coding@schilljs.com>
+ * @copyright Copyright (c) 2017, Dogan Ucar (dogan@dogan-ucar.de)
  *
  * @license GNU AGPL version 3 or any later version
  *
@@ -21,32 +21,15 @@
 
 namespace OCA\RecommendationAssistant\AppInfo;
 
-use OCA\RecommendationAssistant\Listener;
 use OCP\AppFramework\App;
-use OCP\Util;
 
 class Application extends App {
+	public const APPID = "recommendation_assistant";
 	public const APPNAME = "RecommenderJob";
-	public const RECOMMENDER_JOB_NAME = "OCA\DoganMachineLearning\Service\RecommenderService";
+	public const RECOMMENDER_JOB_NAME = "OCA\RecommendationAssistant\Service\RecommenderService";
+	public const SHARED_INSTANCE_STORAGE = "\OCA\Files_Sharing\SharedStorage";
 
 	public function __construct() {
-		parent::__construct('recommendation_assistant');
-	}
-
-	public function register() {
-		$this->registerFilesActivity();
-	}
-
-	/**
-	 * Register the hooks for filesystem operations
-	 *
-	 * @throws \OCP\AppFramework\QueryException
-	 */
-	public function registerFilesActivity() {
-		$listener = $this->getContainer()->query(Listener::class);
-
-		Util::connectHook('OC_Filesystem', 'post_create', $listener, 'fileCreated');
-		Util::connectHook('OC_Filesystem', 'post_update', $listener, 'fileUpdated');
-		Util::connectHook('OC_Filesystem', 'delete', $listener, 'fileDeleted');
+		parent::__construct(Application::APPID);
 	}
 }

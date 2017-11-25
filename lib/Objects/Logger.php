@@ -19,15 +19,27 @@
  *
  */
 
-namespace OCA\RecommendationAssistant\ContentReader;
+namespace OCA\RecommendationAssistant\Objects;
 
-use OCA\RecommendationAssistant\Interfaces\IContentReader;
-use OCP\Files\File;
 
-class ODTReader implements IContentReader {
+use OCA\RecommendationAssistant\AppInfo\Application;
 
-	public function read(File $file): string {
-		return "";
-		// TODO: Implement read() method.
+/**
+ * Collection of static methods that are used to log into the Nextcloud log files
+ *
+ * @package OCA\RecommendationAssistant\Objects
+ * @since 1.0.0
+ */
+class Logger {
+	/**
+	 * Logs a message into the Nextcloud log file with log level debug and the
+	 * appname that is defined in the Application class.
+	 *
+	 * @param string $message the message that should be logged
+	 * @since 1.0.0
+	 */
+	public static function debug($message) {
+		$logger = \OC::$server->getLogger();
+		$logger->debug($message, ["app" => Application::APPNAME]);
 	}
 }

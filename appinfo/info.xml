@@ -2,8 +2,8 @@
 <info>
 	<id>recommendation_assistant</id>
 	<name>Recommendation assistant</name>
-	<summary>Playground for Dogan's Machine Learning master thesis</summary>
-	<description><![CDATA[Playground for Dogan's Machine Learning master thesis]]></description>
+	<summary>Design and Implementation of a Recommendation System Using Hybrid Collaborative Filtering Techniques for the Nextcloud Platform</summary>
+	<description><![CDATA[Design and Implementation of a Recommendation System Using Hybrid Collaborative Filtering Techniques for the Nextcloud Platform]]></description>
 
 	<licence>AGPL</licence>
 	<author>Dogan Ucar</author>
@@ -26,7 +26,7 @@
 	</dependencies>
 
 	<background-jobs>
-		<job>OCA\DoganMachineLearning\BackgroundJob\RecommenderJob</job>
+		<job>OCA\RecommendationAssistant\BackgroundJob\RecommenderJob</job>
 	</background-jobs>
 
 	<!--<navigations>-->
