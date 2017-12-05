@@ -19,14 +19,47 @@
  *
  */
 
-namespace OCA\RecommendationAssistant\ContentReader;
+namespace OCA\RecommendationAssistant\Objects;
 
 
-use OCP\Files\File;
-use OCA\RecommendationAssistant\Interfaces\IContentReader;
-class PPTReader implements IContentReader {
+class TFIDFItem {
+	/**
+	 * @var string $keyword
+	 */
+	private $keyword;
 
-	public function read(File $file): string {
-		// TODO: Implement read() method.
+	/**
+	 * @var double $value
+	 */
+	private $value;
+
+	/**
+	 * @return string
+	 */
+	public function getKeyword(): string {
+		return $this->keyword;
 	}
+
+	/**
+	 * @param string $keyword
+	 */
+	public function setKeyword(string $keyword) {
+		$this->keyword = $keyword;
+	}
+
+	/**
+	 * @return float
+	 */
+	public function getValue(): float {
+		return $this->value;
+	}
+
+	/**
+	 * @param float $value
+	 */
+	public function setValue(float $value) {
+		$this->value = $value;
+	}
+
+
 }

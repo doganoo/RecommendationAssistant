@@ -22,6 +22,7 @@
 namespace OCA\RecommendationAssistant\ContentReader;
 
 
+use OCA\RecommendationAssistant\AppInfo\Application;
 use OCA\RecommendationAssistant\Interfaces\IContentReader;
 use OCP\Files\File;
 
@@ -45,26 +46,27 @@ class DocxReader implements IContentReader {
 	 * @return string the file content
 	 */
 	public function read(File $file): string {
-		$dataDir = \OC::$server->getConfig()->getSystemValue('datadirectory', '');
+		$dataDir = Application::getDataDirectory();
 		$filePath = $dataDir . "/" . $file->getPath();
+		$zipPath = $dataDir . "/" . $file->getId();
 		if (!is_file($filePath)) {
 			return "";
-		}
-
-		if (is_dir($file->getId())) {
-			system("rm -rf " . $file->getId());
 		}
 
 		$archive = new \ZipArchive();
 		$opened = $archive->open($filePath);
 		$textContent = "";
 		if (true === $opened) {
-			$archive->extractTo($file->getId());
-			$contentDocument = $file->getId() . "/word/document.xml";
+			$archive->extractTo($zipPath);
+			$contentDocument = $zipPath . "/word/document.xml";
 			$content = file_get_contents($contentDocument);
 			$dom = new \DOMDocument();
 			$dom->loadXML($content);
 			$textContent = $dom->textContent;
+		}
+
+		if (is_dir($zipPath)) {
+			system("rm -rf " . escapeshellarg($zipPath));
 		}
 		return $textContent;
 	}

@@ -18,10 +18,9 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
  */
+
 namespace OCA\RecommendationAssistant\Service;
 
-
-use OCA\RecommendationAssistant\Objects\Logger;
 
 class TextProcessor {
 	private $text;
@@ -29,17 +28,53 @@ class TextProcessor {
 
 	public function __construct(string $text) {
 		$this->text = $text;
+		$this->sanitize();
+		$this->toArray();
 	}
 
-	public function getTextAsArray() {
+	private function sanitize() {
 		$this->text = str_replace("\r\n", " ", $this->text);
 		$this->text = str_replace("\r", " ", $this->text);
 		$this->text = str_replace("\n", " ", $this->text);
 		$this->text = str_replace("!", " ", $this->text);
 		$this->text = str_replace("?", " ", $this->text);
+		$this->text = str_replace(":", " ", $this->text);
+		$this->text = str_replace(";", " ", $this->text);
 		$this->text = str_replace(".", " ", $this->text);
 		$this->text = str_replace(",", " ", $this->text);
+	}
+
+	private function toArray() {
 		$this->textArray = explode(" ", $this->text);
+		array_walk($this->textArray, function (&$value, $key) {
+			$value = trim($value);
+		});
+		$this->textArray = array_filter($this->textArray, function ($var) {
+			return trim($var) !== "";
+		});
+		return $this->textArray;
+	}
+
+	public function removeNumeric() {
+		$this->textArray = array_filter($this->textArray, function ($var) {
+			return !is_numeric($var);
+		});
+	}
+
+	public function removeDate() {
+		$this->textArray = array_filter($this->textArray, function ($var) {
+			return strtotime($var) === false;
+		});
+	}
+
+	public function toLower() {
+		array_walk($this->textArray, function (&$value, $key) {
+			$value = strtolower($value);
+		});
+	}
+
+
+	public function getTextAsArray() {
 		return $this->textArray;
 	}
 }

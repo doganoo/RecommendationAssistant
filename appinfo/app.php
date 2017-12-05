@@ -20,7 +20,26 @@
  *
  */
 
+use OCA\RecommendationAssistant\AppInfo\Application;
+use OCA\RecommendationAssistant\Exception\AutoloaderNotFoundException;
+
+/**
+ * $l for translation
+ */
+$l = \OC::$server->getL10N(Application::APP_ID);
+
+/**
+ * RecommendationAssistant uses external libraries in order
+ * to work properly. The app should not begin to work if
+ * the autoload.php composer file is missing.
+ */
 if ((@include_once __DIR__ . '/../vendor/autoload.php') === false) {
-	throw new OCA\RecommendationAssistant\Exception\AutoloaderNotFoundException ('Cannot include autoload. Did you run install dependencies using composer?');
+	/**
+	 * AutoloaderNotFoundException is a custom exception defined by RecommendationAssistant
+	 */
+	throw new AutoloaderNotFoundException ($l->t("Could not find autoload.php. Have you installed all composer dependencies?"));
 }
-$app = new \OCA\RecommendationAssistant\AppInfo\Application();
+/**
+ * actually $app has no functionality
+ */
+$app = new Application();

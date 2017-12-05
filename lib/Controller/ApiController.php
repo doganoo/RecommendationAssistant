@@ -24,8 +24,6 @@ namespace OCA\RecommendationAssistant\Controller;
 use OCP\AppFramework\Http\DataResponse;
 use OCP\AppFramework\OCSController;
 use OCP\Files\IAppData;
-use OCP\Files\NotFoundException;
-use OCP\Files\SimpleFS\ISimpleFile;
 use OCP\IRequest;
 use OCP\IUserSession;
 
@@ -36,7 +34,11 @@ class ApiController extends OCSController {
 	/** @var IAppData */
 	protected $appData;
 
-	public function __construct($appName, IRequest $request, IUserSession $userSession, IAppData $appData) {
+	public function __construct(
+		$appName,
+		IRequest $request,
+		IUserSession $userSession,
+		IAppData $appData) {
 		parent::__construct($appName, $request);
 		$this->userSession = $userSession;
 		$this->appData = $appData;
@@ -50,30 +52,6 @@ class ApiController extends OCSController {
 	 * @throws \OCP\Files\NotPermittedException
 	 */
 	public function getData() {
-		$user = $this->userSession->getUser();
-		$dataFile = $this->getUserDataFile($user->getUID());
-		$data = $dataFile->getContent();
-
-		return new DataResponse(explode("\n", $data));
-	}
-
-	/**
-	 * @param string $userId
-	 * @return ISimpleFile
-	 * @throws \OCP\Files\NotPermittedException
-	 * @throws \RuntimeException
-	 */
-	protected function getUserDataFile($userId) {
-		try {
-			$usersFolder = $this->appData->getFolder('users');
-		} catch (NotFoundException $e) {
-			$usersFolder = $this->appData->newFolder('users');
-		}
-
-		try {
-			return $usersFolder->getFile($userId . '.json');
-		} catch (NotFoundException $e) {
-			return $usersFolder->newFile($userId . '.json');
-		}
+		return new DataResponse(explode("\n", ""));
 	}
 }

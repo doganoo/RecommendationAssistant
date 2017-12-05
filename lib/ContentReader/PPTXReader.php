@@ -21,23 +21,26 @@
 
 namespace OCA\RecommendationAssistant\ContentReader;
 
+
 use OCA\RecommendationAssistant\AppInfo\Application;
 use OCA\RecommendationAssistant\Interfaces\IContentReader;
 use OCP\Files\File;
 
 /**
- * ContentReader class that is responsible for Open Office .ods spreadsheet documents.
+ * ContentReader class that is responsible for MS PowerPoint .pptx documents.
  * Class implements IContentReader interface.
  *
  * @package OCA\RecommendationAssistant\ContentReader
  * @since 1.0.0
  */
-class ODSReader implements IContentReader {
+class PPTXReader implements IContentReader {
 
 	/**
 	 * Method implementation that is declared in the interface IContentReader.
-	 * This method unzips the .ods Open Office Spreadsheet document and reads
-	 * the XML document within the zip located at content.xml. The XML document
+	 * This method unzips the .pptx MS Power Point document and reads
+	 * the XML documents within the zip located at ppt/slides/slide<number>.xml.
+	 * Each PPTX slide has its own xml file and therefore, the method iterates
+	 * over each XML file that is located in ppt/slides. The XML file content
 	 * is parsed with the PHP internal \DOMDocument class.
 	 *
 	 * @param File $file the file whose content is to be read
@@ -57,15 +60,26 @@ class ODSReader implements IContentReader {
 		$textContent = "";
 		if (true === $opened) {
 			$archive->extractTo($zipPath);
-			$contentDocument = $zipPath . "/content.xml";
-			$content = file_get_contents($contentDocument);
-			$dom = new \DOMDocument();
-			$dom->loadXML($content);
-			$textContent = $dom->textContent;
+			if ($handle = opendir($zipPath . "/ppt/slides/")) {
+				$entry = readdir($handle);
+				$i = 1;
+				while (false !== ($entry = readdir($handle))) {
+					$pathInfo = pathinfo($entry);
+					if ($pathInfo["extension"] === "xml") {
+						$contentDocument = $zipPath . "/ppt/slides/slide$i.xml";
+						$content = file_get_contents($contentDocument);
+						$dom = new \DOMDocument();
+						$dom->loadXML($content);
+						$textContent .= $dom->textContent;
+						$i++;
+					}
+				}
+			}
 		}
 		if (is_dir($zipPath)) {
 			system("rm -rf " . escapeshellarg($zipPath));
 		}
 		return $textContent;
 	}
+
 }

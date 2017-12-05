@@ -23,13 +23,57 @@ namespace OCA\RecommendationAssistant\AppInfo;
 
 use OCP\AppFramework\App;
 
+/**
+ * All controller instances that are registered by IContainer::registerService
+ * must inherit this class.
+ * Actually, this class serves as a collection of constants and static functions
+ * in order to collect them centrally.
+ *
+ * @package OCA\RecommendationAssistant\AppInfo
+ * @since 1.0.0
+ */
 class Application extends App {
-	public const APPID = "recommendation_assistant";
-	public const APPNAME = "RecommenderJob";
+	/**
+	 * @const APP_ID the unique application id
+	 */
+	public const APP_ID = "recommendation_assistant";
+
+	/**
+	 * @const APP_NAME the application name
+	 */
+	public const APP_NAME = "RecommenderJob";
+
+	/**
+	 * @const RECOMMENDER_JOB_NAME the service class that performs recommendations
+	 */
 	public const RECOMMENDER_JOB_NAME = "OCA\RecommendationAssistant\Service\RecommenderService";
+
+	/**
+	 * @const USER_PROFILE_JOB_NAME the service class that assembles keywords for the users profile
+	 */
+	public const USER_PROFILE_JOB_NAME = "OCA\RecommendationAssistant\Service\UserProfileService";
+
+	/**
+	 * @const SHARED_INSTANCE_STORAGE the fully qualified class name of a SharedStorage instance
+	 */
 	public const SHARED_INSTANCE_STORAGE = "\OCA\Files_Sharing\SharedStorage";
 
+	/**
+	 * Class constructor calls the parent constructor with APP_ID
+	 *
+	 * @since 1.0.0
+	 */
 	public function __construct() {
-		parent::__construct(Application::APPID);
+		parent::__construct(Application::APP_ID);
+	}
+
+	/**
+	 * static class that returns the data directory
+	 *
+	 * @return string $dataDir the full path to the data/ directory
+	 * @since 1.0.0
+	 */
+	public static function getDataDirectory(): string {
+		return $dataDir = \OC::$server->getConfig()->getSystemValue('datadirectory', '');
 	}
 }

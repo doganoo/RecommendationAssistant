@@ -25,8 +25,23 @@ namespace OCA\RecommendationAssistant\ContentReader;
 use OCA\RecommendationAssistant\Interfaces\IContentReader;
 use OCP\Files\File;
 
+/**
+ * ContentReader class that is responsible for XML .xml files.
+ * Class implements IContentReader interface.
+ *
+ * @package OCA\RecommendationAssistant\ContentReader
+ * @since 1.0.0
+ */
 class XMLReader implements IContentReader {
 
+	/**
+	 * Method implementation that is declared in the interface IContentReader.
+	 * This method removes all tags of the content and returns it.
+	 *
+	 * @param File $file the file whose content is to be read
+	 * @since 1.0.0
+	 * @return string the file content
+	 */
 	public function read(File $file): string {
 		return strip_tags($file->getContent());
 

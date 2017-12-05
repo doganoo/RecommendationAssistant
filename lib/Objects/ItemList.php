@@ -20,6 +20,7 @@
  */
 
 namespace OCA\RecommendationAssistant\Objects;
+
 /**
  * Class that serves as a list for all items. ItemList implements the
  * \IteratorAggregate interface that is defined in the PHP core in order
@@ -29,6 +30,7 @@ namespace OCA\RecommendationAssistant\Objects;
  * @since 1.0.0
  */
 class ItemList implements \IteratorAggregate {
+
 	/**
 	 * @var array $itemList
 	 */
@@ -42,7 +44,7 @@ class ItemList implements \IteratorAggregate {
 	 * @return Item the item
 	 * @since 1.0.0
 	 */
-	public function get($index):?Item {
+	public function get($index): ?Item {
 		if (!is_int($index)) {
 			return null;
 		}
@@ -56,13 +58,29 @@ class ItemList implements \IteratorAggregate {
 	 * @param Item $item the item that should be added to the list
 	 * @since 1.0.0
 	 */
-	public function add(Item $item) {
+	public function add(?Item $item) {
+		if ($item === null) {
+			return;
+		}
 		if (isset($this->itemList[$item->getId()])) {
 			foreach ($item->getRaters() as $rater) {
 				$this->itemList[$item->getId()]->addRater($rater);
 			}
 		} else {
 			$this->itemList[$item->getId()] = $item;
+		}
+	}
+
+	/**
+	 * merges a different instance of ItemList to the actual one. The method
+	 * calls the add() method in a loop in order to add the items.
+	 *
+	 * @param ItemList $itemList the item list that should be merged
+	 * @since 1.0.0
+	 */
+	public function merge(ItemList $itemList) {
+		foreach ($itemList as $item) {
+			$this->add($item);
 		}
 	}
 
@@ -77,6 +95,34 @@ class ItemList implements \IteratorAggregate {
 	}
 
 	/**
+	 * deletes all items in the list
+	 *
+	 * @since 1.0.0
+	 */
+	public function deleteList() {
+		unset($this->itemList);
+	}
+
+	/**
+	 * counts the occurence of a single keyword in the list
+	 *
+	 * @param string $needle the keyword that is searched for
+	 * @return int the number of occurences of the keyword in the list
+	 * @since 1.0.0
+	 */
+	public function countKeyword(string $needle) {
+		$count = 0;
+		foreach ($this->itemList as $item) {
+			foreach ($item->getKeywords() as $keyword) {
+				if (strcasecmp($keyword, $needle) === 0) {
+					$count++;
+				}
+			}
+		}
+		return $count;
+	}
+
+	/**
 	 * Retrieve an external iterator
 	 *
 	 * @link http://php.net/manual/en/iteratoraggregate.getiterator.php
@@ -84,7 +130,8 @@ class ItemList implements \IteratorAggregate {
 	 * <b>Traversable</b>
 	 * @since 5.0.0
 	 */
-	public function getIterator() {
+	public
+	function getIterator() {
 		return new \ArrayIterator($this->itemList);
 	}
 }

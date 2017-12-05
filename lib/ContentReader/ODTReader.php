@@ -21,13 +21,52 @@
 
 namespace OCA\RecommendationAssistant\ContentReader;
 
+use OCA\RecommendationAssistant\AppInfo\Application;
 use OCA\RecommendationAssistant\Interfaces\IContentReader;
 use OCP\Files\File;
 
+/**
+ * ContentReader class that is responsible for Open Office .odt documents.
+ * Class implements IContentReader interface.
+ *
+ * @package OCA\RecommendationAssistant\ContentReader
+ * @since 1.0.0
+ */
 class ODTReader implements IContentReader {
 
+	/**
+	 * Method implementation that is declared in the interface IContentReader.
+	 * This method unzips the .odt Open Office document and reads
+	 * the XML document within the zip located at content.xml. The XML document
+	 * is parsed with the PHP internal \DOMDocument class.
+	 *
+	 * @param File $file the file whose content is to be read
+	 * @since 1.0.0
+	 * @return string the file content
+	 */
 	public function read(File $file): string {
-		return "";
-		// TODO: Implement read() method.
+		$dataDir = Application::getDataDirectory();
+		$filePath = $dataDir . "/" . $file->getPath();
+		$zipPath = $dataDir . "/" . $file->getId();
+		if (!is_file($filePath)) {
+			return "";
+		}
+
+		$archive = new \ZipArchive();
+		$opened = $archive->open($filePath);
+		$textContent = "";
+		if (true === $opened) {
+			$archive->extractTo($zipPath);
+			$contentDocument = $zipPath . "/content.xml";
+			$content = file_get_contents($contentDocument);
+			$dom = new \DOMDocument();
+			$dom->loadXML($content);
+			$textContent = $dom->textContent;
+		}
+
+		if (is_dir($zipPath)) {
+			system("rm -rf " . escapeshellarg($zipPath));
+		}
+		return $textContent;
 	}
 }

@@ -31,12 +31,13 @@ use OCA\RecommendationAssistant\AppInfo\Application;
  * @package OCA\RecommendationAssistant\BackgroundJob
  * @since 1.0.0
  */
-class RecommenderJob extends TimedJob {
+class UserProfileJob extends TimedJob {
 	/**
 	 * @const INTERVAL the interval in which the job should run.
-	 * Actually every 5 hours.
+	 * Actually once a day.
 	 */
-	private const INTERVAL = 5 * 60 * 60;
+//	private const INTERVAL = 1000 * 60 * 60 * 24;
+	private const INTERVAL = 1;
 
 	/**
 	 * Class constructor defines the interval in which the background job runs
@@ -44,7 +45,7 @@ class RecommenderJob extends TimedJob {
 	 * @since 1.0.0
 	 */
 	public function __construct() {
-		$this->setInterval(RecommenderJob::INTERVAL);
+		$this->setInterval(UserProfileJob::INTERVAL);
 	}
 
 	/**
@@ -56,11 +57,7 @@ class RecommenderJob extends TimedJob {
 	protected function run($argument) {
 		$app = new Application();
 		$container = $app->getContainer();
-		$recommenderService = $container->query(Application::RECOMMENDER_JOB_NAME);
+		$recommenderService = $container->query(Application::USER_PROFILE_JOB_NAME);
 		$recommenderService->run();
 	}
 }
-
-
-
-

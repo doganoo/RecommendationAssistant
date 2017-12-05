@@ -18,7 +18,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
  */
-script(\OCA\RecommendationAssistant\AppInfo\Application::APPID, 'app');
+script(\OCA\RecommendationAssistant\AppInfo\Application::APP_ID, 'app');
 
 /** @var $l \OCP\IL10N */
 /** @var $_ array */

@@ -40,6 +40,6 @@ class Logger {
 	 */
 	public static function debug($message) {
 		$logger = \OC::$server->getLogger();
-		$logger->debug($message, ["app" => Application::APPNAME]);
+		$logger->debug($message, ["app" => Application::APP_NAME]);
 	}
 }

@@ -31,17 +31,59 @@ use OCP\Files\File;
  * @since 1.0.0
  */
 interface IContentReader {
+	/**
+	 * @const TXT mime type for plain text files
+	 */
 	public const TXT = "text/plain";
+
+	/**
+	 * @const HTML mime type for HTML files
+	 */
 	public const HTML = "text/html";
+
+	/**
+	 * @const PDF mime type for PDF files
+	 */
 	public const PDF = "application/pdf";
+
+	/**
+	 * @const JSON mime type for JSON files
+	 */
 	public const JSON = "application/json";
+
+	/**
+	 * @const XML mime type for XML files
+	 */
 	public const XML = "application/xml";
-	public const DOC = "application/msword";
+
+	/**
+	 * @const DOCX mime type for MS Word docx documents
+	 */
 	public const DOCX = "application/vnd.openxmlformats-officedocument.wordprocessingml.document";
+
+	/**
+	 * @const RTF mime type for RTF files
+	 */
 	public const RTF = "application/rtf";
-	public const XLS = "application/vnd.ms-excel";
-	public const PPT = 'application/vnd.ms-powerpoint';
+
+	/**
+	 * @const XLSX mime type for MS Excel xlsx files
+	 */
+	public const XLSX = "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet";
+
+	/**
+	 * @const PPTX mime type for MS PowerPoint pptx files
+	 */
+	public const PPTX = 'application/vnd.openxmlformats-officedocument.presentationml.presentation';
+
+	/**
+	 * @const ODT mime type for OpenOffice odt files
+	 */
 	public const ODT = 'application/vnd.oasis.opendocument.text';
+
+	/**
+	 * @const ODS mime type for OpenOffice ods files
+	 */
 	public const ODS = 'application/vnd.oasis.opendocument.spreadsheet';
 
 	/**

@@ -21,10 +21,27 @@
 
 namespace OCA\RecommendationAssistant\ContentReader;
 
-use OCP\Files\File;
 use OCA\RecommendationAssistant\Interfaces\IContentReader;
+use OCP\Files\File;
+
+/**
+ * ContentReader class that is responsible for plain text .txt documents.
+ * Class implements IContentReader interface.
+ *
+ * @package OCA\RecommendationAssistant\ContentReader
+ * @since 1.0.0
+ */
 class TextfileReader implements IContentReader {
 
+	/**
+	 * Method implementation that is declared in the interface IContentReader.
+	 * This method simply returns the content of the file that is provided by
+	 * the getContent() method of OCP\Files\File.
+	 *
+	 * @param File $file the file whose content is to be read
+	 * @since 1.0.0
+	 * @return string the file content
+	 */
 	public function read(File $file): string {
 		return $file->getContent();
 	}

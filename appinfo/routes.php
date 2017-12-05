@@ -19,11 +19,15 @@
  *
  */
 
-return [
-	'routes' => [
-		['name' => 'frontend#show', 'url' => '/', 'verb' => 'GET'],
-	],
-	'ocs' => [
-		['name' => 'api#getData', 'url' => '/api', 'verb' => 'GET'],
-	],
-];
+/**
+ * actually we do not have any routes since there is no UI menu
+ */
+
+//return [
+//	'routes' => [
+//		['name' => 'frontend#show', 'url' => '/', 'verb' => 'GET'],
+//	],
+//	'ocs' => [
+//		['name' => 'api#getData', 'url' => '/api', 'verb' => 'GET'],
+//	],
+//];

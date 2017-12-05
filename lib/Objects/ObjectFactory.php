@@ -25,15 +25,15 @@ namespace OCA\RecommendationAssistant\Objects;
 use OCA\RecommendationAssistant\ContentReader\DocxReader;
 use OCA\RecommendationAssistant\ContentReader\EmptyReader;
 use OCA\RecommendationAssistant\ContentReader\HTMLReader;
-use OCA\RecommendationAssistant\ContentReader\IContentReader;
 use OCA\RecommendationAssistant\ContentReader\JSONReader;
 use OCA\RecommendationAssistant\ContentReader\ODSReader;
 use OCA\RecommendationAssistant\ContentReader\ODTReader;
 use OCA\RecommendationAssistant\ContentReader\PDFReader;
-use OCA\RecommendationAssistant\ContentReader\PPTReader;
+use OCA\RecommendationAssistant\ContentReader\PPTXReader;
 use OCA\RecommendationAssistant\ContentReader\TextfileReader;
-use OCA\RecommendationAssistant\ContentReader\XLSReader;
+use OCA\RecommendationAssistant\ContentReader\XLSXReader;
 use OCA\RecommendationAssistant\ContentReader\XMLReader;
+use OCA\RecommendationAssistant\Interfaces\IContentReader;
 
 /**
  * Factory class in order to create objects and delegate the complexity of creation.
@@ -77,11 +77,11 @@ class ObjectFactory {
 		} else if ($mimeType === IContentReader::DOCX) {
 			return new DocxReader();
 		} else if ($mimeType === IContentReader::RTF) {
-			return new RTFReader();
-		} else if ($mimeType === IContentReader::XLS) {
-			return new XLSReader();
-		} else if ($mimeType === IContentReader::PPT) {
-			return new PPTReader();
+			return new RTFReader();//TODO implmenet class!
+		} else if ($mimeType === IContentReader::XLSX) {
+			return new XLSXReader();
+		} else if ($mimeType === IContentReader::PPTX) {
+			return new PPTXReader();
 		} else if ($mimeType === IContentReader::ODT) {
 			return new ODTReader();
 		} else if ($mimeType === IContentReader::ODS) {

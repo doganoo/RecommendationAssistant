@@ -22,12 +22,50 @@
 namespace OCA\RecommendationAssistant\ContentReader;
 
 use OCA\RecommendationAssistant\Interfaces\IContentReader;
+use OCA\RecommendationAssistant\Objects\Logger;
 use OCP\Files\File;
 
+/**
+ * ContentReader class that is responsible for JSON documents.
+ * Class implements IContentReader interface.
+ *
+ * @package OCA\RecommendationAssistant\ContentReader
+ * @since 1.0.0
+ */
 class JSONReader implements IContentReader {
 
+	/**
+	 * Method implementation that is declared in the interface IContentReader.
+	 * This method decodes a JSON string and passes returns a string with all
+	 * entries.
+	 *
+	 * @param File $file the file whose content is to be read
+	 * @since 1.0.0
+	 * @return string the file content
+	 */
 	public function read(File $file): string {
-		$array = json_decode($file->getContent());
-		return implode(" ", $array);
+		$array = json_decode($file->getContent(), true);
+		$string = $this->handleArray($array);
+		return $string;
+	}
+
+	/**
+	 * This method gets an array and iterates over it in order to build
+	 * an string with the array elements.
+	 *
+	 * @param array $array
+	 * @since 1.0.0
+	 * @return string
+	 */
+	private function handleArray(array $array) {
+		$string = "";
+		foreach ($array as $ar) {
+			if (is_array($ar)) {
+				$string = $string . $this->handleArray($ar);
+			} else {
+				$string = $string . " " . $ar;
+			}
+		}
+		return $string;
 	}
 }

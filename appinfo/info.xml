@@ -2,19 +2,26 @@
 <info>
 	<id>recommendation_assistant</id>
 	<name>Recommendation assistant</name>
-	<summary>Design and Implementation of a Recommendation System Using Hybrid Collaborative Filtering Techniques for the Nextcloud Platform</summary>
-	<description><![CDATA[Design and Implementation of a Recommendation System Using Hybrid Collaborative Filtering Techniques for the Nextcloud Platform]]></description>
+	<summary>Design and Implementation of a Recommendation System Using Hybrid
+		Collaborative Filtering Techniques for the Nextcloud Platform
+	</summary>
+	<description>
+		<![CDATA[Design and Implementation of a Recommendation System Using Hybrid Collaborative Filtering Techniques for the Nextcloud Platform]]></description>
 
 	<licence>AGPL</licence>
 	<author>Dogan Ucar</author>
 
 	<category>tools</category>
 
-	<website>https://github.com/nextcloud-gmbh/recommendation_assistant</website>
-	<bugs>https://github.com/nextcloud-gmbh/recommendation_assistant/issues</bugs>
-	<repository type="git">https://github.com/nextcloud-gmbh/recommendation_assistant.git</repository>
+	<website>https://github.com/nextcloud-gmbh/recommendation_assistant
+	</website>
+	<bugs>https://github.com/nextcloud-gmbh/recommendation_assistant/issues
+	</bugs>
+	<repository type="git">
+		https://github.com/nextcloud-gmbh/recommendation_assistant.git
+	</repository>
 
-	<version>0.1.0</version>
+	<version>0.1.5</version>
 	<namespace>RecommendationAssistant</namespace>
 
 	<types>
@@ -22,18 +29,11 @@
 	</types>
 
 	<dependencies>
-		<nextcloud min-version="13" max-version="13" />
+		<nextcloud min-version="13" max-version="13"/>
 	</dependencies>
 
 	<background-jobs>
 		<job>OCA\RecommendationAssistant\BackgroundJob\RecommenderJob</job>
+		<job>OCA\RecommendationAssistant\BackgroundJob\UserProfileJob</job>
 	</background-jobs>
-
-	<!--<navigations>-->
-	<!--<navigation>-->
-	<!--<name>Machine Learning</name>-->
-	<!--<route>dogan_machine_learning.frontend.show</route>-->
-	<!--<order>100</order>-->
-	<!--</navigation>-->
-	<!--</navigations>-->
 </info>

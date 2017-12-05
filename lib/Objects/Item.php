@@ -20,6 +20,9 @@
  */
 
 namespace OCA\RecommendationAssistant\Objects;
+
+use OCP\IUser;
+
 /**
  * Getter/Setter class that represents an item for similarity calculation
  *
@@ -43,6 +46,11 @@ class Item {
 	 * @var array $raters
 	 */
 	private $raters;
+
+	/**
+	 * @var IUser $owner
+	 */
+	private $owner;
 
 	/**
 	 * Returns the id of the item
@@ -82,6 +90,26 @@ class Item {
 	 */
 	public function setName(string $name) {
 		$this->name = $name;
+	}
+
+	/**
+	 * Returns the owner of the item
+	 *
+	 * @return IUser the user that is the owner
+	 * @since 1.0.0
+	 */
+	public function getOwner(): IUser {
+		return $this->owner;
+	}
+
+	/**
+	 * sets the owner of the item
+	 *
+	 * @param IUser $owner the owner of the item
+	 * @since 1.0.0
+	 */
+	public function setOwner(IUser $owner) {
+		$this->owner = $owner;
 	}
 
 	/**
@@ -162,11 +190,41 @@ class Item {
 	 * @since 1.0.0
 	 */
 	public function equals(Item $item) {
-		$equalKeywords = ($this->getKeywords() == $item->getKeywords()) && $this->getKeywords() !== [] && $item->getKeywords() !== [];
-		$equalNames = strcmp($this->getName(), $item->getName()) == 0;
-		//TODO check the owner
-		return $equalKeywords && $equalNames;
+		return $this->getId() !== $item->getId();
+	}
+
+	/**
+	 * counts the occurence of a single keyword in the list
+	 *
+	 * @param string $needle the keyword that is searched for
+	 * @return int the number of occurences of the keyword in the list
+	 * @since 1.0.0
+	 */
+	public function countKeyword(string $needle) {
+		$array = array_filter($this->getKeywords(), function ($value, $key) use ($needle) {
+			return strcasecmp($value, $needle) === 0;
+		}, ARRAY_FILTER_USE_BOTH);
+		return count($array);
+	}
+
+	/**
+	 * counts the total number of keywords in the list
+	 *
+	 * @return int the number of keywords in the list
+	 * @since 1.0.0
+	 */
+	public function keywordSize() {
+		return count($this->getKeywords());
+	}
+
+	/**
+	 * counts the total number of raters
+	 *
+	 * @return int the number of raters
+	 * @since 1.0.0
+	 */
+	public function raterSize() {
+		return count($this->getRaters());
 	}
 	//TODO sizeOfRaters aus Klassendiagramm entferne
-
 }

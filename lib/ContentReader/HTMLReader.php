@@ -24,8 +24,23 @@ namespace OCA\RecommendationAssistant\ContentReader;
 use OCA\RecommendationAssistant\Interfaces\IContentReader;
 use OCP\Files\File;
 
+/**
+ * ContentReader class that is responsible for HTML documents.
+ * Class implements IContentReader interface.
+ *
+ * @package OCA\RecommendationAssistant\ContentReader
+ * @since 1.0.0
+ */
 class HTMLReader implements IContentReader {
-
+	/**
+	 * Method implementation that is declared in the interface IContentReader.
+	 * This method simply reads the file content and removes all HTML tags before
+	 * the plain content is returned.
+	 *
+	 * @param File $file the file whose content is to be read
+	 * @since 1.0.0
+	 * @return string the file content
+	 */
 	public function read(File $file): string {
 		return strip_tags($file->getContent());
 	}

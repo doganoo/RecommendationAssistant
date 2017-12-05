@@ -21,9 +21,10 @@
 
 namespace OCA\RecommendationAssistant\Recommendation;
 
-use OCA\RecommendationAssistant\Interfaces\IComputable;
 use OCA\RecommendationAssistant\Objects\Item;
 use OCA\RecommendationAssistant\Objects\ItemList;
+use OCA\RecommendationAssistant\Objects\KeywordList;
+use OCA\RecommendationAssistant\Objects\TFIDFItem;
 
 /**
  * TFIDFComputer class that computes the Term Frequency / Inverse Document Frequency
@@ -34,8 +35,7 @@ use OCA\RecommendationAssistant\Objects\ItemList;
  * @package OCA\RecommendationAssistant\Recommendation
  * @since 1.0.0
  */
-//TODO: check whether the implemenation of IComputable is necessary
-class TFIDFComputer implements IComputable {
+class TFIDFComputer {
 	/**
 	 * @var Item $item
 	 */
@@ -47,9 +47,9 @@ class TFIDFComputer implements IComputable {
 	private $itemBase = null;
 
 	/**
-	 * @var array $result
+	 * @var KeywordList $result
 	 */
-	private $result = [];
+	private $result = null;
 
 	/**
 	 * Class constructor gets the item and itembase injected for that the
@@ -62,6 +62,7 @@ class TFIDFComputer implements IComputable {
 	public function __construct(Item $item, ItemList $itemBase) {
 		$this->item = $item;
 		$this->itemBase = $itemBase;
+		$this->result = new KeywordList();
 	}
 
 	/**
@@ -74,53 +75,28 @@ class TFIDFComputer implements IComputable {
 	 * their TFIDF value
 	 */
 	public function compute() {
-		$termFrequency = count($this->item->getKeywords());
 		$itemBaseSize = $this->itemBase->size();
 		foreach ($this->item->getKeywords() as $keyword) {
 			if (trim($keyword) == "") {
 				continue;
 			}
-			$count = $this->countKeywordInItemBase($keyword);
+			$tfIdfItem = new TFIDFItem();
+			$count = $this->itemBase->countKeyword($keyword);
+			$termFrequency = $this->item->countKeyword($keyword) / $this->item->keywordSize();
+
 			if ($count == 0) {
 				$count = 1;
 			}
-			$inverseDocumentFrequency = log($itemBaseSize / $count);
+			$inverseDocumentFrequency = log10($itemBaseSize / $count);
 			$tfIdf = $termFrequency * $inverseDocumentFrequency;
-			$this->result[$keyword] = $tfIdf;
-		}
-		$this->trim();
-		return $this->result;
-	}
-
-	/**
-	 * This methods removes the last X entries out of an array. The assumption is
-	 * that the last X elements of the keyword list are stopwords that are not
-	 * needed for further steps.
-	 *
-	 * @since 1.0.0
-	 */
-	private function trim() {
-		$resultSize = count($this->result);
-		$x = $resultSize / 3;
-		$x = round($x, PHP_ROUND_HALF_UP);
-		$this->result = array_slice($this->result, 0, $resultSize - $x, true);
-	}
-
-	/**
-	 * counts the number of occurances of an keyword within the itembase
-	 *
-	 * @param string $keyword the keyword that is searched for
-	 * @since 1.0.0
-	 * @return int number of occurances of $keyword within the itembase
-	 */
-	private function countKeywordInItemBase(string $keyword) {
-		$i = 0;
-		foreach ($this->itemBase as $item) {
-			$keywords = $item->getKeywords();
-			if (array_key_exists($keyword, $keywords)) {
-				$i++;
+			if ($tfIdf < 0) {
+				$tfIdf = 0;
 			}
+			$tfIdfItem->setValue($tfIdf);
+			$tfIdfItem->setKeyword($keyword);
+			$this->result->add($tfIdfItem);
 		}
-		return $i;
+		$this->result->removeStopwords();
+		return $this->result;
 	}
 }
