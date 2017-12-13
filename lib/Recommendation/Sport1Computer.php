@@ -67,7 +67,6 @@ class Sport1Computer implements IComputable {
 	 * @since 1.0.0
 	 */
 	public function __construct(Item $item, KeywordList $keywordList, ItemList $itemBase) {
-		//TODO do not inject itembase!
 		$this->item = $item;
 		$this->keywordList = $keywordList;
 		$this->itemBase = $itemBase;
@@ -80,7 +79,7 @@ class Sport1Computer implements IComputable {
 	 * The computation is based on keywords that are extracted out of the items.
 	 *
 	 * @since 1.0.0
-	 * @return similarity value of item and item1
+	 * @return float value of item and item1
 	 */
 	public function compute() {
 		//if the item does not have any keywords then the computer should not
@@ -92,17 +91,28 @@ class Sport1Computer implements IComputable {
 		}
 		$this->tfIdfComputer = new TFIDFComputer($this->item, $this->itemBase);
 		$keywordList = $this->tfIdfComputer->compute();
-		return $this->doCompute($keywordList);
+		$count = 0;
+		foreach ($keywordList as $tfIdfItem) {
+			$res = $this->keywordList->getValueByKeyword($tfIdfItem->getValue());
+			if ($res > 0) {
+				$count++;
+			}
+		}
+		$lower = $keywordList->size() > $this->keywordList->size() ? $this->keywordList->size() : $keywordList->size();
+		if ($lower == 0) {
+			return 0;
+		}
+		return $count / $lower;
+//		return $this->doCompute($keywordList);
 	}
 
 
 	/**
 	 * executes the Sport1 algorithm
 	 *
-	 * @param $keywordList the TFIDF value for item
-	 * @param $result1 the TFIDF value for item1
+	 * @param KeywordList $keywordList the TFIDF value for item
+	 * @return float value for item and item1
 	 * @since 1.0.0
-	 * @return similarity value for item and item1
 	 */
 	private function doCompute(KeywordList $keywordList) {
 		$upper = 0;

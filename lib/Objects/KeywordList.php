@@ -42,26 +42,26 @@ class KeywordList implements \IteratorAggregate {
 	 * adds an keyword to the list. The highest TFIDF value will remain in
 	 * the list for a specific keyword.
 	 *
-	 * @param TFIDFItem $tfIdfItem the item that should be added to the list
+	 * @param Keyword $keyword the item that should be added to the list
 	 * @since 1.0.0
 	 */
-	public function add(TFIDFItem $tfIdfItem) {
+	public function add(Keyword $keyword) {
 		//TODO check whether this approach (survival of the highest) is valid
-		if (isset($this->keywordList[$tfIdfItem->getKeyword()])) {
-			$oldValue = $this->keywordList[$tfIdfItem->getKeyword()];
-			if ($tfIdfItem->getValue() > $oldValue) {
-				$this->keywordList[$tfIdfItem->getKeyword()] = $tfIdfItem;
+		if (isset($this->keywordList[$keyword->getKeyword()])) {
+			$oldValue = $this->keywordList[$keyword->getKeyword()];
+			if ($keyword->getTfIdf() > $oldValue->getTfIdf()) {
+				$this->keywordList[$keyword->getKeyword()] = $keyword;
 			}
 		} else {
-			$this->keywordList[$tfIdfItem->getKeyword()] = $tfIdfItem;
+			$this->keywordList[$keyword->getKeyword()] = $keyword;
 		}
 	}
 
 	/**
 	 * returns the number of keywords that are in the list
 	 *
-	 * @since 1.0.0
 	 * @return int number of items
+	 * @since 1.0.0
 	 */
 	public function size(): int {
 		return count($this->keywordList);
@@ -73,12 +73,19 @@ class KeywordList implements \IteratorAggregate {
 	 * @since 1.0.0
 	 */
 	public function sort() {
-		uasort($this->keywordList, function (TFIDFItem $a, TFIDFItem $b) {
-			//TODO convert values to numbers and use strict comparision
-			if ($a->getValue() == $b->getValue()) {
+		uasort($this->keywordList, function (Keyword $a, Keyword $b) {
+			$aValue = floatval($a->getTfIdf());
+			$bValue = floatval($b->getTfIdf());
+			$epsilon = 0.00001;
+
+			//never compare two floating point numbers with == or ===.
+			//The reason lies in the limited precision of the numbers.
+			//more information are available at:
+			//http://php.net/manual/en/language.types.float.php
+			if (abs($aValue - $bValue) < $epsilon) {
 				return 0;
 			}
-			return ($a->getValue() > $b->getValue()) ? -1 : 1;
+			return ($aValue > $bValue) ? -1 : 1;
 		});
 	}
 
@@ -89,14 +96,25 @@ class KeywordList implements \IteratorAggregate {
 	 * @since 1.0.0
 	 */
 	public function removeStopwords() {
-		//TODO define "stopword": is it enough to remove keywords with value = 0?
-		$this->keywordList = array_filter($this->keywordList, function (TFIDFItem $item, string $keyword) {
-			return $item->getValue() != 0;
-		}, ARRAY_FILTER_USE_BOTH);
-		$this->sort();
-		$size = $this->size();
-		$last = round(($size / 10), 0, PHP_ROUND_HALF_UP);
-		$this->keywordList = array_slice($this->keywordList, 0, $size - $last, true);
+		/**
+		 * PHP core function array_filter removes all array elements defined by
+		 * a callback. The callback function removes all TFIDFItems that have
+		 * the TFIDF value of 0.
+		 */
+		$this->keywordList = array_filter($this->keywordList,
+			function (Keyword $item, string $keyword) {
+				$floatVal = floatval($item->getTfIdf());
+				return $floatVal !== 0;
+			}, ARRAY_FILTER_USE_BOTH);
+		/**
+		 * the following code removes the last 1/10 of the keywords that are
+		 * in the list. The code is useless actually because we want to see
+		 * the results without.
+		 */
+		//$this->sort();
+		//$size = $this->size();
+		//$last = round(($size / 10), 0, PHP_ROUND_HALF_UP);
+		//$this->keywordList = array_slice($this->keywordList, 0, $size - $last, true);
 	}
 
 	/**
@@ -104,6 +122,7 @@ class KeywordList implements \IteratorAggregate {
 	 * value of 0 if the keyword is not present in the list.
 	 *
 	 * @param string $keyword the keyword that is searched for
+	 * @return int|Keyword
 	 * @since 1.0.0
 	 */
 	public function getValueByKeyword(string $keyword) {
@@ -120,5 +139,13 @@ class KeywordList implements \IteratorAggregate {
 	 */
 	public function getIterator() {
 		return new \ArrayIterator($this->keywordList);
+	}
+
+	public function getKeywords() {
+		$array = [];
+		foreach ($this->keywordList as $keyword) {
+			$array[] = $keyword->getKeyword();
+		}
+		return $array;
 	}
 }

@@ -138,6 +138,7 @@ class Item {
 	/**
 	 * Returns a single rater that has rated the item
 	 *
+	 * @param string $index
 	 * @return Rater rater that has rated the item
 	 * @since 1.0.0
 	 */
@@ -217,14 +218,10 @@ class Item {
 		return count($this->getKeywords());
 	}
 
-	/**
-	 * counts the total number of raters
-	 *
-	 * @return int the number of raters
-	 * @since 1.0.0
-	 */
-	public function raterSize() {
-		return count($this->getRaters());
+	public function isValid():bool{
+		$hasOwner = $this->owner !== null;
+		$hasId = is_int($this->id);
+		$hasKeywords = $this->keywordSize()!==0;
+		return $hasOwner && $hasId && $hasKeywords;
 	}
-	//TODO sizeOfRaters aus Klassendiagramm entferne
 }

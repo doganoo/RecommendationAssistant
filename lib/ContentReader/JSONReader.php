@@ -24,6 +24,7 @@ namespace OCA\RecommendationAssistant\ContentReader;
 use OCA\RecommendationAssistant\Interfaces\IContentReader;
 use OCA\RecommendationAssistant\Objects\Logger;
 use OCP\Files\File;
+use OCP\Files\NotPermittedException;
 
 /**
  * ContentReader class that is responsible for JSON documents.
@@ -44,7 +45,12 @@ class JSONReader implements IContentReader {
 	 * @return string the file content
 	 */
 	public function read(File $file): string {
-		$array = json_decode($file->getContent(), true);
+		try {
+			$array = json_decode($file->getContent(), true);
+		} catch (NotPermittedException $e) {
+			Logger::error($e->getMessage());
+			return "";
+		}
 		$string = $this->handleArray($array);
 		return $string;
 	}

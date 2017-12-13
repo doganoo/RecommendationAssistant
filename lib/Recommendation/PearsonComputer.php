@@ -64,8 +64,8 @@ class PearsonComputer implements IComputable {
 	 * If one user has a appropriate item not rated yet, the rating will be
 	 * represanted as "no like".
 	 *
+	 * @return float similarity value of item x and item y
 	 * @since 1.0.0
-	 * @return similarity value of item x and item y
 	 */
 	public function compute() {
 		$avgX = $this->averageRating($this->x->getRaters());
@@ -97,8 +97,9 @@ class PearsonComputer implements IComputable {
 	/**
 	 * returns the average rating for an item.
 	 *
+	 * @param array $raters
+	 * @return float rating for an item
 	 * @since 1.0.0
-	 * @return average rating for an item
 	 */
 	private function averageRating(array $raters) {
 		$sum = 0;

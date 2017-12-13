@@ -23,6 +23,7 @@ namespace OCA\RecommendationAssistant\ContentReader;
 
 use OCA\RecommendationAssistant\Interfaces\IContentReader;
 use OCP\Files\File;
+use OCP\Files\NotPermittedException;
 
 /**
  * ContentReader class that is responsible for plain text .txt documents.
@@ -43,6 +44,11 @@ class TextfileReader implements IContentReader {
 	 * @return string the file content
 	 */
 	public function read(File $file): string {
-		return $file->getContent();
+		try {
+			return $file->getContent();
+		} catch (NotPermittedException $e) {
+			Logger::error($e->getMessage());
+			return "";
+		}
 	}
 }

@@ -28,13 +28,13 @@ use OCP\Migration\IOutput;
 use OCP\Migration\SimpleMigrationStep;
 
 class Version2000Date20171129140736 extends SimpleMigrationStep {
-	private const TABLE_NAME_RECOMMENDATIONS = "recommendations";
-	private const TABLE_NAME_USER_PROFILE = "user_profile";
-	private const ID = "id";
-	private const CREATION_TS = "creation_ts";
-	private const USER_ID = "user_id";
-	private const FILE_ID = "file_id";
-	private const KEYWORD = "keyword";
+	 const TABLE_NAME_RECOMMENDATIONS = "recommendations";
+	 const TABLE_NAME_USER_PROFILE = "user_profile";
+	 const ID = "id";
+	 const CREATION_TS = "creation_ts";
+	 const USER_ID = "user_id";
+	 const FILE_ID = "file_id";
+	 const KEYWORD = "keyword";
 
 	public function changeSchema(IOutput $output, \Closure $schemaClosure, array $options) {
 		/** @var Schema $schema */

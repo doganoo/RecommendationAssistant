@@ -21,9 +21,10 @@
 
 namespace OCA\RecommendationAssistant\ContentReader;
 
-use OCP\Files\File;
-use Smalot\PdfParser\Parser;
 use OCA\RecommendationAssistant\Interfaces\IContentReader;
+use OCP\Files\File;
+use OCP\Files\NotPermittedException;
+use Smalot\PdfParser\Parser;
 
 /**
  * ContentReader class that is responsible for Portable Document Format pdf documents.
@@ -58,7 +59,15 @@ class PDFReader implements IContentReader {
 	 * @return string the file content
 	 */
 	public function read(File $file): string {
-		$content = $this->parser->parseContent($file->getContent());
+		try {
+			$content = $this->parser->parseContent($file->getContent());
+		} catch (NotPermittedException $e) {
+			Logger::error($e->getMessage());
+			return "";
+		} catch (\Exception $e) {
+			Logger::error($e->getMessage());
+			return "";
+		}
 		return $content->getText();
 	}
 }

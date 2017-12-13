@@ -1,5 +1,11 @@
 {
   "require": {
-    "smalot/pdfparser": "*"
+    "smalot/pdfparser": "*",
+    "henck/rtf-to-html": "dev-master"
+  },
+  "autoload": {
+    "psr-4": {
+      "Henck\\RTFTOHTML\\": "vendor/henck"
+    }
   }
 }

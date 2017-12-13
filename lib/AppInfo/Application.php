@@ -36,27 +36,35 @@ class Application extends App {
 	/**
 	 * @const APP_ID the unique application id
 	 */
-	public const APP_ID = "recommendation_assistant";
+	const APP_ID = "recommendation_assistant";
 
 	/**
 	 * @const APP_NAME the application name
 	 */
-	public const APP_NAME = "RecommenderJob";
+	const APP_NAME = "RecommenderJob";
 
 	/**
 	 * @const RECOMMENDER_JOB_NAME the service class that performs recommendations
 	 */
-	public const RECOMMENDER_JOB_NAME = "OCA\RecommendationAssistant\Service\RecommenderService";
+	const RECOMMENDER_JOB_NAME = "OCA\RecommendationAssistant\Service\RecommenderService";
 
 	/**
 	 * @const USER_PROFILE_JOB_NAME the service class that assembles keywords for the users profile
 	 */
-	public const USER_PROFILE_JOB_NAME = "OCA\RecommendationAssistant\Service\UserProfileService";
+	const USER_PROFILE_JOB_NAME = "OCA\RecommendationAssistant\Service\UserProfileService";
 
 	/**
 	 * @const SHARED_INSTANCE_STORAGE the fully qualified class name of a SharedStorage instance
 	 */
-	public const SHARED_INSTANCE_STORAGE = "\OCA\Files_Sharing\SharedStorage";
+	const SHARED_INSTANCE_STORAGE = "\OCA\Files_Sharing\SharedStorage";
+
+	/**
+	 * @const DEBUG RecommendationAssistant is in Debug mode or not
+	 *
+	 * actual behaviour:
+	 * <li>files are processed even if they are processed in the past</li>
+	 */
+	const DEBUG = true;
 
 	/**
 	 * Class constructor calls the parent constructor with APP_ID

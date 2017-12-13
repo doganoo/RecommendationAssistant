@@ -24,7 +24,7 @@ namespace OCA\RecommendationAssistant\Recommendation;
 use OCA\RecommendationAssistant\Objects\Item;
 use OCA\RecommendationAssistant\Objects\ItemList;
 use OCA\RecommendationAssistant\Objects\KeywordList;
-use OCA\RecommendationAssistant\Objects\TFIDFItem;
+use OCA\RecommendationAssistant\Objects\Keyword;
 
 /**
  * TFIDFComputer class that computes the Term Frequency / Inverse Document Frequency
@@ -71,7 +71,7 @@ class TFIDFComputer {
 	 * calculation algorithm for keywords that is assoociated to an item.
 	 *
 	 * @since 1.0.0
-	 * @return array resulting array that contains the (trimmed) keywords and
+	 * @return KeywordList resulting array that contains the (trimmed) keywords and
 	 * their TFIDF value
 	 */
 	public function compute() {
@@ -80,9 +80,9 @@ class TFIDFComputer {
 			if (trim($keyword) == "") {
 				continue;
 			}
-			$tfIdfItem = new TFIDFItem();
-			$count = $this->itemBase->countKeyword($keyword);
+			$tfIdfItem = new Keyword();
 			$termFrequency = $this->item->countKeyword($keyword) / $this->item->keywordSize();
+			$count = $this->itemBase->countKeyword($keyword);
 
 			if ($count == 0) {
 				$count = 1;
@@ -92,7 +92,7 @@ class TFIDFComputer {
 			if ($tfIdf < 0) {
 				$tfIdf = 0;
 			}
-			$tfIdfItem->setValue($tfIdf);
+			$tfIdfItem->setTfIdf($tfIdf);
 			$tfIdfItem->setKeyword($keyword);
 			$this->result->add($tfIdfItem);
 		}

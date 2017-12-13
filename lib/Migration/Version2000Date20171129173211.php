@@ -28,12 +28,12 @@ use OCP\Migration\IOutput;
 use OCP\Migration\SimpleMigrationStep;
 
 class Version2000Date20171129173211 extends SimpleMigrationStep {
-	private const TABLE_NAME_FILES_PROCESSED = "files_processed";
-	private const ID = "id";
-	private const CREATION_TS = "creation_ts";
-	private const FILE_ID = "file_id";
-	private const KEYWORD = "keyword";
-	private const TFIDF_VALUE = "tfidf_value";
+	const TABLE_NAME_FILES_PROCESSED = "files_processed";
+	const ID = "id";
+	const CREATION_TS = "creation_ts";
+	const FILE_ID = "file_id";
+	const KEYWORD = "keyword";
+	const TFIDF_VALUE = "tfidf_value";
 
 	public function changeSchema(IOutput $output, \Closure $schemaClosure, array $options) {
 		/** @var Schema $schema */

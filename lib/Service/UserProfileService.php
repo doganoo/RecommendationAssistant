@@ -21,6 +21,7 @@
 
 namespace OCA\RecommendationAssistant\Service;
 
+use OC\Files\Filesystem;
 use OCA\RecommendationAssistant\AppInfo\Application;
 use OCA\RecommendationAssistant\ContentReader\EmptyReader;
 use OCA\RecommendationAssistant\Db\UserProfileManager;
@@ -103,19 +104,29 @@ class UserProfileService {
 	 */
 	public function run() {
 		Logger::debug("UserProfileService start");
-		$this->userManager->callForSeenUsers(function (IUser $user) {
-			$keywordList = new KeywordList();
-			\OC\Files\Filesystem::initMountPoints($user->getUID());
+		$itemList = new ItemList();
+		$users = [];
+		$this->userManager->callForSeenUsers(function (IUser $user) use (&$itemList, &$users) {
+
+			Filesystem::initMountPoints($user->getUID());
 			$folder = $this->rootFolder->getUserFolder($user->getUID());
-			$itemList = $this->handleFolder($folder);
-			foreach ($itemList as $item) {
-				$tfidf = new TFIDFComputer($item, $itemList);
-				$keywordList = $tfidf->compute();
-				$keywordList->sort();
-			}
-			$this->userProfileManager->insertKeywords($keywordList, $user);
-			$itemList->deleteList();
+			$return = $this->handleFolder($folder);
+			$itemList->merge($return);
+			$users[] = $user;
 		});
+
+		foreach ($itemList as $item) {
+			foreach ($users as $user) {
+				$keywordList = new KeywordList();
+				foreach ($itemList as $item) {
+					$tfidf = new TFIDFComputer($item, $itemList);
+					$keywordList = $tfidf->compute();
+					$keywordList->sort();
+				}
+				$this->userProfileManager->insertKeywords($keywordList, $user);
+//				$itemList->deleteList();
+			}
+		}
 		Logger::debug("UserProfileService end");
 	}
 
@@ -166,21 +177,22 @@ class UserProfileService {
 	 * circumstances
 	 * @since 1.0.0
 	 */
-	private function handleFile(File $file): ?Item {
+	private function handleFile(File $file): Item {
+		$item = new Item();
 		$isSharedStorage = $file->getStorage()->instanceOfStorage(Application::SHARED_INSTANCE_STORAGE);
 		if ($file->isEncrypted()) {
-			return null;
+			return $item;
 		}
 		if (!$file->isReadable()) {
-			return null;
+			return $item;
 		}
 		if ($isSharedStorage) {
-			return null;
+			return $item;
 		}
 		$contentReader = ObjectFactory::getContentReader($file->getMimeType());
 
 		if ($contentReader instanceof EmptyReader) {
-			return null;
+			return $item;
 		}
 
 		$content = $contentReader->read($file);
@@ -190,7 +202,6 @@ class UserProfileService {
 		$textProcessor->toLower();
 		$array = $textProcessor->getTextAsArray();
 
-		$item = new Item();
 		$item->setId($file->getId());
 		$item->setKeywords($array);
 		return $item;

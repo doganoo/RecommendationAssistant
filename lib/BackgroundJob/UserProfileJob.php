@@ -23,6 +23,8 @@ namespace OCA\RecommendationAssistant\BackgroundJob;
 
 use OC\BackgroundJob\TimedJob;
 use OCA\RecommendationAssistant\AppInfo\Application;
+use OCA\RecommendationAssistant\Objects\Logger;
+use OCP\AppFramework\QueryException;
 
 /**
  * Class that is the entry point of the background job registered in info.xml.
@@ -36,8 +38,8 @@ class UserProfileJob extends TimedJob {
 	 * @const INTERVAL the interval in which the job should run.
 	 * Actually once a day.
 	 */
-//	private const INTERVAL = 1000 * 60 * 60 * 24;
-	private const INTERVAL = 1;
+//	 const INTERVAL = 1000 * 60 * 60 * 24;
+	const INTERVAL = 1;
 
 	/**
 	 * Class constructor defines the interval in which the background job runs
@@ -55,9 +57,13 @@ class UserProfileJob extends TimedJob {
 	 * @since 1.0.0
 	 */
 	protected function run($argument) {
-		$app = new Application();
-		$container = $app->getContainer();
-		$recommenderService = $container->query(Application::USER_PROFILE_JOB_NAME);
-		$recommenderService->run();
+		try {
+			$app = new Application();
+			$container = $app->getContainer();
+			$recommenderService = $container->query(Application::USER_PROFILE_JOB_NAME);
+			$recommenderService->run();
+		} catch (QueryException $exception) {
+			Logger::error($exception->getMessage());
+		}
 	}
 }

@@ -40,6 +40,9 @@ class TextProcessor {
 		$this->text = str_replace("?", " ", $this->text);
 		$this->text = str_replace(":", " ", $this->text);
 		$this->text = str_replace(";", " ", $this->text);
+		$this->text = str_replace("(", " ", $this->text);
+		$this->text = str_replace(")", " ", $this->text);
+		$this->text = str_replace("-", "", $this->text); // da - auch ein Bindestrich sein kann
 		$this->text = str_replace(".", " ", $this->text);
 		$this->text = str_replace(",", " ", $this->text);
 	}

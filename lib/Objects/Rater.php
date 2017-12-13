@@ -44,16 +44,17 @@ class Rater {
 	/**
 	 * @const int LIKE
 	 */
-	public const LIKE = 1;
+	const LIKE = 1;
 
 	/**
 	 * @const int NO_LIKE
 	 */
-	public const NO_LIKE = 0;
+	const NO_LIKE = 0;
 
 	/**
 	 * Class constructor gets an user injected
 	 *
+	 * @param $user
 	 * @since 1.0.0
 	 */
 	public function __construct($user) {

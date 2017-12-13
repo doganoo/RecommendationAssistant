@@ -37,30 +37,16 @@ class ItemList implements \IteratorAggregate {
 	private $itemList = array();
 
 	/**
-	 * Returns a single item that is in the list.
-	 * This method returns null if the item is not in the list.
-	 *
-	 * @param string $index the index that is searched for
-	 * @return Item the item
-	 * @since 1.0.0
-	 */
-	public function get($index): ?Item {
-		if (!is_int($index)) {
-			return null;
-		}
-		return $this->itemList[$index];
-	}
-
-	/**
 	 * adds an item to the list. The ratings of the new item will be transfered
 	 * to the actual one if the item is already present in the list.
 	 *
 	 * @param Item $item the item that should be added to the list
+	 * @return bool
 	 * @since 1.0.0
 	 */
-	public function add(?Item $item) {
-		if ($item === null) {
-			return;
+	public function add(Item $item): bool {
+		if ($item->isValid()) {
+			return false;
 		}
 		if (isset($this->itemList[$item->getId()])) {
 			foreach ($item->getRaters() as $rater) {
@@ -69,6 +55,7 @@ class ItemList implements \IteratorAggregate {
 		} else {
 			$this->itemList[$item->getId()] = $item;
 		}
+		return true;
 	}
 
 	/**
@@ -92,15 +79,6 @@ class ItemList implements \IteratorAggregate {
 	 */
 	public function size(): int {
 		return count($this->itemList);
-	}
-
-	/**
-	 * deletes all items in the list
-	 *
-	 * @since 1.0.0
-	 */
-	public function deleteList() {
-		unset($this->itemList);
 	}
 
 	/**

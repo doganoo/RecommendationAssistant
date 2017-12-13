@@ -22,17 +22,19 @@
 namespace OCA\RecommendationAssistant\Service;
 
 
+use OC\Files\Filesystem;
 use OCA\RecommendationAssistant\AppInfo\Application;
 use OCA\RecommendationAssistant\Db\ProcessedFilesManager;
 use OCA\RecommendationAssistant\Db\UserProfileManager;
-use OCA\RecommendationAssistant\Objects\Hybrid;
+use OCA\RecommendationAssistant\Objects\HybridItem;
+use OCA\RecommendationAssistant\Objects\HybridList;
 use OCA\RecommendationAssistant\Objects\Item;
 use OCA\RecommendationAssistant\Objects\ItemList;
 use OCA\RecommendationAssistant\Objects\Logger;
 use OCA\RecommendationAssistant\Objects\ObjectFactory;
 use OCA\RecommendationAssistant\Objects\Rater;
+use OCA\RecommendationAssistant\Recommendation\OverlapCoefficientComputer;
 use OCA\RecommendationAssistant\Recommendation\PearsonComputer;
-use OCA\RecommendationAssistant\Recommendation\Sport1Computer;
 use OCP\Files\File;
 use OCP\Files\Folder;
 use OCP\Files\IRootFolder;
@@ -81,11 +83,6 @@ class RecommenderService {
 	private $processedFileManager = null;
 
 	/**
-	 * @var Hybrid $hybrid Hybridization instance of the recommendation algorithm
-	 */
-	private $hybrid = null;
-
-	/**
 	 * Class constructor gets multiple instances injected
 	 *
 	 * @param IRootFolder $rootFolder the rootfolder of each user
@@ -95,8 +92,7 @@ class RecommenderService {
 	 * In this case: the favorites
 	 * @param UserProfileManager $userProfileManager data storage access instance
 	 * in order to get/set the keywords associated to a user profile
-	 * @param ProcessedFilesManager $processedFileManager data storage access instance
-	 * in order to get/set the processed files
+	 * @param ProcessedFilesManager $processedFilesManager
 	 * @since 1.0.0
 	 */
 	public function __construct(
@@ -110,7 +106,10 @@ class RecommenderService {
 		$this->tagManager = $tagManager;
 		$this->userProfileManager = $userProfileManager;
 		$this->processedFileManager = $processedFilesManager;
-		$this->hybrid = new Hybrid();
+	}
+
+	private function log($message) {
+		echo $message . "\n";
 	}
 
 	/**
@@ -128,40 +127,51 @@ class RecommenderService {
 		Logger::debug("RecommenderService start");
 		$itemList = new ItemList();
 		$users = [];
+		$hybridList = new HybridList();
 		$this->userManager->callForSeenUsers(function (IUser $user) use (&$itemList, &$users) {
-			\OC\Files\Filesystem::initMountPoints($user->getUID());
+			Filesystem::initMountPoints($user->getUID());
 			$folder = $this->rootFolder->getUserFolder($user->getUID());
 			$result = $this->handleFolder($folder, $user);
 			$itemList->merge($result);
 			$users[] = $user;
 		});
-
+		/** @var Item $item */
 		foreach ($itemList as $item) {
 			foreach ($users as $user) {
+				$hybrid = $hybridList->getHybridByUser($item, $user);
 				$keywordList = $this->userProfileManager->getKeywordListByUser($user);
 				if ($item->getOwner()->getUID() === $user->getUID()) {
 					continue;
 				}
-				$sport1 = new Sport1Computer($item, $keywordList, $itemList);
-				$sim = $sport1->compute();
-				if ($sim == 0) {
-					continue;
-				}
-				$this->hybrid->addValue($sim, Hybrid::TYPE_CONTENT_BASED, $item);
+				$overlap = new OverlapCoefficientComputer($item, $keywordList);
+				$sim = $overlap->compute();
+				$hybrid->setContentBased($sim);
+				$hybrid->setItem($item);
+				$hybrid->setUser($user);
+				$hybridList->add($hybrid, $user, $item);
 			}
-		}
 
-		foreach ($itemList as $item) {
 			foreach ($itemList as $item1) {
 				if ($item->equals($item1)) {
 					continue;
 				}
+				$hybrid = $hybridList->getHybridByUser($item1, $item->getOwner());
 				$pearson = new PearsonComputer($item, $item1);
 				$sim = $pearson->compute();
-				if ($sim == 0) {
-					continue;
+				$hybrid->setCollaborative($sim);
+				$hybrid->setItem($item1);
+				$hybrid->setUser($item->getOwner());
+				$hybridList->add($hybrid, $item->getOwner(), $item1);
+			}
+		}
+
+		foreach ($hybridList as $userId => $array) {
+			foreach ($array as $itemId => $hybrid) {
+				$recommendation = HybridItem::weightedAverage($hybrid);
+				if ($recommendation > 0.35) {
+//					$this->log($hybrid);
+//					$this->log($hybrid->getItem()->getOwner()->getUID());
 				}
-				$this->hybrid->addValue($sim, Hybrid::TYPE_COLLABORATIVE, $item);
 			}
 		}
 
@@ -191,7 +201,6 @@ class RecommenderService {
 				$itemList->merge($return);
 			} else if ($node instanceof File) {
 				$return = $this->handleFile($node, $currentUser);
-				//TODO check return whether null or not
 				$itemList->add($return);
 			}
 		}
@@ -221,17 +230,17 @@ class RecommenderService {
 	 * circumstances
 	 * @since 1.0.0
 	 */
-	private function handleFile(File $file, IUser $currentUser): ?Item {
+	private function handleFile(File $file, IUser $currentUser): Item {
+		$item = new Item();
 		if ($this->isIndexed($file)) {
-			return null;
+			return $item;
 		}
 		if ($file->isEncrypted()) {
-			return null;
+			return $item;
 		}
 		if (!$file->isReadable()) {
-			return null;
+			return $item;
 		}
-		$item = new Item();
 		$item->setId($file->getId());
 		$item->setName($file->getName());
 		$item->setOwner($file->getOwner());
@@ -264,7 +273,7 @@ class RecommenderService {
 	 * This method checks whether the file is marked as favorite (is liked) by
 	 * a given user.
 	 *
-	 * @param IUser $currentUser the actual user
+	 * @param IUser $user
 	 * @param int $fileId the actual file id
 	 * @return bool whether the file is liked or not
 	 * @since 1.0.0
@@ -279,7 +288,7 @@ class RecommenderService {
 	/**
 	 * This simply creates a Rater object
 	 *
-	 * @param IUser $currentUser the actual user
+	 * @param IUser $user
 	 * @param bool $rating binary rating (1 or 0)
 	 * @return Rater object that represents the rater
 	 * @since 1.0.0
@@ -299,6 +308,10 @@ class RecommenderService {
 	 * @since 1.0.0
 	 */
 	private function isIndexed(File $file): bool {
+		if (Application::DEBUG) {
+			return false;
+		}
+		//TODO check the checksum of the file for changes?
 		$presentable = $this->processedFileManager->isPresentable($file);
 		return $presentable;
 	}

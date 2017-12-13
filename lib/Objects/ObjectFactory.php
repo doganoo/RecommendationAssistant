@@ -30,6 +30,7 @@ use OCA\RecommendationAssistant\ContentReader\ODSReader;
 use OCA\RecommendationAssistant\ContentReader\ODTReader;
 use OCA\RecommendationAssistant\ContentReader\PDFReader;
 use OCA\RecommendationAssistant\ContentReader\PPTXReader;
+use OCA\RecommendationAssistant\ContentReader\RTFReader;
 use OCA\RecommendationAssistant\ContentReader\TextfileReader;
 use OCA\RecommendationAssistant\ContentReader\XLSXReader;
 use OCA\RecommendationAssistant\ContentReader\XMLReader;
@@ -76,8 +77,9 @@ class ObjectFactory {
 			return new XMLReader();
 		} else if ($mimeType === IContentReader::DOCX) {
 			return new DocxReader();
-		} else if ($mimeType === IContentReader::RTF) {
-			return new RTFReader();//TODO implmenet class!
+		} else if ($mimeType === IContentReader::RTF
+			|| $mimeType === IContentReader::RTF_TEXT) {
+			return new RTFReader();
 		} else if ($mimeType === IContentReader::XLSX) {
 			return new XLSXReader();
 		} else if ($mimeType === IContentReader::PPTX) {

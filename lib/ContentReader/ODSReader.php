@@ -24,6 +24,8 @@ namespace OCA\RecommendationAssistant\ContentReader;
 use OCA\RecommendationAssistant\AppInfo\Application;
 use OCA\RecommendationAssistant\Interfaces\IContentReader;
 use OCP\Files\File;
+use OCP\Files\InvalidPathException;
+use OCP\Files\NotFoundException;
 
 /**
  * ContentReader class that is responsible for Open Office .ods spreadsheet documents.
@@ -47,7 +49,15 @@ class ODSReader implements IContentReader {
 	public function read(File $file): string {
 		$dataDir = Application::getDataDirectory();
 		$filePath = $dataDir . "/" . $file->getPath();
-		$zipPath = $dataDir . "/" . $file->getId();
+		try {
+			$zipPath = $dataDir . "/" . $file->getId();
+		} catch (InvalidPathException $e) {
+			Logger::error($e->getMessage());
+			return "";
+		} catch (NotFoundException $e) {
+			Logger::error($e->getMessage());
+			return "";
+		}
 		if (!is_file($filePath)) {
 			return "";
 		}

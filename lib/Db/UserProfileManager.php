@@ -22,7 +22,7 @@
 namespace OCA\RecommendationAssistant\Db;
 
 use OCA\RecommendationAssistant\Objects\KeywordList;
-use OCA\RecommendationAssistant\Objects\TFIDFItem;
+use OCA\RecommendationAssistant\Objects\Keyword;
 use OCP\IDBConnection;
 use OCP\IUser;
 
@@ -43,11 +43,12 @@ class UserProfileManager {
 	 * @const TABLE_NAME the name of the database table that is used in this
 	 * class
 	 */
-	private const TABLE_NAME = "user_profile";
+	const TABLE_NAME = "user_profile";
 
 	/**
 	 * Class constructor gets an instance of IDBConnection injected
 	 *
+	 * @param IDBConnection $dbConnection
 	 * @since 1.0.0
 	 */
 	public function __construct(IDBConnection $dbConnection) {
@@ -57,18 +58,18 @@ class UserProfileManager {
 	/**
 	 * inserts a keyword, its TFIDF value and the user id into the database
 	 *
-	 * @param TFIDFItem $item the keyword and its TFIDF value
+	 * @param Keyword $item the keyword and its TFIDF value
 	 * @param IUser $user the user who is associated to the item
 	 * @return bool whether the insertation was successfull or not
 	 * @since 1.0.0
 	 */
-	private function insertKeyword(TFIDFItem $item, IUser $user): bool {
+	private function insertKeyword(Keyword $item, IUser $user): bool {
 		$query = $this->dbConnection->getQueryBuilder();
 		$query->insert(UserProfileManager::TABLE_NAME)->values(
 			[
 				"user_id" => $query->createNamedParameter($user->getUID()),
 				"keyword" => $query->createNamedParameter($item->getKeyword()),
-				"tfidf_value" => $query->createNamedParameter($item->getValue())
+				"tfidf_value" => $query->createNamedParameter($item->getTfIdf())
 			]
 		);
 		$query->execute();
@@ -82,7 +83,7 @@ class UserProfileManager {
 	 * Before insertation all keywords are deleted in order to ensure that
 	 * no keywords are present twice in the database.
 	 *
-	 * @param TFIDFItem $item the keyword and its TFIDF value
+	 * @param KeywordList $keywordList the list that is inserted
 	 * @param IUser $user the user who is associated to the item
 	 * @since 1.0.0
 	 */
@@ -124,9 +125,9 @@ class UserProfileManager {
 
 		$result = $query->execute();
 		while (false !== $row = $result->fetch()) {
-			$tfidfitem = new TFIDFItem();
+			$tfidfitem = new Keyword();
 			$tfidfitem->setKeyword($row["keyword"]);
-			$tfidfitem->setValue($row["tfidf_value"]);
+			$tfidfitem->setTfIdf($row["tfidf_value"]);
 			$keywordList->add($tfidfitem);
 		}
 		$result->closeCursor();

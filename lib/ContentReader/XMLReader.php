@@ -24,6 +24,7 @@ namespace OCA\RecommendationAssistant\ContentReader;
 
 use OCA\RecommendationAssistant\Interfaces\IContentReader;
 use OCP\Files\File;
+use OCP\Files\NotPermittedException;
 
 /**
  * ContentReader class that is responsible for XML .xml files.
@@ -43,7 +44,12 @@ class XMLReader implements IContentReader {
 	 * @return string the file content
 	 */
 	public function read(File $file): string {
-		return strip_tags($file->getContent());
+		try {
+			return strip_tags($file->getContent());
+		} catch (NotPermittedException $e) {
+			Logger::error($e->getMessage());
+			return "";
+		}
 
 	}
 }

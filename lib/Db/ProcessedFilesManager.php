@@ -21,7 +21,10 @@
 
 namespace OCA\RecommendationAssistant\Db;
 
+use OCA\RecommendationAssistant\Objects\Logger;
 use OCP\Files\File;
+use OCP\Files\InvalidPathException;
+use OCP\Files\NotFoundException;
 use OCP\IDBConnection;
 
 /**
@@ -41,11 +44,12 @@ class ProcessedFilesManager {
 	 * @const TABLE_NAME the name of the database table that is used in this
 	 * class
 	 */
-	private const TABLE_NAME = "files_processed";
+	const TABLE_NAME = "files_processed";
 
 	/**
 	 * Class constructor gets an instance of IDBConnection injected
 	 *
+	 * @param IDBConnection $dbConnection
 	 * @since 1.0.0
 	 */
 	public function __construct(IDBConnection $dbConnection) {
@@ -64,12 +68,20 @@ class ProcessedFilesManager {
 			return true;
 		}
 		$query = $this->dbConnection->getQueryBuilder();
-		$query->insert(ProcessedFilesManager::TABLE_NAME)->values(
-			[
-				"file_id" => $query->createNamedParameter($file->getId()),
-				"creation_ts" => $query->createNamedParameter(time())
-			]
-		);
+		try {
+			$query->insert(ProcessedFilesManager::TABLE_NAME)->values(
+				[
+					"file_id" => $query->createNamedParameter($file->getId()),
+					"creation_ts" => $query->createNamedParameter(time())
+				]
+			);
+		} catch (InvalidPathException $e) {
+			Logger::error($e->getMessage());
+			return false;
+		} catch (NotFoundException $e) {
+			Logger::error($e->getMessage());
+			return false;
+		}
 		$query->execute();
 		$lastInsertId = $query->getLastInsertId();
 		return is_int($lastInsertId);
@@ -102,9 +114,17 @@ class ProcessedFilesManager {
 	 */
 	public function isPresentable(File $file) {
 		$query = $this->dbConnection->getQueryBuilder();
-		$query->select('file_id')
-			->from(ProcessedFilesManager::TABLE_NAME, 'pf')
-			->where($query->expr()->eq('file_id', $query->createNamedParameter($file->getId())));
+		try {
+			$query->select('file_id')
+				->from(ProcessedFilesManager::TABLE_NAME, 'pf')
+				->where($query->expr()->eq('file_id', $query->createNamedParameter($file->getId())));
+		} catch (InvalidPathException $e) {
+			Logger::error($e->getMessage());
+			return false;
+		} catch (NotFoundException $e) {
+			Logger::error($e->getMessage());
+			return false;
+		}
 
 		$result = $query->execute();
 		$row = $result->fetch();

@@ -22,16 +22,16 @@
 namespace OCA\RecommendationAssistant\Objects;
 
 
-class TFIDFItem {
+class Keyword {
 	/**
 	 * @var string $keyword
 	 */
 	private $keyword;
 
 	/**
-	 * @var double $value
+	 * @var double $tfIdf
 	 */
-	private $value;
+	private $tfIdf;
 
 	/**
 	 * @return string
@@ -50,15 +50,15 @@ class TFIDFItem {
 	/**
 	 * @return float
 	 */
-	public function getValue(): float {
-		return $this->value;
+	public function getTfIdf(): float {
+		return floatval($this->tfIdf);
 	}
 
 	/**
-	 * @param float $value
+	 * @param float $tfIdf
 	 */
-	public function setValue(float $value) {
-		$this->value = $value;
+	public function setTfIdf(float $tfIdf) {
+		$this->tfIdf = $tfIdf;
 	}
 
 
