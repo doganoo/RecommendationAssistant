@@ -249,6 +249,7 @@ class RecommenderService {
 		//if the file is a shared one, then we do not need to process the content
 		//because it is already processed. We just need the rating of the user
 		//that has access to the file
+		//TODO: verify whether this is still valid
 		if ($isSharedStorage) {
 			$favorite = $this->checkForFavorite($currentUser, $file->getId());
 			$rater = $this->getRater($currentUser, $favorite == 1);

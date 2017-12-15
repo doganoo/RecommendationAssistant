@@ -125,10 +125,10 @@ class UserProfileManager {
 
 		$result = $query->execute();
 		while (false !== $row = $result->fetch()) {
-			$tfidfitem = new Keyword();
-			$tfidfitem->setKeyword($row["keyword"]);
-			$tfidfitem->setTfIdf($row["tfidf_value"]);
-			$keywordList->add($tfidfitem);
+			$keyword = new Keyword();
+			$keyword->setKeyword($row["keyword"]);
+			$keyword->setTfIdf($row["tfidf_value"]);
+			$keywordList->add($keyword);
 		}
 		$result->closeCursor();
 		return $keywordList;
