@@ -44,6 +44,18 @@ class Logger {
 	}
 
 	/**
+	 * Logs a message into the Nextcloud log file with log level warning and the
+	 * appname that is defined in the Application class.
+	 *
+	 * @param string $message the message that should be logged
+	 * @since 1.0.0
+	 */
+	public static function warn($message) {
+		$logger = \OC::$server->getLogger();
+		$logger->warning($message, ["app" => Application::APP_NAME]);
+	}
+
+	/**
 	 * Logs a message into the Nextcloud log file with log level error and the
 	 * appname that is defined in the Application class.
 	 *

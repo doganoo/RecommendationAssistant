@@ -22,8 +22,15 @@
 namespace OCA\RecommendationAssistant\Objects;
 
 
+use OCA\RecommendationAssistant\Exception\InvalidSimilarityValueException;
 use OCP\IUser;
 
+/**
+ * Getter/Setter class for calculating the weighted recommendation
+ *
+ * @package OCA\RecommendationAssistant\Objects
+ * @since 1.0.0
+ */
 class HybridItem {
 	private $collaborative = 0;
 	private $contentBased = 0;
@@ -31,42 +38,107 @@ class HybridItem {
 	private $user = null;
 
 	/**
-	 * @param Item $item
+	 * sets the item for that the recommendation is made
+	 *
+	 * @param Item $item the item
+	 * @since 1.0.0
 	 */
 	public function setItem(Item $item) {
 		$this->item = $item;
 	}
 
 	/**
-	 * @param IUser $user
+	 * sets the user for whom the recommendation is made
+	 *
+	 * @param IUser $user the user
+	 * @since 1.0.0
 	 */
 	public function setUser(IUser $user) {
 		$this->user = $user;
 	}
 
+	/**
+	 * sets the collaborative filtering similarity value for $item.
+	 * the value has to be between 0 and 1, otherwise an exception
+	 * of type InvalidSimilarityValueException is thrown.
+	 *
+	 * @param float $collaborative
+	 * @throws InvalidSimilarityValueException
+	 * @since 1.0.0
+	 */
+	public function setCollaborative(float $collaborative) {
+		$precision = 10;
+		$compare = round($collaborative, $precision, PHP_ROUND_HALF_EVEN);
+		$one = round(1, $precision, PHP_ROUND_HALF_EVEN);
+		$zero = round(0, $precision, PHP_ROUND_HALF_EVEN);
+		//TODO is this a valid approach?
+		if ($compare < $zero || $compare > $one) {
+			throw new InvalidSimilarityValueException("the similarity value has to be between 0 and 1, " . (float)$collaborative);
+		}
+		$this->collaborative = $collaborative;
+	}
+
+	/**
+	 * Returns the collaborative similarity value
+	 *
+	 * @return float
+	 * @since 1.0.0
+	 */
 	public function getCollaborative(): float {
 		return $this->collaborative;
 	}
 
-	public function setCollaborative(float $collaborative) {
-		$this->collaborative = $collaborative;
+	/**
+	 * sets the content based similarity value for $item.
+	 * the value has to be between 0 and 1, otherwise an exception
+	 * of type InvalidSimilarityValueException is thrown.
+	 *
+	 * @param float $contentBased
+	 * @throws InvalidSimilarityValueException
+	 * @since 1.0.0
+	 */
+	public function setContentBased(float $contentBased) {
+		$precision = 10;
+		$compare = round($contentBased, $precision, PHP_ROUND_HALF_EVEN);
+		$one = round(1, $precision, PHP_ROUND_HALF_EVEN);
+		$zero = round(0, $precision, PHP_ROUND_HALF_EVEN);
+		//TODO is this a valid approach?
+		if ($compare < $zero || $compare > $one) {
+			throw new InvalidSimilarityValueException("the similarity value has to be between 0 and 1, $contentBased given");
+		}
+		$this->contentBased = $contentBased;
 	}
 
+	/**
+	 * Returns the content based similarity value
+	 *
+	 * @return float
+	 * @since 1.0.0
+	 */
 	public function getContentBased(): float {
 		return $this->contentBased;
 	}
 
-	public function setContentBased(float $contentBased) {
-		$this->contentBased = $contentBased;
-	}
-
+	/**
+	 * returns a string representation of an instance of this class
+	 *
+	 * @return string
+	 * @since 1.0.0
+	 */
 	public function __toString() {
 		$val = HybridItem::weightedAverage($this);
 		return "[#itemId#][#{$this->item->getId()}#][#itemName#][#{$this->item->getName()}#][#userId#][#{$this->user->getUID()}#][#collaborative#][#{$this->collaborative}#][#contentBased#][#{$this->contentBased}#][#recommendation#][$val]";
 	}
 
-	public static function weightedAverage(HybridItem $hybrid) {
-		$contentBased = 0.9;
+	/**
+	 * calculates the weighted average of an HybridItem
+	 *
+	 * @param HybridItem $hybrid
+	 * @return float
+	 * @since 1.0.0
+	 */
+	public static function weightedAverage(HybridItem $hybrid): float {
+		$contentBased = 0.5;
 		$collaborative = 1 - $contentBased;
 		return ($contentBased * $hybrid->getContentBased()) + ($collaborative * $hybrid->getCollaborative());
 	}

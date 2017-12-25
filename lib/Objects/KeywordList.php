@@ -143,6 +143,9 @@ class KeywordList implements \IteratorAggregate {
 
 	public function getKeywords() {
 		$array = [];
+		if ($this->keywordList == null) {
+			return $array;
+		}
 		foreach ($this->keywordList as $keyword) {
 			$array[] = $keyword->getKeyword();
 		}

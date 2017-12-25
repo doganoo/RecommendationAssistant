@@ -57,7 +57,7 @@ class Rater {
 	 * @param $user
 	 * @since 1.0.0
 	 */
-	public function __construct($user) {
+	public function __construct($user = null) {
 		$this->user = $user;
 	}
 
@@ -89,6 +89,16 @@ class Rater {
 	 */
 	public function setRating(int $rating) {
 		$this->rating = $rating;
+	}
+
+	/**
+	 * determines whether the instance is valid or not.
+	 * The instance has to contain a user object in order to be valid.
+	 *
+	 * @return bool
+	 */
+	public function isValid(): bool {
+		return $this->user !== null;
 	}
 
 

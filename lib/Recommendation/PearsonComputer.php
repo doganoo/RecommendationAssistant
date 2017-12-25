@@ -75,13 +75,13 @@ class PearsonComputer implements IComputable {
 		$lowerY = 0;
 		$lowerTotal = 0;
 		foreach ($this->x->getRaters() as $rater) {
-			$y = Rater::NO_LIKE;
-			$x = ($rater->getRating() - $avgX);
 			$uid = $rater->getUser()->getUID();
 			$raterPresent = $this->y->raterPresent($uid);
-			if ($raterPresent) {
-				$y = $this->y->getRater($uid)->getRating();
+			if (!$raterPresent) {
+				continue;
 			}
+			$x = ($rater->getRating() - $avgX);
+			$y = $this->y->getRater($uid)->getRating();
 			$y = ($y - $avgY);
 			$upper = $upper + ($x * $y);
 			$lowerX = $lowerX + pow($x, 2);

@@ -26,18 +26,20 @@ use OC\Files\Filesystem;
 use OCA\RecommendationAssistant\AppInfo\Application;
 use OCA\RecommendationAssistant\Db\ProcessedFilesManager;
 use OCA\RecommendationAssistant\Db\UserProfileManager;
-use OCA\RecommendationAssistant\Objects\HybridItem;
 use OCA\RecommendationAssistant\Objects\HybridList;
 use OCA\RecommendationAssistant\Objects\Item;
 use OCA\RecommendationAssistant\Objects\ItemList;
+use OCA\RecommendationAssistant\Objects\ItemToItemMatrix;
 use OCA\RecommendationAssistant\Objects\Logger;
 use OCA\RecommendationAssistant\Objects\ObjectFactory;
 use OCA\RecommendationAssistant\Objects\Rater;
+use OCA\RecommendationAssistant\Recommendation\CosineComputer;
 use OCA\RecommendationAssistant\Recommendation\OverlapCoefficientComputer;
-use OCA\RecommendationAssistant\Recommendation\PearsonComputer;
+use OCA\RecommendationAssistant\Recommendation\RatingPredictor;
 use OCP\Files\File;
 use OCP\Files\Folder;
 use OCP\Files\IRootFolder;
+use OCP\IGroupManager;
 use OCP\ITagManager;
 use OCP\IUser;
 use OCP\IUserManager;
@@ -83,6 +85,11 @@ class RecommenderService {
 	private $processedFileManager = null;
 
 	/**
+	 * @var IGroupManager $groupManager the GroupManager to determine the users groups
+	 */
+	private $groupManager = null;
+
+	/**
 	 * Class constructor gets multiple instances injected
 	 *
 	 * @param IRootFolder $rootFolder the rootfolder of each user
@@ -100,12 +107,15 @@ class RecommenderService {
 		IUserManager $userManager,
 		ITagManager $tagManager,
 		UserProfileManager $userProfileManager,
-		ProcessedFilesManager $processedFilesManager) {
+		ProcessedFilesManager $processedFilesManager,
+		IGroupManager $groupManager
+	) {
 		$this->rootFolder = $rootFolder;
 		$this->userManager = $userManager;
 		$this->tagManager = $tagManager;
 		$this->userProfileManager = $userProfileManager;
 		$this->processedFileManager = $processedFilesManager;
+		$this->groupManager = $groupManager;
 	}
 
 	private function log($message) {
@@ -129,49 +139,46 @@ class RecommenderService {
 		$users = [];
 		$hybridList = new HybridList();
 		$this->userManager->callForSeenUsers(function (IUser $user) use (&$itemList, &$users) {
+//			$groups = $this->groupManager->getUserGroups($user);
 			Filesystem::initMountPoints($user->getUID());
 			$folder = $this->rootFolder->getUserFolder($user->getUID());
 			$result = $this->handleFolder($folder, $user);
 			$itemList->merge($result);
 			$users[] = $user;
 		});
+		$predictionComputer = new ItemToItemMatrix();
+
 		/** @var Item $item */
 		foreach ($itemList as $item) {
+			/** @var Item $item1 */
+			foreach ($itemList as $item1) {
+				$pearson = new CosineComputer($item, $item1);
+				$sim = $pearson->compute();
+				$predictionComputer->add($item, $item1, $sim);
+			}
+
+			/** @var IUser $user */
 			foreach ($users as $user) {
-				$hybrid = $hybridList->getHybridByUser($item, $user);
-				$keywordList = $this->userProfileManager->getKeywordListByUser($user);
 				if ($item->getOwner()->getUID() === $user->getUID()) {
 					continue;
 				}
+				$hybrid = $hybridList->getHybridByUser($item, $user);
+				$keywordList = $this->userProfileManager->getKeywordListByUser($user);
 				$overlap = new OverlapCoefficientComputer($item, $keywordList);
-				$sim = $overlap->compute();
-				$hybrid->setContentBased($sim);
+				$contentBasedSimilarity = $overlap->compute();
+
+				$hybrid->setContentBased($contentBasedSimilarity);
 				$hybrid->setItem($item);
 				$hybrid->setUser($user);
 				$hybridList->add($hybrid, $user, $item);
-			}
 
-			foreach ($itemList as $item1) {
-				if ($item->equals($item1)) {
-					continue;
-				}
-				$hybrid = $hybridList->getHybridByUser($item1, $item->getOwner());
-				$pearson = new PearsonComputer($item, $item1);
-				$sim = $pearson->compute();
-				$hybrid->setCollaborative($sim);
+				$itemComputer = new RatingPredictor($item, $user, $itemList, $predictionComputer);
+				$collaborativeSimilarity = $itemComputer->predict();
+
+				$hybrid->setCollaborative($collaborativeSimilarity);
 				$hybrid->setItem($item1);
 				$hybrid->setUser($item->getOwner());
 				$hybridList->add($hybrid, $item->getOwner(), $item1);
-			}
-		}
-
-		foreach ($hybridList as $userId => $array) {
-			foreach ($array as $itemId => $hybrid) {
-				$recommendation = HybridItem::weightedAverage($hybrid);
-				if ($recommendation > 0.35) {
-//					$this->log($hybrid);
-//					$this->log($hybrid->getItem()->getOwner()->getUID());
-				}
 			}
 		}
 
@@ -193,7 +200,8 @@ class RecommenderService {
 	 * or by the handleFile() method
 	 * @since 1.0.0
 	 */
-	private function handleFolder(Folder $folder, IUser $currentUser): ItemList {
+	private
+	function handleFolder(Folder $folder, IUser $currentUser): ItemList {
 		$itemList = new ItemList();
 		foreach ($folder->getDirectoryListing() as $node) {
 			if ($node instanceof Folder) {
@@ -230,7 +238,8 @@ class RecommenderService {
 	 * circumstances
 	 * @since 1.0.0
 	 */
-	private function handleFile(File $file, IUser $currentUser): Item {
+	private
+	function handleFile(File $file, IUser $currentUser): Item {
 		$item = new Item();
 		if ($this->isIndexed($file)) {
 			return $item;
@@ -251,8 +260,8 @@ class RecommenderService {
 		//that has access to the file
 		//TODO: verify whether this is still valid
 		if ($isSharedStorage) {
-			$favorite = $this->checkForFavorite($currentUser, $file->getId());
-			$rater = $this->getRater($currentUser, $favorite == 1);
+			$isFavorite = $this->checkForFavorite($currentUser, $file->getId());
+			$rater = $this->getRater($currentUser, $isFavorite);
 			$item->addRater($rater);
 			return $item;
 		}
@@ -279,7 +288,8 @@ class RecommenderService {
 	 * @return bool whether the file is liked or not
 	 * @since 1.0.0
 	 */
-	private function checkForFavorite(IUser $user, $fileId) {
+	private
+	function checkForFavorite(IUser $user, $fileId) {
 		$tags = $this->tagManager->load("files", [], false, $user->getUID());
 		$favorites = $tags->getFavorites();
 		$isFavorite = in_array($fileId, $favorites);
@@ -294,7 +304,8 @@ class RecommenderService {
 	 * @return Rater object that represents the rater
 	 * @since 1.0.0
 	 */
-	private function getRater(IUser $user, bool $rating) {
+	private
+	function getRater(IUser $user, bool $rating) {
 		$rater = new Rater($user);
 		$rater->setRating($rating ? 1 : 0);
 		return $rater;
@@ -308,7 +319,8 @@ class RecommenderService {
 	 * @return bool whether the file is already processed or not
 	 * @since 1.0.0
 	 */
-	private function isIndexed(File $file): bool {
+	private
+	function isIndexed(File $file): bool {
 		if (Application::DEBUG) {
 			return false;
 		}

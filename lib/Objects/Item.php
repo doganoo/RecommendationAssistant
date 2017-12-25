@@ -143,7 +143,10 @@ class Item {
 	 * @since 1.0.0
 	 */
 	public function getRater(string $index): Rater {
-		return $this->raters[$index];
+		if (isset($this->raters[$index])) {
+			return $this->raters[$index];
+		}
+		return new Rater();
 	}
 
 	/**
@@ -191,7 +194,7 @@ class Item {
 	 * @since 1.0.0
 	 */
 	public function equals(Item $item) {
-		return $this->getId() !== $item->getId();
+		return $this->getId() === $item->getId();
 	}
 
 	/**
@@ -218,10 +221,16 @@ class Item {
 		return count($this->getKeywords());
 	}
 
-	public function isValid():bool{
+	/**
+	 * determines whether the instance is valid or not.
+	 * The instance has to contain a owner object and a
+	 * integer id in order to be valid.
+	 *
+	 * @return bool
+	 */
+	public function isValid(): bool {
 		$hasOwner = $this->owner !== null;
 		$hasId = is_int($this->id);
-		$hasKeywords = $this->keywordSize()!==0;
-		return $hasOwner && $hasId && $hasKeywords;
+		return $hasOwner && $hasId;
 	}
 }
