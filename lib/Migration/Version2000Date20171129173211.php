@@ -24,39 +24,35 @@ namespace OCA\RecommendationAssistant\Migration;
 
 use Doctrine\DBAL\Schema\Schema;
 use Doctrine\DBAL\Types\Type;
+use OCA\RecommendationAssistant\Db\DbConstants;
 use OCP\Migration\IOutput;
 use OCP\Migration\SimpleMigrationStep;
 
 class Version2000Date20171129173211 extends SimpleMigrationStep {
-	const TABLE_NAME_FILES_PROCESSED = "files_processed";
-	const ID = "id";
-	const CREATION_TS = "creation_ts";
-	const FILE_ID = "file_id";
-	const KEYWORD = "keyword";
-	const TFIDF_VALUE = "tfidf_value";
 
 	public function changeSchema(IOutput $output, \Closure $schemaClosure, array $options) {
 		/** @var Schema $schema */
 		$schema = $schemaClosure();
 
-		if (!$schema->hasTable(Version2000Date20171129173211::TABLE_NAME_FILES_PROCESSED)) {
-			$table = $schema->createTable(Version2000Date20171129173211::TABLE_NAME_FILES_PROCESSED);
-			$table->addColumn(Version2000Date20171129173211::ID, Type::BIGINT, [
-				'autoincrement' => true,
-				'notnull' => true,
-				'length' => 20,
+		if (!$schema->hasTable(DbConstants::TABLE_NAME_FILES_PROCESSED)) {
+			$table = $schema->createTable(DbConstants::TABLE_NAME_FILES_PROCESSED);
+			$table->addColumn(DbConstants::TB_FP_ID, Type::BIGINT, [
+				DbConstants::AUTOINCREMENT => true,
+				DbConstants::NOTNULL => true,
+				DbConstants::LENGTH => 20,
 			]);
-			$table->addColumn(Version2000Date20171129173211::CREATION_TS, Type::INTEGER, [
-				'notnull' => true,
-				'length' => 4,
-				'default' => 0,
+
+			$table->addColumn(DbConstants::TB_FP_CREATION_TS, Type::INTEGER, [
+				DbConstants::NOTNULL => true,
+				DbConstants::LENGTH => 4,
+				DbConstants::DEFAULT => 0,
 			]);
-			$table->addColumn(Version2000Date20171129173211::FILE_ID, Type::INTEGER, [
-				'notnull' => true,
-				'length' => 4,
-				'default' => 0
+			$table->addColumn(DbConstants::TB_FP_FILE_ID, Type::INTEGER, [
+				DbConstants::NOTNULL => true,
+				DbConstants::LENGTH => 4,
+				DbConstants::DEFAULT => 0
 			]);
-			$table->setPrimaryKey([Version2000Date20171129173211::ID]);
+			$table->setPrimaryKey([DbConstants::TB_FP_ID]);
 		}
 		return $schema;
 	}

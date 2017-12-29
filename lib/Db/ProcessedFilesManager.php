@@ -41,12 +41,6 @@ class ProcessedFilesManager {
 	private $dbConnection = null;
 
 	/**
-	 * @const TABLE_NAME the name of the database table that is used in this
-	 * class
-	 */
-	const TABLE_NAME = "files_processed";
-
-	/**
 	 * Class constructor gets an instance of IDBConnection injected
 	 *
 	 * @param IDBConnection $dbConnection
@@ -69,10 +63,10 @@ class ProcessedFilesManager {
 		}
 		$query = $this->dbConnection->getQueryBuilder();
 		try {
-			$query->insert(ProcessedFilesManager::TABLE_NAME)->values(
+			$query->insert(DbConstants::TABLE_NAME_FILES_PROCESSED)->values(
 				[
-					"file_id" => $query->createNamedParameter($file->getId()),
-					"creation_ts" => $query->createNamedParameter(time())
+					DbConstants::TB_FP_FILE_ID => $query->createNamedParameter($file->getId()),
+					DbConstants::TB_FP_CREATION_TS => $query->createNamedParameter(time())
 				]
 			);
 		} catch (InvalidPathException $e) {
@@ -115,9 +109,9 @@ class ProcessedFilesManager {
 	public function isPresentable(File $file) {
 		$query = $this->dbConnection->getQueryBuilder();
 		try {
-			$query->select('file_id')
-				->from(ProcessedFilesManager::TABLE_NAME, 'pf')
-				->where($query->expr()->eq('file_id', $query->createNamedParameter($file->getId())));
+			$query->select(DbConstants::TB_FP_FILE_ID)
+				->from(DbConstants::TABLE_NAME_FILES_PROCESSED)
+				->where($query->expr()->eq(DbConstants::TB_FP_FILE_ID, $query->createNamedParameter($file->getId())));
 		} catch (InvalidPathException $e) {
 			Logger::error($e->getMessage());
 			return false;

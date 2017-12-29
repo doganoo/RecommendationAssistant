@@ -47,7 +47,11 @@ class UserProfileJob extends TimedJob {
 	 * @since 1.0.0
 	 */
 	public function __construct() {
-		$this->setInterval(UserProfileJob::INTERVAL);
+		if (Application::DEBUG) {
+			$this->setInterval(1);
+		} else {
+			$this->setInterval(UserProfileJob::INTERVAL);
+		}
 	}
 
 	/**

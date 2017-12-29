@@ -36,6 +36,7 @@ class HybridItem {
 	private $contentBased = 0;
 	private $item = null;
 	private $user = null;
+	private $groupWeight = 1;
 
 	/**
 	 * sets the item for that the recommendation is made
@@ -55,6 +56,26 @@ class HybridItem {
 	 */
 	public function setUser(IUser $user) {
 		$this->user = $user;
+	}
+
+	/**
+	 * sets the group weight that is associated to the item and calculated
+	 * from the user groups that is associated to the owner(s)
+	 *
+	 * @param float $groupWeight the weight
+	 * @throws InvalidSimilarityValueException
+	 * @since 1.0.0
+	 */
+	public function setGroupWeight(float $groupWeight) {
+		$precision = 10;
+		$compare = round($groupWeight, $precision, PHP_ROUND_HALF_EVEN);
+		$one = round(1, $precision, PHP_ROUND_HALF_EVEN);
+		$zero = round(0, $precision, PHP_ROUND_HALF_EVEN);
+		//TODO is this a valid approach?
+		if ($compare < $zero || $compare > $one) {
+			throw new InvalidSimilarityValueException("the similarity value has to be between 0 and 1, $groupWeight given");
+		}
+		$this->groupWeight = $groupWeight;
 	}
 
 	/**
@@ -86,6 +107,16 @@ class HybridItem {
 	 */
 	public function getCollaborative(): float {
 		return $this->collaborative;
+	}
+
+	/**
+	 * returns the group weight
+	 *
+	 * @return float
+	 * @since 1.0.0
+	 */
+	public function getGroupWeight(): float {
+		return $this->groupWeight;
 	}
 
 	/**
@@ -127,7 +158,7 @@ class HybridItem {
 	 */
 	public function __toString() {
 		$val = HybridItem::weightedAverage($this);
-		return "[#itemId#][#{$this->item->getId()}#][#itemName#][#{$this->item->getName()}#][#userId#][#{$this->user->getUID()}#][#collaborative#][#{$this->collaborative}#][#contentBased#][#{$this->contentBased}#][#recommendation#][$val]";
+		return "[#itemId#][#{$this->item->getId()}#][#itemName#][#{$this->item->getName()}#][#userId#][#{$this->user->getUID()}#][#collaborative#][#{$this->collaborative}#][#contentBased#][#{$this->contentBased}#][#groupWeight#][#{$this->groupWeight}#][#recommendation#][$val]";
 	}
 
 	/**
@@ -138,8 +169,8 @@ class HybridItem {
 	 * @since 1.0.0
 	 */
 	public static function weightedAverage(HybridItem $hybrid): float {
-		$contentBased = 0.5;
+		$contentBased = 0.26912;
 		$collaborative = 1 - $contentBased;
-		return ($contentBased * $hybrid->getContentBased()) + ($collaborative * $hybrid->getCollaborative());
+		return $hybrid->getGroupWeight() * (($contentBased * $hybrid->getContentBased()) + ($collaborative * $hybrid->getCollaborative()));
 	}
 }

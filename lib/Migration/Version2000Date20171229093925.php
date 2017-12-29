@@ -28,55 +28,39 @@ use OCA\RecommendationAssistant\Db\DbConstants;
 use OCP\Migration\IOutput;
 use OCP\Migration\SimpleMigrationStep;
 
-class Version2000Date20171129140736 extends SimpleMigrationStep {
-
+class Version2000Date20171229093925 extends SimpleMigrationStep {
 	public function changeSchema(IOutput $output, \Closure $schemaClosure, array $options) {
 		/** @var Schema $schema */
 		$schema = $schemaClosure();
 
-		if (!$schema->hasTable(DbConstants::TABLE_NAME_RECOMMENDATIONS)) {
-			$table = $schema->createTable(DbConstants::TABLE_NAME_RECOMMENDATIONS);
-			$table->addColumn(DbConstants::TB_RC_ID, Type::BIGINT, [
+		if (!$schema->hasTable(DbConstants::TABLE_NAME_GROUP_WEIGHTS)) {
+			$table = $schema->createTable(DbConstants::TABLE_NAME_GROUP_WEIGHTS);
+			$table->addColumn(DbConstants::TB_GW_ID, Type::BIGINT, [
 				DbConstants::AUTOINCREMENT => true,
 				DbConstants::NOTNULL => true,
 				DbConstants::LENGTH => 20,
 			]);
-			$table->addColumn(DbConstants::TB_RC_CREATION_TS, Type::INTEGER, [
+
+			$table->addColumn(DbConstants::TB_GW_SOURCE_GROUP_ID, Type::STRING, [
+				DbConstants::NOTNULL => true,
+				DbConstants::LENGTH => 64,
+				DbConstants::DEFAULT => 0,
+			]);
+			$table->addColumn(DbConstants::TB_GW_TARGET_GROUP_ID, Type::STRING, [
+				DbConstants::NOTNULL => true,
+				DbConstants::LENGTH => 64,
+				DbConstants::DEFAULT => 0,
+			]);
+			$table->addColumn(DbConstants::TB_GW_CREATION_TS, Type::INTEGER, [
 				DbConstants::NOTNULL => true,
 				DbConstants::LENGTH => 4,
 				DbConstants::DEFAULT => 0,
 			]);
-			$table->addColumn(DbConstants::TB_RC_USER_ID, Type::STRING, [
+			$table->addColumn(DbConstants::TB_GW_VALUE, Type::FLOAT, [
 				DbConstants::NOTNULL => true,
-				DbConstants::LENGTH => 64,
-				DbConstants::DEFAULT => "",
+				DbConstants::DEFAULT => 0,
 			]);
-			$table->addColumn(DbConstants::TB_RC_FILE_ID, Type::STRING, [
-				DbConstants::NOTNULL => true,
-				DbConstants::LENGTH => 255,
-				DbConstants::DEFAULT => ""
-			]);
-			$table->setPrimaryKey([DbConstants::TB_RC_ID]);
-		}
-
-		if (!$schema->hasTable(DbConstants::TABLE_NAME_USER_PROFILE)) {
-			$table = $schema->createTable(DbConstants::TABLE_NAME_USER_PROFILE);
-			$table->addColumn(DbConstants::TB_UP_ID, Type::BIGINT, [
-				DbConstants::AUTOINCREMENT => true,
-				DbConstants::NOTNULL => true,
-				DbConstants::LENGTH => 20
-			]);
-			$table->addColumn(DbConstants::TB_UP_USER_ID, Type::STRING, [
-				DbConstants::NOTNULL => true,
-				DbConstants::LENGTH => 64,
-				DbConstants::DEFAULT => "",
-			]);
-			$table->addColumn(DbConstants::TB_UP_KEYWORD, Type::STRING, [
-				DbConstants::NOTNULL => true,
-				DbConstants::LENGTH => 250,
-				DbConstants::DEFAULT => "",
-			]);
-			$table->setPrimaryKey([DbConstants::TB_UP_ID]);
+			$table->setPrimaryKey([DbConstants::TB_FP_ID]);
 		}
 		return $schema;
 	}

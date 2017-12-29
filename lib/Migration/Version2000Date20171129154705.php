@@ -24,76 +24,25 @@ namespace OCA\RecommendationAssistant\Migration;
 
 use Doctrine\DBAL\Schema\Schema;
 use Doctrine\DBAL\Types\Type;
+use OCA\RecommendationAssistant\Db\DbConstants;
 use OCP\Migration\IOutput;
 use OCP\Migration\SimpleMigrationStep;
 
 class Version2000Date20171129154705 extends SimpleMigrationStep {
-	const TABLE_NAME_RECOMMENDATIONS = "recommendations";
-	const TABLE_NAME_USER_PROFILE = "user_profile";
-	const ID = "id";
-	const CREATION_TS = "creation_ts";
-	const USER_ID = "user_id";
-	const FILE_ID = "file_id";
-	const KEYWORD = "keyword";
-	const TFIDF_VALUE = "tfidf_value";
 
 	public function changeSchema(IOutput $output, \Closure $schemaClosure, array $options) {
 		/** @var Schema $schema */
 		$schema = $schemaClosure();
 
-		if (!$schema->hasTable(Version2000Date20171129154705::TABLE_NAME_RECOMMENDATIONS)) {
-			$table = $schema->createTable(Version2000Date20171129154705::TABLE_NAME_RECOMMENDATIONS);
-			$table->addColumn(Version2000Date20171129154705::ID, Type::BIGINT, [
-				'autoincrement' => true,
-				'notnull' => true,
-				'length' => 20,
-			]);
-			$table->addColumn(Version2000Date20171129154705::CREATION_TS, Type::INTEGER, [
-				'notnull' => true,
-				'length' => 4,
-				'default' => 0,
-			]);
-			$table->addColumn(Version2000Date20171129154705::USER_ID, Type::STRING, [
-				'notnull' => true,
-				'length' => 64,
-				'default' => "",
-			]);
-			$table->addColumn(Version2000Date20171129154705::FILE_ID, Type::STRING, [
-				'notnull' => true,
-				'length' => 255,
-				'default' => ""
-			]);
-			$table->setPrimaryKey([Version2000Date20171129154705::ID]);
-		}
-
-		if (!$schema->hasTable(Version2000Date20171129154705::TABLE_NAME_USER_PROFILE)) {
-			$table = $schema->createTable(Version2000Date20171129154705::TABLE_NAME_USER_PROFILE);
-			$table->addColumn(Version2000Date20171129154705::ID, Type::BIGINT,
-				['autoincrement' => true,
-					'notnull' => true,
-					'length' => 20]
-			);
-			$table->addColumn(Version2000Date20171129154705::USER_ID, Type::STRING, [
-				'notnull' => true,
-				'length' => 64,
-				'default' => "",
-			]);
-			$table->addColumn(Version2000Date20171129154705::KEYWORD, Type::STRING, [
-				'notnull' => true,
-				'length' => 250,
-				'default' => "",
-			]);
-			$table->setPrimaryKey([Version2000Date20171129154705::ID]);
-		} else {
-			$table = $schema->getTable(Version2000Date20171129154705::TABLE_NAME_USER_PROFILE);
-			if (!$table->hasColumn(Version2000Date20171129154705::TFIDF_VALUE)) {
-				$table->addColumn(Version2000Date20171129154705::TFIDF_VALUE, Type::FLOAT, [
-					'notnull' => true,
-					'default' => 0,
+		if ($schema->hasTable(DbConstants::TABLE_NAME_USER_PROFILE)) {
+			$table = $schema->getTable(DbConstants::TABLE_NAME_USER_PROFILE);
+			if (!$table->hasColumn(DbConstants::TB_UP_TFIDF_VALUE)) {
+				$table->addColumn(DbConstants::TB_UP_TFIDF_VALUE, Type::FLOAT, [
+					DbConstants::NOTNULL => true,
+					DbConstants::DEFAULT => 0,
 				]);
 			}
 		}
-
 		return $schema;
 	}
 }

@@ -24,6 +24,8 @@ namespace OCA\RecommendationAssistant\Service;
 
 use OC\Files\Filesystem;
 use OCA\RecommendationAssistant\AppInfo\Application;
+use OCA\RecommendationAssistant\ContentReader\ContentReaderFactory;
+use OCA\RecommendationAssistant\Db\GroupWeightsManager;
 use OCA\RecommendationAssistant\Db\ProcessedFilesManager;
 use OCA\RecommendationAssistant\Db\UserProfileManager;
 use OCA\RecommendationAssistant\Objects\HybridList;
@@ -31,11 +33,12 @@ use OCA\RecommendationAssistant\Objects\Item;
 use OCA\RecommendationAssistant\Objects\ItemList;
 use OCA\RecommendationAssistant\Objects\ItemToItemMatrix;
 use OCA\RecommendationAssistant\Objects\Logger;
-use OCA\RecommendationAssistant\Objects\ObjectFactory;
 use OCA\RecommendationAssistant\Objects\Rater;
 use OCA\RecommendationAssistant\Recommendation\CosineComputer;
+use OCA\RecommendationAssistant\Recommendation\GroupWeightComputer;
 use OCA\RecommendationAssistant\Recommendation\OverlapCoefficientComputer;
 use OCA\RecommendationAssistant\Recommendation\RatingPredictor;
+use OCA\RecommendationAssistant\Recommendation\TextProcessor;
 use OCP\Files\File;
 use OCP\Files\Folder;
 use OCP\Files\IRootFolder;
@@ -90,6 +93,11 @@ class RecommenderService {
 	private $groupManager = null;
 
 	/**
+	 * @var GroupWeightsManager $groupWeightsManager the manager for querying group weights
+	 */
+	private $groupWeightsManager = null;
+
+	/**
 	 * Class constructor gets multiple instances injected
 	 *
 	 * @param IRootFolder $rootFolder the rootfolder of each user
@@ -100,6 +108,9 @@ class RecommenderService {
 	 * @param UserProfileManager $userProfileManager data storage access instance
 	 * in order to get/set the keywords associated to a user profile
 	 * @param ProcessedFilesManager $processedFilesManager
+	 * @param IGroupManager $groupManager the manager for requesting user groups
+	 * @param GroupWeightsManager $groupWeightsManager the manager for querying
+	 * group weights
 	 * @since 1.0.0
 	 */
 	public function __construct(
@@ -108,7 +119,8 @@ class RecommenderService {
 		ITagManager $tagManager,
 		UserProfileManager $userProfileManager,
 		ProcessedFilesManager $processedFilesManager,
-		IGroupManager $groupManager
+		IGroupManager $groupManager,
+		GroupWeightsManager $groupWeightsManager
 	) {
 		$this->rootFolder = $rootFolder;
 		$this->userManager = $userManager;
@@ -116,6 +128,7 @@ class RecommenderService {
 		$this->userProfileManager = $userProfileManager;
 		$this->processedFileManager = $processedFilesManager;
 		$this->groupManager = $groupManager;
+		$this->groupWeightsManager = $groupWeightsManager;
 	}
 
 	private function log($message) {
@@ -139,7 +152,6 @@ class RecommenderService {
 		$users = [];
 		$hybridList = new HybridList();
 		$this->userManager->callForSeenUsers(function (IUser $user) use (&$itemList, &$users) {
-//			$groups = $this->groupManager->getUserGroups($user);
 			Filesystem::initMountPoints($user->getUID());
 			$folder = $this->rootFolder->getUserFolder($user->getUID());
 			$result = $this->handleFolder($folder, $user);
@@ -166,9 +178,15 @@ class RecommenderService {
 				$keywordList = $this->userProfileManager->getKeywordListByUser($user);
 				$overlap = new OverlapCoefficientComputer($item, $keywordList);
 				$contentBasedSimilarity = $overlap->compute();
+				$groupWeightComputer = new GroupWeightComputer(
+					$this->groupManager->getUserGroups($item->getOwner()),
+					$this->groupManager->getUserGroups($item1->getOwner()),
+					$this->groupWeightsManager);
+				$calc = $groupWeightComputer->calculateWeight();
 
 				$hybrid->setContentBased($contentBasedSimilarity);
 				$hybrid->setItem($item);
+				$hybrid->setGroupWeight($calc);
 				$hybrid->setUser($user);
 				$hybridList->add($hybrid, $user, $item);
 
@@ -177,6 +195,7 @@ class RecommenderService {
 
 				$hybrid->setCollaborative($collaborativeSimilarity);
 				$hybrid->setItem($item1);
+				$hybrid->setGroupWeight($calc);
 				$hybrid->setUser($item->getOwner());
 				$hybridList->add($hybrid, $item->getOwner(), $item1);
 			}
@@ -266,7 +285,7 @@ class RecommenderService {
 			return $item;
 		}
 
-		$contentReader = ObjectFactory::getContentReader($file->getMimeType());
+		$contentReader = ContentReaderFactory::getContentReader($file->getMimeType());
 		$content = $contentReader->read($file);
 		$textProcessor = new TextProcessor($content);
 		$array = $textProcessor->getTextAsArray();

@@ -21,8 +21,8 @@
 
 namespace OCA\RecommendationAssistant\Db;
 
-use OCA\RecommendationAssistant\Objects\KeywordList;
 use OCA\RecommendationAssistant\Objects\Keyword;
+use OCA\RecommendationAssistant\Objects\KeywordList;
 use OCP\IDBConnection;
 use OCP\IUser;
 
@@ -38,12 +38,6 @@ class UserProfileManager {
 	 * @var IDBConnection $dbConnection
 	 */
 	private $dbConnection = null;
-
-	/**
-	 * @const TABLE_NAME the name of the database table that is used in this
-	 * class
-	 */
-	const TABLE_NAME = "user_profile";
 
 	/**
 	 * Class constructor gets an instance of IDBConnection injected
@@ -65,11 +59,11 @@ class UserProfileManager {
 	 */
 	private function insertKeyword(Keyword $item, IUser $user): bool {
 		$query = $this->dbConnection->getQueryBuilder();
-		$query->insert(UserProfileManager::TABLE_NAME)->values(
+		$query->insert(DbConstants::TABLE_NAME_USER_PROFILE)->values(
 			[
-				"user_id" => $query->createNamedParameter($user->getUID()),
-				"keyword" => $query->createNamedParameter($item->getKeyword()),
-				"tfidf_value" => $query->createNamedParameter($item->getTfIdf())
+				DbConstants::TB_UP_USER_ID => $query->createNamedParameter($user->getUID()),
+				DbConstants::TB_UP_KEYWORD => $query->createNamedParameter($item->getKeyword()),
+				DbConstants::TB_UP_TFIDF_VALUE => $query->createNamedParameter($item->getTfIdf())
 			]
 		);
 		$query->execute();
@@ -103,8 +97,8 @@ class UserProfileManager {
 	 */
 	private function deleteForUser(IUser $user) {
 		$query = $this->dbConnection->getQueryBuilder();
-		$query->delete("user_profile")
-			->where($query->expr()->eq('user_id', $query->createNamedParameter($user->getUID())))
+		$query->delete(DbConstants::TABLE_NAME_USER_PROFILE)
+			->where($query->expr()->eq(DbConstants::TB_UP_USER_ID, $query->createNamedParameter($user->getUID())))
 			->execute();
 	}
 
@@ -119,15 +113,15 @@ class UserProfileManager {
 	public function getKeywordListByUser(IUser $user) {
 		$keywordList = new KeywordList();
 		$query = $this->dbConnection->getQueryBuilder();
-		$query->select('keyword', "tfidf_value")
-			->from('user_profile', 'r')
-			->where($query->expr()->eq('user_id', $query->createNamedParameter($user->getUID())));
+		$query->select(DbConstants::TB_UP_KEYWORD, DbConstants::TB_UP_TFIDF_VALUE)
+			->from(DbConstants::TABLE_NAME_USER_PROFILE)
+			->where($query->expr()->eq(DbConstants::TB_UP_USER_ID, $query->createNamedParameter($user->getUID())));
 
 		$result = $query->execute();
 		while (false !== $row = $result->fetch()) {
 			$keyword = new Keyword();
-			$keyword->setKeyword($row["keyword"]);
-			$keyword->setTfIdf($row["tfidf_value"]);
+			$keyword->setKeyword($row[DbConstants::TB_UP_KEYWORD]);
+			$keyword->setTfIdf($row[DbConstants::TB_UP_TFIDF_VALUE]);
 			$keywordList->add($keyword);
 		}
 		$result->closeCursor();

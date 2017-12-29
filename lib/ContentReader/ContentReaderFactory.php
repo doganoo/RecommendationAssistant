@@ -19,30 +19,19 @@
  *
  */
 
-namespace OCA\RecommendationAssistant\Objects;
+namespace OCA\RecommendationAssistant\ContentReader;
 
 
-use OCA\RecommendationAssistant\ContentReader\DocxReader;
-use OCA\RecommendationAssistant\ContentReader\EmptyReader;
-use OCA\RecommendationAssistant\ContentReader\HTMLReader;
-use OCA\RecommendationAssistant\ContentReader\JSONReader;
-use OCA\RecommendationAssistant\ContentReader\ODSReader;
-use OCA\RecommendationAssistant\ContentReader\ODTReader;
-use OCA\RecommendationAssistant\ContentReader\PDFReader;
-use OCA\RecommendationAssistant\ContentReader\PPTXReader;
-use OCA\RecommendationAssistant\ContentReader\RTFReader;
-use OCA\RecommendationAssistant\ContentReader\TextfileReader;
-use OCA\RecommendationAssistant\ContentReader\XLSXReader;
-use OCA\RecommendationAssistant\ContentReader\XMLReader;
 use OCA\RecommendationAssistant\Interfaces\IContentReader;
 
 /**
- * Factory class in order to create objects and delegate the complexity of creation.
+ * Factory class in order to create IContentReader instances and delegate
+ * the complexity of creation.
  *
- * @package OCA\RecommendationAssistant\Objects
+ * @package OCA\RecommendationAssistant\ContentReader
  * @since 1.0.0
  */
-class ObjectFactory {
+class ContentReaderFactory {
 
 	/**
 	 * creates an object that has implemented the IContentReader interface in

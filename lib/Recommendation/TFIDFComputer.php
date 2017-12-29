@@ -59,7 +59,9 @@ class TFIDFComputer {
 	 * @param ItemList $itemBase the itembase
 	 * @since 1.0.0
 	 */
-	public function __construct(Item $item, ItemList $itemBase) {
+	public function __construct(
+		Item $item,
+		ItemList $itemBase) {
 		$this->item = $item;
 		$this->itemBase = $itemBase;
 		$this->result = new KeywordList();

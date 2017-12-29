@@ -36,27 +36,37 @@ use OCA\RecommendationAssistant\Objects\Rater;
  */
 class CosineComputer implements IComputable {
 	/**
-	 * @var Item $x the first item
+	 * @var Item $sourceItem the first item
 	 */
-	private $x = null;
+	private $sourceItem = null;
 
 	/**
-	 * @var Item $y the first item
+	 * @var Item $targetItem the first item
 	 */
-	private $y = null;
+	private $targetItem = null;
 
-	public function __construct(Item $x, Item $y) {
-		$this->x = $x;
-		$this->y = $y;
+	/**
+	 * Class constructor gets two items injected
+	 *
+	 * @param Item $sourceItem the item for that the prediction is made
+	 * @param Item $targetItem the item to that $sourceItem is compared
+	 * @since 1.0.0
+	 */
+	public function __construct(
+		Item $sourceItem,
+		Item $targetItem) {
+		$this->sourceItem = $sourceItem;
+		$this->targetItem = $targetItem;
 	}
 
 	/**
-	 * Computes similiarty between two items
+	 * Computes similiarty between two items. This method returns the value
+	 * 1 if the items are equal.
 	 *
 	 * @since 1.0.0
 	 */
 	public function compute() {
-		if ($this->x->equals($this->y)) {
+		if ($this->sourceItem->equals($this->targetItem)) {
 			return 1;
 		}
 		$lowerA = 0;
@@ -64,13 +74,13 @@ class CosineComputer implements IComputable {
 		$upper = 0;
 		$lower = 0;
 		/** @var Rater $rater */
-		foreach ($this->x->getRaters() as $rater) {
+		foreach ($this->sourceItem->getRaters() as $rater) {
 			$rater->getRating();
-			$yValid = $this->y->getRater($rater->getUser()->getUID())->isValid();
+			$yValid = $this->targetItem->getRater($rater->getUser()->getUID())->isValid();
 			if (!$yValid) {
 				continue;
 			}
-			$raterY = $this->y->getRater($rater->getUser()->getUID());
+			$raterY = $this->targetItem->getRater($rater->getUser()->getUID());
 			$x = $rater->getRating();
 			$y = $raterY->getRating();
 

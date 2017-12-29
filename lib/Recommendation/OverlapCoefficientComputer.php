@@ -58,9 +58,11 @@ class OverlapCoefficientComputer implements IComputable {
 	}
 
 	/**
-	 * Computes similiarty between two or more items
+	 * Method implementation that is declared in the interface IComputable.
+	 * This method implements the Overlap Coefficient Algorithm.
 	 *
 	 * @since 1.0.0
+	 * @return float the overlap coefficient
 	 */
 	public function compute() {
 		$arr = array_intersect($this->item->getKeywords(), $this->keywordList->getKeywords());

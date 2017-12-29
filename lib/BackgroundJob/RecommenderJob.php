@@ -38,8 +38,7 @@ class RecommenderJob extends TimedJob {
 	 * @const INTERVAL the interval in which the job should run.
 	 * Actually every 5 hours.
 	 */
-//	private const INTERVAL = 5 * 60 * 60;
-	const INTERVAL = 1;
+	const INTERVAL = 5 * 60 * 60;
 
 	/**
 	 * Class constructor defines the interval in which the background job runs
@@ -47,7 +46,11 @@ class RecommenderJob extends TimedJob {
 	 * @since 1.0.0
 	 */
 	public function __construct() {
-		$this->setInterval(RecommenderJob::INTERVAL);
+		if (Application::DEBUG) {
+			$this->setInterval(1);
+		} else {
+			$this->setInterval(RecommenderJob::INTERVAL);
+		}
 	}
 
 	/**

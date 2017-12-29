@@ -19,7 +19,7 @@
  *
  */
 
-namespace OCA\RecommendationAssistant\Service;
+namespace OCA\RecommendationAssistant\Recommendation;
 
 
 class TextProcessor {

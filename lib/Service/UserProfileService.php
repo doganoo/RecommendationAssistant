@@ -29,7 +29,7 @@ use OCA\RecommendationAssistant\Objects\Item;
 use OCA\RecommendationAssistant\Objects\ItemList;
 use OCA\RecommendationAssistant\Objects\KeywordList;
 use OCA\RecommendationAssistant\Objects\Logger;
-use OCA\RecommendationAssistant\Objects\ObjectFactory;
+use OCA\RecommendationAssistant\Objects\ContentReaderFactory;
 use OCA\RecommendationAssistant\Recommendation\TFIDFComputer;
 use OCP\Files\File;
 use OCP\Files\Folder;
@@ -124,7 +124,6 @@ class UserProfileService {
 					$keywordList->sort();
 				}
 				$this->userProfileManager->insertKeywords($keywordList, $user);
-//				$itemList->deleteList();
 			}
 		}
 		Logger::debug("UserProfileService end");
@@ -189,7 +188,7 @@ class UserProfileService {
 		if ($isSharedStorage) {
 			return $item;
 		}
-		$contentReader = ObjectFactory::getContentReader($file->getMimeType());
+		$contentReader = ContentReaderFactory::getContentReader($file->getMimeType());
 
 		if ($contentReader instanceof EmptyReader) {
 			return $item;
