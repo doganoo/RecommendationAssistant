@@ -33,7 +33,7 @@ class Item {
 	/**
 	 * @var int $id
 	 */
-	private $id;
+	private $id = -1;
 	/**
 	 * @var string $name
 	 */
@@ -136,6 +136,25 @@ class Item {
 	}
 
 	/**
+	 * merges given keywords to the existing ones. The keyword will be ignored
+	 * if it is already in the list.
+	 *
+	 * @param array $keywords
+	 * @since 1.0.0
+	 */
+	public function mergeKeywords(array $keywords) {
+		foreach ($keywords as $keyword) {
+			if (trim($keyword) == "") {
+				continue;
+			}
+			if ($this->keywords == null ||
+				!in_array($keyword, $this->keywords, false)) {
+				$this->keywords[] = $keyword;
+			}
+		}
+	}
+
+	/**
 	 * Returns a single rater that has rated the item
 	 *
 	 * @param string $index
@@ -217,7 +236,7 @@ class Item {
 	 * @return int the number of keywords in the list
 	 * @since 1.0.0
 	 */
-	public function keywordSize() {
+	public function keywordSize(): int {
 		return count($this->getKeywords());
 	}
 
@@ -230,7 +249,7 @@ class Item {
 	 */
 	public function isValid(): bool {
 		$hasOwner = $this->owner !== null;
-		$hasId = is_int($this->id);
+		$hasId = $this->id !== -1;
 		return $hasOwner && $hasId;
 	}
 }

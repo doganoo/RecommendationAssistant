@@ -28,31 +28,22 @@ use OCA\RecommendationAssistant\Db\DbConstants;
 use OCP\Migration\IOutput;
 use OCP\Migration\SimpleMigrationStep;
 
-class Version2000Date20171129173211 extends SimpleMigrationStep {
-
+class Version2000Date20180104125733 extends SimpleMigrationStep {
 	public function changeSchema(IOutput $output, \Closure $schemaClosure, array $options) {
 		/** @var Schema $schema */
 		$schema = $schemaClosure();
 
-		if (!$schema->hasTable(DbConstants::TABLE_NAME_FILES_PROCESSED)) {
-			$table = $schema->createTable(DbConstants::TABLE_NAME_FILES_PROCESSED);
-			$table->addColumn(DbConstants::TB_FP_ID, Type::BIGINT, [
-				DbConstants::AUTOINCREMENT => true,
-				DbConstants::NOTNULL => true,
-				DbConstants::LENGTH => 20,
-			]);
+		if ($schema->hasTable(DbConstants::TABLE_NAME_USER_PROFILE)) {
+			$table = $schema->getTable(DbConstants::TABLE_NAME_USER_PROFILE);
+			if ($table->hasColumn(DbConstants::TB_UP_KEYWORD)) {
+				$table->dropColumn(DbConstants::TB_UP_KEYWORD);
 
-			$table->addColumn(DbConstants::TB_FP_CREATION_TS, Type::INTEGER, [
-				DbConstants::NOTNULL => true,
-				DbConstants::LENGTH => 4,
-				DbConstants::DEFAULT => 0,
-			]);
-			$table->addColumn(DbConstants::TB_FP_FILE_ID, Type::INTEGER, [
-				DbConstants::NOTNULL => true,
-				DbConstants::LENGTH => 4,
-				DbConstants::DEFAULT => 0
-			]);
-			$table->setPrimaryKey([DbConstants::TB_FP_ID]);
+				$table->addColumn(DbConstants::TB_UP_KEYWORD, Type::TEXT, [
+					DbConstants::NOTNULL => true,
+					DbConstants::LENGTH => 250,
+					DbConstants::DEFAULT => "",
+				]);
+			}
 		}
 		return $schema;
 	}

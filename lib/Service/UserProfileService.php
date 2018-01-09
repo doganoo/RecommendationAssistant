@@ -23,13 +23,16 @@ namespace OCA\RecommendationAssistant\Service;
 
 use OC\Files\Filesystem;
 use OCA\RecommendationAssistant\AppInfo\Application;
+use OCA\RecommendationAssistant\ContentReader\ContentReaderFactory;
 use OCA\RecommendationAssistant\ContentReader\EmptyReader;
 use OCA\RecommendationAssistant\Db\UserProfileManager;
+use OCA\RecommendationAssistant\Objects\ConsoleLogger;
 use OCA\RecommendationAssistant\Objects\Item;
 use OCA\RecommendationAssistant\Objects\ItemList;
 use OCA\RecommendationAssistant\Objects\KeywordList;
 use OCA\RecommendationAssistant\Objects\Logger;
-use OCA\RecommendationAssistant\Objects\ContentReaderFactory;
+use OCA\RecommendationAssistant\Objects\Rater;
+use OCA\RecommendationAssistant\Recommendation\TextProcessor;
 use OCA\RecommendationAssistant\Recommendation\TFIDFComputer;
 use OCP\Files\File;
 use OCP\Files\Folder;
@@ -104,29 +107,34 @@ class UserProfileService {
 	 */
 	public function run() {
 		Logger::debug("UserProfileService start");
+		ConsoleLogger::debug("UserProfileService start");
 		$itemList = new ItemList();
 		$users = [];
 		$this->userManager->callForSeenUsers(function (IUser $user) use (&$itemList, &$users) {
-
 			Filesystem::initMountPoints($user->getUID());
 			$folder = $this->rootFolder->getUserFolder($user->getUID());
-			$return = $this->handleFolder($folder);
+			$return = $this->handleFolder($folder, $user);
 			$itemList->merge($return);
 			$users[] = $user;
 		});
-
-		foreach ($itemList as $item) {
-			foreach ($users as $user) {
-				$keywordList = new KeywordList();
-				foreach ($itemList as $item) {
-					$tfidf = new TFIDFComputer($item, $itemList);
-					$keywordList = $tfidf->compute();
-					$keywordList->sort();
+		/** @var IUser $user */
+		foreach ($users as $user) {
+			$keywordList = new KeywordList();
+			/** @var Item $item */
+			foreach ($itemList as $item) {
+				if (!$item->raterPresent($user->getUID())) {
+					continue;
 				}
-				$this->userProfileManager->insertKeywords($keywordList, $user);
+				$tfidf = new TFIDFComputer($item, $itemList);
+				$preparedList = $tfidf->compute();
+				$preparedList->sort();
+				$preparedList->removeStopwords();
+				$keywordList->merge($preparedList);
 			}
+			$this->userProfileManager->insertKeywords($keywordList, $user);
 		}
 		Logger::debug("UserProfileService end");
+		ConsoleLogger::debug("UserProfileService end");
 	}
 
 	/**
@@ -142,14 +150,14 @@ class UserProfileService {
 	 * or by the handleFile() method
 	 * @since 1.0.0
 	 */
-	private function handleFolder(Folder $folder): ItemList {
+	private function handleFolder(Folder $folder, IUser $user): ItemList {
 		$itemList = new ItemList();
 		foreach ($folder->getDirectoryListing() as $node) {
 			if ($node instanceof Folder) {
-				$return = $this->handleFolder($node);
+				$return = $this->handleFolder($node, $user);
 				$itemList->merge($return);
 			} else if ($node instanceof File) {
-				$return = $this->handleFile($node);
+				$return = $this->handleFile($node, $user);
 				$itemList->add($return);
 			}
 		}
@@ -176,7 +184,7 @@ class UserProfileService {
 	 * circumstances
 	 * @since 1.0.0
 	 */
-	private function handleFile(File $file): Item {
+	private function handleFile(File $file, IUser $user): Item {
 		$item = new Item();
 		$isSharedStorage = $file->getStorage()->instanceOfStorage(Application::SHARED_INSTANCE_STORAGE);
 		if ($file->isEncrypted()) {
@@ -194,6 +202,7 @@ class UserProfileService {
 			return $item;
 		}
 
+
 		$content = $contentReader->read($file);
 		$textProcessor = new TextProcessor($content);
 		$textProcessor->removeNumeric();
@@ -202,8 +211,27 @@ class UserProfileService {
 		$array = $textProcessor->getTextAsArray();
 
 		$item->setId($file->getId());
+		$item->setOwner($file->getOwner());
+		$item->setName($file->getName());
+		$rater = $this->getRater($user, true);
+		$item->addRater($rater);
 		$item->setKeywords($array);
 		return $item;
+	}
+
+	/**
+	 * This simply creates a Rater object
+	 *
+	 * @param IUser $user
+	 * @param bool $rating binary rating (1 or 0)
+	 * @return Rater object that represents the rater
+	 * @since 1.0.0
+	 */
+	private
+	function getRater(IUser $user, bool $rating) {
+		$rater = new Rater($user);
+		$rater->setRating($rating ? 1 : 0);
+		return $rater;
 	}
 
 }

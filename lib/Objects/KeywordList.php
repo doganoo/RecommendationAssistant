@@ -57,6 +57,13 @@ class KeywordList implements \IteratorAggregate {
 		}
 	}
 
+	public function merge(KeywordList $keywordList) {
+		/** @var Keyword $keyword */
+		foreach ($keywordList as $keyword) {
+			$this->add($keyword);
+		}
+	}
+
 	/**
 	 * returns the number of keywords that are in the list
 	 *
@@ -77,12 +84,13 @@ class KeywordList implements \IteratorAggregate {
 			$aValue = floatval($a->getTfIdf());
 			$bValue = floatval($b->getTfIdf());
 			$epsilon = 0.00001;
-
+			$equals = abs($aValue - $bValue) < $epsilon;
 			//never compare two floating point numbers with == or ===.
 			//The reason lies in the limited precision of the numbers.
 			//more information are available at:
 			//http://php.net/manual/en/language.types.float.php
-			if (abs($aValue - $bValue) < $epsilon) {
+
+			if ($equals) {
 				return 0;
 			}
 			return ($aValue > $bValue) ? -1 : 1;
@@ -104,7 +112,9 @@ class KeywordList implements \IteratorAggregate {
 		$this->keywordList = array_filter($this->keywordList,
 			function (Keyword $item, string $keyword) {
 				$floatVal = floatval($item->getTfIdf());
-				return $floatVal !== 0;
+				//TODO never compare floats with ==
+				//return (abs($floatVal - 0.0) < 0.1);
+				return $floatVal !== 0.0;
 			}, ARRAY_FILTER_USE_BOTH);
 		/**
 		 * the following code removes the last 1/10 of the keywords that are
@@ -138,6 +148,9 @@ class KeywordList implements \IteratorAggregate {
 	 * @since 5.0.0
 	 */
 	public function getIterator() {
+		if ($this->keywordList == null) {
+			return new \ArrayIterator([]);
+		}
 		return new \ArrayIterator($this->keywordList);
 	}
 

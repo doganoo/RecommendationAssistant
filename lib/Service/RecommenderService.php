@@ -27,7 +27,10 @@ use OCA\RecommendationAssistant\AppInfo\Application;
 use OCA\RecommendationAssistant\ContentReader\ContentReaderFactory;
 use OCA\RecommendationAssistant\Db\GroupWeightsManager;
 use OCA\RecommendationAssistant\Db\ProcessedFilesManager;
+use OCA\RecommendationAssistant\Db\RecommendationManager;
 use OCA\RecommendationAssistant\Db\UserProfileManager;
+use OCA\RecommendationAssistant\Exception\InvalidRatingException;
+use OCA\RecommendationAssistant\Objects\ConsoleLogger;
 use OCA\RecommendationAssistant\Objects\HybridList;
 use OCA\RecommendationAssistant\Objects\Item;
 use OCA\RecommendationAssistant\Objects\ItemList;
@@ -39,9 +42,12 @@ use OCA\RecommendationAssistant\Recommendation\GroupWeightComputer;
 use OCA\RecommendationAssistant\Recommendation\OverlapCoefficientComputer;
 use OCA\RecommendationAssistant\Recommendation\RatingPredictor;
 use OCA\RecommendationAssistant\Recommendation\TextProcessor;
+use OCA\RecommendationAssistant\Util\Util;
 use OCP\Files\File;
 use OCP\Files\Folder;
+use OCP\Files\InvalidPathException;
 use OCP\Files\IRootFolder;
+use OCP\Files\NotFoundException;
 use OCP\IGroupManager;
 use OCP\ITagManager;
 use OCP\IUser;
@@ -98,6 +104,12 @@ class RecommenderService {
 	private $groupWeightsManager = null;
 
 	/**
+	 * @var RecommendationManager $recommendationManager the manager for querying
+	 * recommendations
+	 */
+	private $recommendationManager = null;
+
+	/**
 	 * Class constructor gets multiple instances injected
 	 *
 	 * @param IRootFolder $rootFolder the rootfolder of each user
@@ -105,34 +117,34 @@ class RecommenderService {
 	 * all users
 	 * @param ITagManager $tagManager the tag manager instance to access the tags.
 	 * In this case: the favorites
+	 * @param IGroupManager $groupManager the manager for requesting user groups
 	 * @param UserProfileManager $userProfileManager data storage access instance
 	 * in order to get/set the keywords associated to a user profile
 	 * @param ProcessedFilesManager $processedFilesManager
-	 * @param IGroupManager $groupManager the manager for requesting user groups
 	 * @param GroupWeightsManager $groupWeightsManager the manager for querying
 	 * group weights
+	 * @param RecommendationManager $recommendationManager database access to
+	 * recommendations
 	 * @since 1.0.0
 	 */
 	public function __construct(
 		IRootFolder $rootFolder,
 		IUserManager $userManager,
 		ITagManager $tagManager,
+		IGroupManager $groupManager,
 		UserProfileManager $userProfileManager,
 		ProcessedFilesManager $processedFilesManager,
-		IGroupManager $groupManager,
-		GroupWeightsManager $groupWeightsManager
+		GroupWeightsManager $groupWeightsManager,
+		RecommendationManager $recommendationManager
 	) {
 		$this->rootFolder = $rootFolder;
 		$this->userManager = $userManager;
 		$this->tagManager = $tagManager;
+		$this->groupManager = $groupManager;
 		$this->userProfileManager = $userProfileManager;
 		$this->processedFileManager = $processedFilesManager;
-		$this->groupManager = $groupManager;
 		$this->groupWeightsManager = $groupWeightsManager;
-	}
-
-	private function log($message) {
-		echo $message . "\n";
+		$this->recommendationManager = $recommendationManager;
 	}
 
 	/**
@@ -148,6 +160,7 @@ class RecommenderService {
 	 */
 	public function run() {
 		Logger::debug("RecommenderService start");
+		ConsoleLogger::debug("RecommenderService start");
 		$itemList = new ItemList();
 		$users = [];
 		$hybridList = new HybridList();
@@ -158,51 +171,55 @@ class RecommenderService {
 			$itemList->merge($result);
 			$users[] = $user;
 		});
-		$predictionComputer = new ItemToItemMatrix();
+		$itemItemMatrix = new ItemToItemMatrix();
 
 		/** @var Item $item */
 		foreach ($itemList as $item) {
 			/** @var Item $item1 */
 			foreach ($itemList as $item1) {
+				//not need to check if both items the same because
+				//an entire similarity matrix is needed
 				$pearson = new CosineComputer($item, $item1);
-				$sim = $pearson->compute();
-				$predictionComputer->add($item, $item1, $sim);
+				$pearsonSimilarity = $pearson->compute();
+				$itemItemMatrix->add($item, $item1, $pearsonSimilarity);
 			}
 
 			/** @var IUser $user */
 			foreach ($users as $user) {
-				if ($item->getOwner()->getUID() === $user->getUID()) {
+				if (Util::sameUser($item->getOwner(), $user)) {
 					continue;
 				}
 				$hybrid = $hybridList->getHybridByUser($item, $user);
+				$hybrid->setUser($user);
+				$hybrid->setItem($item);
 				$keywordList = $this->userProfileManager->getKeywordListByUser($user);
-				$overlap = new OverlapCoefficientComputer($item, $keywordList);
+
+				$overlap = new OverlapCoefficientComputer($item, $itemList, $keywordList);
 				$contentBasedSimilarity = $overlap->compute();
 				$groupWeightComputer = new GroupWeightComputer(
 					$this->groupManager->getUserGroups($item->getOwner()),
 					$this->groupManager->getUserGroups($item1->getOwner()),
 					$this->groupWeightsManager);
-				$calc = $groupWeightComputer->calculateWeight();
+				$userGroupWeights = $groupWeightComputer->calculateWeight();
+				$hybrid->setGroupWeight($userGroupWeights);
 
-				$hybrid->setContentBased($contentBasedSimilarity);
-				$hybrid->setItem($item);
-				$hybrid->setGroupWeight($calc);
-				$hybrid->setUser($user);
-				$hybridList->add($hybrid, $user, $item);
-
-				$itemComputer = new RatingPredictor($item, $user, $itemList, $predictionComputer);
+				$itemComputer = new RatingPredictor($item, $user, $itemList, $itemItemMatrix);
 				$collaborativeSimilarity = $itemComputer->predict();
-
+				$hybrid->setContentBased($contentBasedSimilarity);
 				$hybrid->setCollaborative($collaborativeSimilarity);
-				$hybrid->setItem($item1);
-				$hybrid->setGroupWeight($calc);
-				$hybrid->setUser($item->getOwner());
-				$hybridList->add($hybrid, $item->getOwner(), $item1);
+				if (!$item->raterPresent($user->getUID())) {
+					$hybridList->add($hybrid, $user, $item);
+				}
+
 			}
 		}
 
-		//TODO: what to do with the results?
+//		$hybridList->removeNonRecommendable();
+		$this->recommendationManager->deleteAll();
+		$this->recommendationManager->insertHybridList($hybridList);
+
 		Logger::debug("RecommenderService end");
+		ConsoleLogger::debug("RecommenderService end");
 	}
 
 	/**
@@ -222,14 +239,18 @@ class RecommenderService {
 	private
 	function handleFolder(Folder $folder, IUser $currentUser): ItemList {
 		$itemList = new ItemList();
-		foreach ($folder->getDirectoryListing() as $node) {
-			if ($node instanceof Folder) {
-				$return = $this->handleFolder($node, $currentUser);
-				$itemList->merge($return);
-			} else if ($node instanceof File) {
-				$return = $this->handleFile($node, $currentUser);
-				$itemList->add($return);
+		try {
+			foreach ($folder->getDirectoryListing() as $node) {
+				if ($node instanceof Folder) {
+					$return = $this->handleFolder($node, $currentUser);
+					$itemList->merge($return);
+				} else if ($node instanceof File) {
+					$return = $this->handleFile($node, $currentUser);
+					$itemList->add($return);
+				}
 			}
+		} catch (NotFoundException $exception) {
+			Logger::warn($exception->getMessage());
 		}
 		return $itemList;
 	}
@@ -238,68 +259,118 @@ class RecommenderService {
 	 * This method is responsible for a File instance and processes it in order
 	 * to pass it to the Content Based and Collaborative recommendation process.
 	 *
-	 * First, the method checks some pre conditions: is the file already processed,
-	 * encrpyted or readable. The file is checked whether it is a shared one or
-	 * not if it passes the above checks. If this is the case, it is only determined
-	 * whether the user that got the file shared has liked the file or not.
-	 *
-	 * If the file is not shared, meaning that the actual user owns the file, then
-	 * it is further processed by reading out its content and determining whether
-	 * it is liked or not. Finally, the file is added to the "processed files"
-	 * database.
+	 * The method calls other private methods of the class in order to create
+	 * an item, add raters and assign keywords to the item.
 	 *
 	 * The result of this method is a Item instance that actually represents a file.
-	 * The method will return null if one of the above described conditions are true.
+	 * The method will return an invalid instance of Item if the following conditions
+	 * are true:
+	 *
+	 * <ul>file is already processed</ul>
+	 * <ul>file is encrypted</ul>
+	 * <ul>file is not readable</ul>
 	 *
 	 * @param File $file the actual file
 	 * @param IUser $currentUser the actual user
-	 * @return null|Item the item that represents the file or null under some
+	 * @return Item the item that represents the file or null under some
 	 * circumstances
 	 * @since 1.0.0
 	 */
 	private
 	function handleFile(File $file, IUser $currentUser): Item {
-		$item = new Item();
-		if ($this->isIndexed($file)) {
-			return $item;
+		if ($this->isProcessed($file)) {
+			return new Item();
 		}
 		if ($file->isEncrypted()) {
-			return $item;
+			return new Item();
 		}
-		if (!$file->isReadable()) {
-			return $item;
-		}
-		$item->setId($file->getId());
-		$item->setName($file->getName());
-		$item->setOwner($file->getOwner());
-		$isSharedStorage = $file->getStorage()->instanceOfStorage(Application::SHARED_INSTANCE_STORAGE);
-
-		//if the file is a shared one, then we do not need to process the content
-		//because it is already processed. We just need the rating of the user
-		//that has access to the file
-		//TODO: verify whether this is still valid
-		if ($isSharedStorage) {
-			$isFavorite = $this->checkForFavorite($currentUser, $file->getId());
-			$rater = $this->getRater($currentUser, $isFavorite);
-			$item->addRater($rater);
-			return $item;
+		try {
+			if (!$file->isReadable()) {
+				return new Item();
+			}
+		} catch (InvalidPathException $exception) {
+			Logger::warn($exception->getMessage());
+			return new Item();
+		} catch (NotFoundException $exception) {
+			Logger::warn($exception->getMessage());
+			return new Item();
 		}
 
-		$contentReader = ContentReaderFactory::getContentReader($file->getMimeType());
-		$content = $contentReader->read($file);
-		$textProcessor = new TextProcessor($content);
-		$array = $textProcessor->getTextAsArray();
-		$item->setKeywords($array);
+		if (Application::DEBUG) {
+			if (!in_array($file->getName(), ["d1.txt", "d2.txt", "d3.txt", "d4.txt", "d5.txt"])) {
+				return new Item();
+			}
+		}
 
-		$isFavorite = $this->checkForFavorite($file->getOwner(), $file->getId());
-		$rater = $this->getRater($file->getOwner(), $isFavorite);
-		$item->addRater($rater);
+		$item = $this->createItem($file);
+		$item = $this->addRater($item, $file, $currentUser);
+		$item = $this->addKeywords($item, $file);
 		$this->processedFileManager->insertFile($file);
 		return $item;
 	}
 
 	/**
-	 * This method checks whether the file is marked as favorite (is liked) by
+	 * this method adds the $currentUsers rating for $file and assigns the
+	 * information to the item. The method returns the item without assigning
+	 * a rating if the file is invalid or can not be found.
+	 *
+	 * @param Item $item
+	 * @param File $file
+	 * @param IUser $currentUser
+	 * @return Item
+	 * @since 1.0.0
+	 */
+	private function addRater(Item $item, File $file, IUser $currentUser) {
+		$fileId = -1;
+		try {
+			$fileId = $file->getId();
+		} catch (NotFoundException $exception) {
+			Logger::warn($exception->getMessage());
+			return $item;
+		} catch (InvalidPathException $exception) {
+			Logger::warn($exception->getMessage());
+			return $item;
+		}
+		$isFavorite = $this->checkForFavorite($currentUser, $fileId);
+		$rating = $isFavorite === true ? Rater::LIKE : Rater::DISLIKE;
+		$rater = $this->getRater($currentUser, $rating);
+		$item->addRater($rater);
+		return $item;
+	}
+
+	/**
+	 * this method reads the file content and assigns them as an array to the
+	 * passed item. If the file is an shared one, the keywords are not read
+	 * because they will be processed for the owner.
+	 *
+	 * @param Item $item
+	 * @param File $file
+	 * @return Item
+	 * @since 1.0.0
+	 */
+	public function addKeywords(Item $item, File $file) {
+		$isSharedStorage = false;
+		try {
+			$isSharedStorage = $file->getStorage()->instanceOfStorage(Application::SHARED_INSTANCE_STORAGE);
+		} catch (NotFoundException $exception) {
+			Logger::warn($exception->getMessage());
+		}
+		/* sharedStorage means that the file is shared to the user.
+		 * if this is the case we do not need to process the file twice.
+		 */
+		if ($isSharedStorage) {
+			return $item;
+		}
+		$contentReader = ContentReaderFactory::getContentReader($file->getMimeType());
+		$content = $contentReader->read($file);
+		$textProcessor = new TextProcessor($content);
+		$array = $textProcessor->getTextAsArray();
+		$item->setKeywords($array);
+		return $item;
+	}
+
+	/**
+	 * This method checks whether the file is tagged as favorite (is liked) by
 	 * a given user.
 	 *
 	 * @param IUser $user
@@ -308,25 +379,34 @@ class RecommenderService {
 	 * @since 1.0.0
 	 */
 	private
-	function checkForFavorite(IUser $user, $fileId) {
+	function checkForFavorite(IUser $user, $fileId): bool {
 		$tags = $this->tagManager->load("files", [], false, $user->getUID());
 		$favorites = $tags->getFavorites();
 		$isFavorite = in_array($fileId, $favorites);
-		return $isFavorite;
+		return $isFavorite === true;
 	}
 
 	/**
-	 * This simply creates a Rater object
+	 * This simply creates a Rater object. $rating has to be a valid rating:
+	 * <ul>-1 for no rating</1>
+	 * <ul>0 for dislike</1>
+	 * <ul>1 for like</1>
+	 *
+	 * see class OCA\RecommendationAssistant\Objects\Rater for all types of
+	 * ratings.
 	 *
 	 * @param IUser $user
-	 * @param bool $rating binary rating (1 or 0)
+	 * @param int $rating binary rating (1 or 0)
 	 * @return Rater object that represents the rater
 	 * @since 1.0.0
 	 */
-	private
-	function getRater(IUser $user, bool $rating) {
+	private function getRater(IUser $user, int $rating) {
 		$rater = new Rater($user);
-		$rater->setRating($rating ? 1 : 0);
+		try {
+			$rater->setRating($rating);
+		} catch (InvalidRatingException $exception) {
+			Logger::error($exception->getMessage());
+		}
 		return $rater;
 	}
 
@@ -339,12 +419,36 @@ class RecommenderService {
 	 * @since 1.0.0
 	 */
 	private
-	function isIndexed(File $file): bool {
+	function isProcessed(File $file): bool {
 		if (Application::DEBUG) {
 			return false;
 		}
 		//TODO check the checksum of the file for changes?
 		$presentable = $this->processedFileManager->isPresentable($file);
 		return $presentable;
+	}
+
+	/**
+	 * creates an instance of Item from a file. If the id is not readable
+	 * the method returns and empty Item which is not valid.
+	 *
+	 * @param File $file
+	 * @return Item
+	 * @since 1.0.0
+	 */
+	private function createItem(File $file) {
+		$item = new Item();
+		try {
+			$item->setId($file->getId());
+		} catch (InvalidPathException $exception) {
+			Logger::warn($exception->getMessage());
+			return $item;
+		} catch (NotFoundException $exception) {
+			Logger::warn($exception->getMessage());
+			return $item;
+		}
+		$item->setName($file->getName());
+		$item->setOwner($file->getOwner());
+		return $item;
 	}
 }

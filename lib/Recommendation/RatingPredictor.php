@@ -22,9 +22,12 @@
 namespace OCA\RecommendationAssistant\Recommendation;
 
 
+use OCA\RecommendationAssistant\Objects\ConsoleLogger;
 use OCA\RecommendationAssistant\Objects\Item;
 use OCA\RecommendationAssistant\Objects\ItemList;
 use OCA\RecommendationAssistant\Objects\ItemToItemMatrix;
+use OCA\RecommendationAssistant\Objects\Rater;
+use OCA\RecommendationAssistant\Objects\Similarity;
 use OCP\IUser;
 
 /**
@@ -88,30 +91,38 @@ class RatingPredictor {
 	 * This method predicts the recommendation value of $item for $user using
 	 * the weighted average method.
 	 *
-	 * @return float
+	 * @return Similarity
 	 * @since 1.0.0
 	 */
-	public function predict(): float {
+	public function predict(): Similarity {
+		$similarity = new Similarity();
 		$upper = 0;
 		$lower = 0;
+
 		/** @var Item $item1 */
 		foreach ($this->itemList as $item1) {
 			if ($this->item->equals($item1)) {
 				continue;
 			}
-			if (!$item1->getRater($this->user->getUID())->isValid()) {
+			$rating = $item1->getRater($this->user->getUID())->getRating();
+			if ($rating == Rater::NO_RATING) {
 				continue;
 			}
-			$rating = $item1->getRater($this->user->getUID())->getRating();
+
 			$sim = $this->matrix->get($this->item, $item1);
-			$upper += $rating * $sim;
-			$lower += $rating;
+			$rating = $item1->getRater($this->user->getUID())->getRating();
+			$upper += $sim->getValue() * $rating;
+			$lower += $sim->getValue();
 		}
 		if ($lower == 0) {
-			return 0.0;
+			$similarity->setValue(0.0);
+			$similarity->setStatus(Similarity::NO_SIMILARITY_AVAILABLE);
+			$similarity->setDescription("lower equals to 0");
+		} else {
+			$similarity->setValue($upper / $lower);
+			$similarity->setStatus(Similarity::VALID);
+			$similarity->setDescription("ok");
 		}
-		$return = floatval($upper / $lower);
-		return $return;
+		return $similarity;
 	}
-
 }

@@ -21,6 +21,7 @@
 
 namespace OCA\RecommendationAssistant\Db;
 
+use OCA\RecommendationAssistant\Objects\ConsoleLogger;
 use OCA\RecommendationAssistant\Objects\Keyword;
 use OCA\RecommendationAssistant\Objects\KeywordList;
 use OCP\IDBConnection;
@@ -62,11 +63,16 @@ class UserProfileManager {
 		$query->insert(DbConstants::TABLE_NAME_USER_PROFILE)->values(
 			[
 				DbConstants::TB_UP_USER_ID => $query->createNamedParameter($user->getUID()),
-				DbConstants::TB_UP_KEYWORD => $query->createNamedParameter($item->getKeyword()),
+				DbConstants::TB_UP_KEYWORD => $query->createNamedParameter(($item->getKeyword())),
 				DbConstants::TB_UP_TFIDF_VALUE => $query->createNamedParameter($item->getTfIdf())
 			]
 		);
-		$query->execute();
+		//TODO find a solution
+		try {
+			$query->execute();
+		} catch (\Exception $exception) {
+			ConsoleLogger::debug($exception->getMessage());
+		}
 		$lastInsertId = $query->getLastInsertId();
 		return is_int($lastInsertId);
 	}
@@ -85,6 +91,7 @@ class UserProfileManager {
 		$this->deleteForUser($user);
 		foreach ($keywordList as $keywordItem) {
 			$this->insertKeyword($keywordItem, $user);
+
 		}
 	}
 

@@ -25,6 +25,7 @@ namespace OCA\RecommendationAssistant\Recommendation;
 use OCA\RecommendationAssistant\Interfaces\IComputable;
 use OCA\RecommendationAssistant\Objects\Item;
 use OCA\RecommendationAssistant\Objects\Rater;
+use OCA\RecommendationAssistant\Objects\Similarity;
 
 /**
  * CosineComputer class that computes the similarity between two items.
@@ -65,9 +66,13 @@ class CosineComputer implements IComputable {
 	 *
 	 * @since 1.0.0
 	 */
-	public function compute() {
+	public function compute(): Similarity {
+		$similarity = new Similarity();
 		if ($this->sourceItem->equals($this->targetItem)) {
-			return 1;
+			$similarity->setValue(1.0);
+			$similarity->setStatus(Similarity::SAME_COSINE_ITEMS);
+			$similarity->setDescription("the items are the same");
+			return $similarity;
 		}
 		$lowerA = 0;
 		$lowerB = 0;
@@ -75,23 +80,31 @@ class CosineComputer implements IComputable {
 		$lower = 0;
 		/** @var Rater $rater */
 		foreach ($this->sourceItem->getRaters() as $rater) {
-			$rater->getRating();
-			$yValid = $this->targetItem->getRater($rater->getUser()->getUID())->isValid();
+			$yValid = $this->targetItem->getRater(
+				$rater->getUser()->getUID()
+			)->isValid();
 			if (!$yValid) {
 				continue;
 			}
-			$raterY = $this->targetItem->getRater($rater->getUser()->getUID());
-			$x = $rater->getRating();
-			$y = $raterY->getRating();
+			$sourceRating = $rater->getRating();
+			$targetRating = $this->targetItem->getRater($rater->getUser()->getUID())->getRating();
 
-			$upper += $x * $y;
-			$lowerA += pow($x, 2);
-			$lowerB += pow($y, 2);
+			$upper += $sourceRating * $targetRating;
+			$powX = pow($sourceRating, 2);
+			$powY = pow($targetRating, 2);
+			$lowerA += $powX;
+			$lowerB += $powY;
 		}
 		$lower = sqrt($lowerA) * sqrt($lowerB);
 		if ($lower == 0) {
-			return 0;
+			$similarity->setValue(0.0);
+			$similarity->setStatus(Similarity::NO_COSINE_SQUARE_POSSIBLE);
+			$similarity->setDescription("multiplication of sqrt of both returned 0");
+		} else {
+			$similarity->setValue($upper / $lower);
+			$similarity->setStatus(Similarity::VALID);
+			$similarity->setDescription("ok");
 		}
-		return $upper / $lower;
+		return $similarity;
 	}
 }

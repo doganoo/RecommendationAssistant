@@ -23,8 +23,11 @@ namespace OCA\RecommendationAssistant\Recommendation;
 
 
 use OCA\RecommendationAssistant\Interfaces\IComputable;
+use OCA\RecommendationAssistant\Objects\ConsoleLogger;
 use OCA\RecommendationAssistant\Objects\Item;
+use OCA\RecommendationAssistant\Objects\ItemList;
 use OCA\RecommendationAssistant\Objects\KeywordList;
+use OCA\RecommendationAssistant\Objects\Similarity;
 
 /**
  * OverlapCoefficientComputer class that computes the similarity between two items
@@ -47,13 +50,23 @@ class OverlapCoefficientComputer implements IComputable {
 	private $keywordList = null;
 
 	/**
+	 * @var ItemList $itemList the entire item base
+	 */
+	private $itemList = null;
+
+	/**
 	 * OverlapCoefficientComputer constructor.
 	 *
 	 * @param Item $item
+	 * @param ItemList $itemList the entire item base
 	 * @param KeywordList $keywordList
 	 */
-	public function __construct(Item $item, KeywordList $keywordList) {
+	public function __construct(
+		Item $item,
+		ItemList $itemList,
+		KeywordList $keywordList) {
 		$this->item = $item;
+		$this->itemList = $itemList;
 		$this->keywordList = $keywordList;
 	}
 
@@ -62,16 +75,44 @@ class OverlapCoefficientComputer implements IComputable {
 	 * This method implements the Overlap Coefficient Algorithm.
 	 *
 	 * @since 1.0.0
-	 * @return float the overlap coefficient
+	 * @return Similarity the similarity object that represents the similarity
 	 */
-	public function compute() {
-		$arr = array_intersect($this->item->getKeywords(), $this->keywordList->getKeywords());
+	public function compute(): Similarity {
+		$similarity = new Similarity();
+		if ($this->item->keywordSize() === $this->itemList->size()) {
+			$similarity->setValue(0.0);
+			$similarity->setStatus(Similarity::NOT_ENOUGH_ITEMS_IN_ITEM_BASE);
+			$similarity->setDescription("number of items and item base is equal");
+		}
+		$tfIdf = new TFIDFComputer($this->item, $this->itemList);
+		/** @var KeywordList $itemKeywords */
+		$itemKeywords = $tfIdf->compute();
+		$itemKeywords->sort();
+		$itemKeywords->removeStopwords();
+		$arr = array_intersect($itemKeywords->getKeywords(), $this->keywordList->getKeywords());
 		$arr = array_unique($arr);
 		$count = count($arr);
-		$lower = $this->item->keywordSize() > $this->keywordList->size() ? $this->keywordList->size() : $this->keywordList->size();
-		if ($count == 0 || $lower == 0) {
-			return 0;
+		//this source code part means: use the amount of item keywords if the
+		//item has more keywords than the user profile. Otherwise use the amount
+		//of the user profile
+		$lower = $itemKeywords->size() > $this->keywordList->size() ? $this->keywordList->size() : $itemKeywords->size();
+		$value = 0.0;
+
+		if ($count == 0) {
+			$similarity->setValue(0.0);
+			$similarity->setStatus(Similarity::NO_OVERLAPPING_KEYWORDS);
+			$similarity->setDescription("no overlapping keywords found");
 		}
-		return $count / $lower;
+		if ($lower == 0) {
+			$similarity->setValue(0.0);
+			$similarity->setStatus(Similarity::ITEM_OR_USER_PROFILE_EMPTY);
+			$similarity->setDescription("no keywords in item / user profile");
+		}
+		if ($count > 0 && $lower > 0) {
+			$similarity->setValue($count / $lower);
+			$similarity->setStatus(Similarity::VALID);
+			$similarity->setDescription("valid calculation");
+		}
+		return $similarity;
 	}
 }

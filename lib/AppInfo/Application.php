@@ -41,7 +41,7 @@ class Application extends App {
 	/**
 	 * @const APP_NAME the application name
 	 */
-	const APP_NAME = "RecommenderJob";
+	const APP_NAME = "RecommendationAssistant";
 
 	/**
 	 * @const RECOMMENDER_JOB_NAME the service class that performs recommendations
@@ -63,6 +63,9 @@ class Application extends App {
 	 *
 	 * actual behaviour:
 	 * <li>files are processed even if they are processed in the past</li>
+	 * <li>RecommenderService interval equals to 1</li>
+	 * <li>UserProfileService interval equals to 1</li>
+	 * <li>ConsoleLogger logs the messages to the console</li>
 	 */
 	const DEBUG = true;
 

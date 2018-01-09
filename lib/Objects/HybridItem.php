@@ -32,11 +32,13 @@ use OCP\IUser;
  * @since 1.0.0
  */
 class HybridItem {
-	private $collaborative = 0;
-	private $contentBased = 0;
+	private $collaborative = null;
+	private $contentBased = null;
 	private $item = null;
 	private $user = null;
 	private $groupWeight = 1;
+	private static $collaborativeWeight = 0.5;
+	private static $contentBasedWeight = 1 - 0.5;
 
 	/**
 	 * sets the item for that the recommendation is made
@@ -49,6 +51,16 @@ class HybridItem {
 	}
 
 	/**
+	 * returns the recommendation item
+	 *
+	 * @return Item
+	 * @since 1.0.0
+	 */
+	public function getItem(): Item {
+		return $this->item;
+	}
+
+	/**
 	 * sets the user for whom the recommendation is made
 	 *
 	 * @param IUser $user the user
@@ -56,6 +68,16 @@ class HybridItem {
 	 */
 	public function setUser(IUser $user) {
 		$this->user = $user;
+	}
+
+	/**
+	 * returns the user for that the recommendation is made
+	 *
+	 * @return IUser
+	 * @since 1.0.0
+	 */
+	public function getUser(): IUser {
+		return $this->user;
 	}
 
 	/**
@@ -83,29 +105,20 @@ class HybridItem {
 	 * the value has to be between 0 and 1, otherwise an exception
 	 * of type InvalidSimilarityValueException is thrown.
 	 *
-	 * @param float $collaborative
-	 * @throws InvalidSimilarityValueException
+	 * @param Similarity $collaborative
 	 * @since 1.0.0
 	 */
-	public function setCollaborative(float $collaborative) {
-		$precision = 10;
-		$compare = round($collaborative, $precision, PHP_ROUND_HALF_EVEN);
-		$one = round(1, $precision, PHP_ROUND_HALF_EVEN);
-		$zero = round(0, $precision, PHP_ROUND_HALF_EVEN);
-		//TODO is this a valid approach?
-		if ($compare < $zero || $compare > $one) {
-			throw new InvalidSimilarityValueException("the similarity value has to be between 0 and 1, " . (float)$collaborative);
-		}
+	public function setCollaborative(Similarity $collaborative) {
 		$this->collaborative = $collaborative;
 	}
 
 	/**
 	 * Returns the collaborative similarity value
 	 *
-	 * @return float
+	 * @return Similarity
 	 * @since 1.0.0
 	 */
-	public function getCollaborative(): float {
+	public function getCollaborative(): Similarity {
 		return $this->collaborative;
 	}
 
@@ -124,29 +137,20 @@ class HybridItem {
 	 * the value has to be between 0 and 1, otherwise an exception
 	 * of type InvalidSimilarityValueException is thrown.
 	 *
-	 * @param float $contentBased
-	 * @throws InvalidSimilarityValueException
+	 * @param Similarity $contentBased
 	 * @since 1.0.0
 	 */
-	public function setContentBased(float $contentBased) {
-		$precision = 10;
-		$compare = round($contentBased, $precision, PHP_ROUND_HALF_EVEN);
-		$one = round(1, $precision, PHP_ROUND_HALF_EVEN);
-		$zero = round(0, $precision, PHP_ROUND_HALF_EVEN);
-		//TODO is this a valid approach?
-		if ($compare < $zero || $compare > $one) {
-			throw new InvalidSimilarityValueException("the similarity value has to be between 0 and 1, $contentBased given");
-		}
+	public function setContentBased(Similarity $contentBased) {
 		$this->contentBased = $contentBased;
 	}
 
 	/**
 	 * Returns the content based similarity value
 	 *
-	 * @return float
+	 * @return Similarity
 	 * @since 1.0.0
 	 */
-	public function getContentBased(): float {
+	public function getContentBased(): Similarity {
 		return $this->contentBased;
 	}
 
@@ -158,7 +162,16 @@ class HybridItem {
 	 */
 	public function __toString() {
 		$val = HybridItem::weightedAverage($this);
-		return "[#itemId#][#{$this->item->getId()}#][#itemName#][#{$this->item->getName()}#][#userId#][#{$this->user->getUID()}#][#collaborative#][#{$this->collaborative}#][#contentBased#][#{$this->contentBased}#][#groupWeight#][#{$this->groupWeight}#][#recommendation#][$val]";
+		return "
+				[#itemId#][#{$this->item->getId()}#]
+				[#itemName#][#{$this->item->getName()}#]
+				[#userId#][#{$this->user->getUID()}#]
+				[#collaborativeValue#][#{$this->collaborative->getValue()}#]
+				[#collaborativeWeight#][#" . self::$collaborativeWeight . "#]
+				[#contentBasedValue#][#{$this->contentBased->getValue()}#]
+				[#contentBasedWeight#][#" . self::$contentBasedWeight . "#]
+				[#groupWeight#][#{$this->groupWeight}#]
+				[#recommendation#][#$val#]";
 	}
 
 	/**
@@ -169,8 +182,35 @@ class HybridItem {
 	 * @since 1.0.0
 	 */
 	public static function weightedAverage(HybridItem $hybrid): float {
-		$contentBased = 0.26912;
-		$collaborative = 1 - $contentBased;
-		return $hybrid->getGroupWeight() * (($contentBased * $hybrid->getContentBased()) + ($collaborative * $hybrid->getCollaborative()));
+		$collaborative = 0.5;
+		$contentBased = 0.5;
+
+		if (!$hybrid->getCollaborative()->isValid() &&
+			!$hybrid->getContentBased()->isValid()) {
+			return 0.0;
+		}
+		if (!$hybrid->getContentBased()->isValid() &&
+			$hybrid->getCollaborative()->isValid()) {
+			$collaborative = 1;
+			$contentBased = 0;
+		}
+		if (!$hybrid->getCollaborative()->isValid() &&
+			$hybrid->getContentBased()->isValid()) {
+			$collaborative = 0;
+			$contentBased = 1;
+
+		}
+		$contentBasedResult = $contentBased * $hybrid->getContentBased()->getValue();
+		$collaborativeResult = $collaborative * $hybrid->getCollaborative()->getValue();
+		$weightedAverage = $hybrid->getGroupWeight() * ($contentBasedResult + $collaborativeResult);
+		return $weightedAverage;
+	}
+
+	public function isRecommandable(): bool {
+		$val = HybridItem::weightedAverage($this);
+		if ($val > 0.4) {
+			return true;
+		}
+		return false;
 	}
 }

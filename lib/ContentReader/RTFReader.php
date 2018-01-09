@@ -10,6 +10,7 @@ namespace OCA\RecommendationAssistant\ContentReader;
 
 
 use OCA\RecommendationAssistant\Interfaces\IContentReader;
+use OCA\RecommendationAssistant\Objects\Logger;
 use OCP\Files\File;
 use OCP\Files\NotPermittedException;
 

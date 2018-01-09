@@ -22,6 +22,7 @@
 namespace OCA\RecommendationAssistant\Objects;
 
 
+use OCA\RecommendationAssistant\Exception\InvalidRatingException;
 use OCP\IUser;
 
 /**
@@ -39,7 +40,7 @@ class Rater {
 	/**
 	 * @var int $rating
 	 */
-	private $rating;
+	private $rating = self::NO_RATING;
 
 	/**
 	 * @const int LIKE
@@ -47,9 +48,14 @@ class Rater {
 	const LIKE = 1;
 
 	/**
-	 * @const int NO_LIKE
+	 * @const int DISLIKE
 	 */
-	const NO_LIKE = 0;
+	const DISLIKE = 0;
+
+	/**
+	 * @const int NO_RATING
+	 */
+	const NO_RATING = -1;
 
 	/**
 	 * Class constructor gets an user injected
@@ -85,10 +91,16 @@ class Rater {
 	 * sets the rating of an user
 	 *
 	 * @param int $rating the rating of the user
+	 * @throws InvalidRatingException invalid rating
 	 * @since 1.0.0
 	 */
 	public function setRating(int $rating) {
-		$this->rating = $rating;
+		if ($rating == self::LIKE || $rating == self::DISLIKE || $rating == self::NO_RATING) {
+			$this->rating = $rating;
+		} else {
+			throw new InvalidRatingException("$rating is not a valid rating");
+		}
+
 	}
 
 	/**

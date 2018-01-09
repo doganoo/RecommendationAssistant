@@ -28,33 +28,13 @@ class TextProcessor {
 
 	public function __construct(string $text) {
 		$this->text = $text;
-		$this->sanitize();
+		//TODO valid solution?
+		$this->text = mb_convert_encoding($this->text, "ASCII", mb_detect_encoding($this->text));
 		$this->toArray();
 	}
 
-	private function sanitize() {
-		$this->text = str_replace("\r\n", " ", $this->text);
-		$this->text = str_replace("\r", " ", $this->text);
-		$this->text = str_replace("\n", " ", $this->text);
-		$this->text = str_replace("!", " ", $this->text);
-		$this->text = str_replace("?", " ", $this->text);
-		$this->text = str_replace(":", " ", $this->text);
-		$this->text = str_replace(";", " ", $this->text);
-		$this->text = str_replace("(", " ", $this->text);
-		$this->text = str_replace(")", " ", $this->text);
-		$this->text = str_replace("-", "", $this->text); // da - auch ein Bindestrich sein kann
-		$this->text = str_replace(".", " ", $this->text);
-		$this->text = str_replace(",", " ", $this->text);
-	}
-
 	private function toArray() {
-		$this->textArray = explode(" ", $this->text);
-		array_walk($this->textArray, function (&$value, $key) {
-			$value = trim($value);
-		});
-		$this->textArray = array_filter($this->textArray, function ($var) {
-			return trim($var) !== "";
-		});
+		$this->textArray = str_word_count($this->text, 1);
 		return $this->textArray;
 	}
 

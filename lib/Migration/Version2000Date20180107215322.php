@@ -28,31 +28,20 @@ use OCA\RecommendationAssistant\Db\DbConstants;
 use OCP\Migration\IOutput;
 use OCP\Migration\SimpleMigrationStep;
 
-class Version2000Date20171129173211 extends SimpleMigrationStep {
-
+class Version2000Date20180107215322 extends SimpleMigrationStep {
 	public function changeSchema(IOutput $output, \Closure $schemaClosure, array $options) {
 		/** @var Schema $schema */
 		$schema = $schemaClosure();
 
-		if (!$schema->hasTable(DbConstants::TABLE_NAME_FILES_PROCESSED)) {
-			$table = $schema->createTable(DbConstants::TABLE_NAME_FILES_PROCESSED);
-			$table->addColumn(DbConstants::TB_FP_ID, Type::BIGINT, [
-				DbConstants::AUTOINCREMENT => true,
-				DbConstants::NOTNULL => true,
-				DbConstants::LENGTH => 20,
-			]);
-
-			$table->addColumn(DbConstants::TB_FP_CREATION_TS, Type::INTEGER, [
-				DbConstants::NOTNULL => true,
-				DbConstants::LENGTH => 4,
-				DbConstants::DEFAULT => 0,
-			]);
-			$table->addColumn(DbConstants::TB_FP_FILE_ID, Type::INTEGER, [
-				DbConstants::NOTNULL => true,
-				DbConstants::LENGTH => 4,
-				DbConstants::DEFAULT => 0
-			]);
-			$table->setPrimaryKey([DbConstants::TB_FP_ID]);
+		if ($schema->hasTable(DbConstants::TABLE_NAME_RECOMMENDATIONS)) {
+			$table = $schema->getTable(DbConstants::TABLE_NAME_RECOMMENDATIONS);
+			if (!$table->hasColumn(DbConstants::TB_RC_OWNER_ID)) {
+				$table->addColumn(DbConstants::TB_RC_OWNER_ID, Type::STRING, [
+					DbConstants::NOTNULL => true,
+					DbConstants::LENGTH => 64,
+					DbConstants::DEFAULT => "",
+				]);
+			}
 		}
 		return $schema;
 	}

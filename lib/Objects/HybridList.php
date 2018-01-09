@@ -82,6 +82,27 @@ class HybridList implements \IteratorAggregate {
 		return count($this->hybridList, $countMode);
 	}
 
+	public function removeNonRecommendable() {
+		/**
+		 * @var string $userId
+		 * @var array $array
+		 */
+		foreach ($this->hybridList as $userId => $array) {
+			/**
+			 * @var string $itemId
+			 * @var HybridItem $hybridItem
+			 */
+			foreach ($array as $itemId => $hybridItem) {
+				if (!$hybridItem->isRecommandable()) {
+					unset($this->hybridList[$userId][$itemId]);
+				}
+			}
+			if (count($this->hybridList[$userId]) == 0) {
+				unset($this->hybridList[$userId]);
+			}
+		}
+	}
+
 	/**
 	 * Retrieve an external iterator
 	 *

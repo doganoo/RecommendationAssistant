@@ -22,9 +22,28 @@ script(\OCA\RecommendationAssistant\AppInfo\Application::APP_ID, 'app');
 
 /** @var $l \OCP\IL10N */
 /** @var $_ array */
+
+/** @var \OCP\Files\IRootFolder $rootFolder */
+$rootFolder = $_["rootFolder"];
 ?>
 
+
 <div id="app-content">
-	<div id="container">
-	</div>
+	<?
+	/** @var \OCA\RecommendationAssistant\Objects\Recommendation $recommendation */
+	foreach ($_["recommendations"] as $recommendation) {
+		/** @var \OCP\Files\Node $node */
+		$node = $rootFolder->getById($recommendation->getFileId());
+		/** @var \OCP\Files\Node $value */
+		foreach ($node as $value) {
+			if ($value->getId() == $recommendation->getFileId()) {
+				echo '<div id="container">';
+				echo $value->getName();
+				echo " to ";
+				echo $recommendation->getUserId();
+				echo '</div>';
+			}
+		}
+	}
+	?>
 </div>

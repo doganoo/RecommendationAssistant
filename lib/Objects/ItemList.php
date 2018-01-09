@@ -53,6 +53,7 @@ class ItemList implements \IteratorAggregate {
 			foreach ($item->getRaters() as $rater) {
 				$this->itemList[$item->getId()]->addRater($rater);
 			}
+			$this->itemList[$item->getId()]->mergeKeywords($item->getKeywords());
 		} else {
 			$this->itemList[$item->getId()] = $item;
 		}

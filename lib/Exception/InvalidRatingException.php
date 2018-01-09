@@ -22,6 +22,6 @@
 namespace OCA\RecommendationAssistant\Exception;
 
 
-class InvalidSimilarityValueException extends \Exception {
+class InvalidRatingException extends \Exception {
 
 }

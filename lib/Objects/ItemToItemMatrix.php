@@ -38,10 +38,10 @@ class ItemToItemMatrix {
 	 *
 	 * @param Item $item the first item
 	 * @param Item $item1 the second item
-	 * @param float $similarity the similarity value between $item and $item1
+	 * @param Similarity $similarity the similarity value between $item and $item1
 	 * @since 1.0.0
 	 */
-	public function add(Item $item, Item $item1, float $similarity) {
+	public function add(Item $item, Item $item1, Similarity $similarity) {
 		$index = $item->getId();
 		$index1 = $item1->getId();
 		$array = [];
@@ -57,17 +57,45 @@ class ItemToItemMatrix {
 	 *
 	 * @param Item $item the first item
 	 * @param Item $item1 the second item
-	 * @return int
+	 * @return Similarity
 	 */
-	public function get(Item $item, Item $item1) {
+	public function get(Item $item, Item $item1): Similarity {
 		if (!isset($this->matrix[$item->getId()])) {
-			return 0;
+			return new Similarity();
 		}
 		$arr = $this->matrix[$item->getId()];
 		if (!isset($arr[$item1->getId()])) {
-			return 0;
+			return new Similarity();
 		}
 		return $arr[$item1->getId()];
+	}
+
+	public function __toString() {
+		$string = "";
+		/**
+		 * @var string $itemId
+		 * @var array $array
+		 */
+		foreach ($this->matrix as $itemId => $array) {
+			/**
+			 * @var string $item1id
+			 * @var  Similarity $similarity
+			 */
+			foreach ($array as $item1id => $similarity) {
+				if (!$similarity->isValid()) {
+					continue;
+				}
+				if ($similarity->getStatus() === Similarity::SAME_COSINE_ITEMS){
+					continue;
+				}
+				$string = $string . "
+									[#item#][#$itemId#]
+									[#item1#][#$item1id#]
+									[#similarity#][#{$similarity->getValue()}#]
+									[#similarityStatus#][#{$similarity->getDescription()}#]";
+			}
+			return $string;
+		}
 	}
 
 }

@@ -21,14 +21,31 @@
 
 namespace OCA\RecommendationAssistant\Controller;
 
+use OCA\RecommendationAssistant\AppInfo\Application;
+use OCA\RecommendationAssistant\Db\RecommendationManager;
+use OCA\RecommendationAssistant\Objects\Recommendation;
 use OCP\AppFramework\Controller;
+use OCP\AppFramework\Http\DataResponse;
 use OCP\AppFramework\Http\TemplateResponse;
+use OCP\Files\IRootFolder;
 use OCP\IRequest;
+use OCP\Template;
 
 class FrontendController extends Controller {
+	private $recommendationManager = null;
+	private $userId = null;
+	private $rootFolder = null;
 
-	public function __construct($appName, IRequest $request) {
+	public function __construct(
+		$appName,
+		$UserId,
+		IRequest $request,
+		IRootFolder $rootFolder,
+		RecommendationManager $recommendationManager) {
 		parent::__construct($appName, $request);
+		$this->recommendationManager = $recommendationManager;
+		$this->userId = $UserId;
+		$this->rootFolder = $rootFolder;
 	}
 
 	/**
@@ -38,7 +55,13 @@ class FrontendController extends Controller {
 	 * @return TemplateResponse
 	 */
 	public function show() {
-		return new TemplateResponse('recommendation_assistant', 'index', [
-		]);
+		$recommendations = $this->recommendationManager->getKeywordListByUser($this->userId);
+
+		return new TemplateResponse(Application::APP_ID, 'index',
+			['appNavigation' => new Template(Application::APP_ID, 'stream.app.navigation', ''),
+				"recommendations" => $recommendations,
+				"rootFolder" => $this->rootFolder
+
+			]);
 	}
 }

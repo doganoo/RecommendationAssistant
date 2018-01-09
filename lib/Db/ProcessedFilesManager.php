@@ -21,6 +21,7 @@
 
 namespace OCA\RecommendationAssistant\Db;
 
+use OCA\RecommendationAssistant\AppInfo\Application;
 use OCA\RecommendationAssistant\Objects\Logger;
 use OCP\Files\File;
 use OCP\Files\InvalidPathException;
@@ -58,6 +59,9 @@ class ProcessedFilesManager {
 	 * @since 1.0.0
 	 */
 	public function insertFile(File $file): bool {
+		if (Application::DEBUG) {
+			return true;
+		}
 		if ($this->isPresentable($file)) {
 			return true;
 		}

@@ -23,6 +23,7 @@ namespace OCA\RecommendationAssistant\Recommendation;
 
 
 use OCA\RecommendationAssistant\Db\GroupWeightsManager;
+use OCA\RecommendationAssistant\Objects\ConsoleLogger;
 use OCP\IGroup;
 
 /**
@@ -80,14 +81,20 @@ class GroupWeightComputer {
 	public function calculateWeight(): float {
 		$sum = 0;
 		$sourceGroupSize = count($this->sourceGroups);
+		$hasWeights = false;
 		/** @var IGroup $sourceGroup */
 		foreach ($this->sourceGroups as $sourceGroup) {
 			/** @var IGroup $targetGroup */
 			foreach ($this->targetGroups as $targetGroup) {
 				$sum = $this->groupWeightManager->getGroupWeightForGroups($sourceGroup->getGID(), $targetGroup->getGID());
+				$hasWeights = true;
 			}
 		}
+
 		if ($sourceGroupSize == 0) {
+			return 1;
+		}
+		if (!$hasWeights) {
 			return 1;
 		}
 		return $sum / $sourceGroupSize;
