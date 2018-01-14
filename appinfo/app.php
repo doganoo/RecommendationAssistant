@@ -22,11 +22,18 @@
 
 use OCA\RecommendationAssistant\AppInfo\Application;
 use OCA\RecommendationAssistant\Exception\AutoloaderNotFoundException;
+use OCP\Util;
 
 /**
  * $l for translation
  */
 $l = \OC::$server->getL10N(Application::APP_ID);
+
+/**
+ * to add a script whenever the page refreshes
+ */
+Util::addscript(\OCA\RecommendationAssistant\AppInfo\Application::APP_ID, 'app');
+
 /**
  * RecommendationAssistant uses external libraries in order
  * to work properly. The app should not begin to work if
@@ -38,8 +45,6 @@ if ((@include_once __DIR__ . '/../vendor/autoload.php') === false) {
 	 */
 	throw new AutoloaderNotFoundException ($l->t("Could not find autoload.php. Have you installed all composer dependencies?"));
 }
-/**
- * actually $app has no functionality
- */
+
 $app = new Application();
-echo $app->register();
+$app->register();

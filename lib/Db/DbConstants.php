@@ -79,4 +79,14 @@ class DbConstants {
 	const TB_GW_CREATION_TS = "creation_ts";
 	const TB_GW_VALUE = "value";
 
+	/**
+	 * FILE CHANGE LOG
+	 */
+	const TABLE_NAME_CHANGED_FILES_LOG = "changed_files_log";
+	const TB_CFL_ID = "id";
+	const TB_CFL_FILE_ID = "file_id";
+	const TB_CFL_CHANGE_TS = "change_ts";
+	const TB_CFL_CREATION_TS = "creation_ts";
+	const TB_CFL_TYPE = "type";
+
 }

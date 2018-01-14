@@ -21,7 +21,15 @@
 
 namespace OCA\RecommendationAssistant\AppInfo;
 
+use OCA\RecommendationAssistant\Db\ChangedFilesManager;
+use OCA\RecommendationAssistant\Db\ProcessedFilesManager;
+use OCA\RecommendationAssistant\Hook\FileConsumer;
+use OCA\RecommendationAssistant\Hook\FileHook;
+use OCA\RecommendationAssistant\Objects\Logger;
 use OCP\AppFramework\App;
+use OCP\IContainer;
+use OCP\Util;
+use Symfony\Component\EventDispatcher\GenericEvent;
 
 /**
  * All controller instances that are registered by IContainer::registerService
@@ -70,12 +78,39 @@ class Application extends App {
 	const DEBUG = true;
 
 	/**
+	 * @const HOOK_FILE_HOOK_NAME the file hook name
+	 */
+	const HOOK_FILE_HOOK_NAME = "OCA\RecommendationAssistant\Hook\FileHook";
+
+	/**
 	 * Class constructor calls the parent constructor with APP_ID
 	 *
 	 * @since 1.0.0
 	 */
 	public function __construct() {
 		parent::__construct(Application::APP_ID);
+		$container = $this->getContainer();
+		$server = $container->getServer();
+		$container->registerService('ProcessedFileManager', function (IContainer $c) use ($server) {
+			return new ProcessedFilesManager(
+				$server->getDatabaseConnection()
+			);
+		});
+		$container->registerService('ChangedFilesManager', function (IContainer $c) use ($server) {
+			return new ChangedFilesManager(
+				$server->getDatabaseConnection()
+			);
+		});
+
+		$container->registerService('FileHook', function (IContainer $c) use ($server) {
+			return new FileHook(
+				$server->getUserSession(),
+				$server->getRequest(),
+				$server->getRootFolder(),
+				$c->query("ProcessedFileManager"),
+				$c->query("ChangedFilesManager")
+			);
+		});
 	}
 
 	/**
@@ -86,5 +121,32 @@ class Application extends App {
 	 */
 	public static function getDataDirectory(): string {
 		return $dataDir = \OC::$server->getConfig()->getSystemValue('datadirectory', '');
+	}
+
+	public function register() {
+		Util::connectHook('OC_Filesystem', 'read', $this, 'callFileHook');
+
+		$this->getContainer()->getServer()->getEventDispatcher()->addListener(\OCA\Files\Service\TagService::class . '::addFavorite', function (GenericEvent $event) {
+			$userId = $event->getArgument('userId');
+			$fileId = $event->getArgument('fileId');
+			/** @var FileHook $hook */
+			$hook = $this->getContainer()->query("FileHook");
+			$hook->runFavorite($userId, $fileId, "addFavorite");
+		});
+
+		$this->getContainer()->getServer()->getEventDispatcher()->addListener(\OCA\Files\Service\TagService::class . '::removeFavorite', function (GenericEvent $event) {
+			$userId = $event->getArgument('userId');
+			$fileId = $event->getArgument('fileId');
+			/** @var FileHook $hook */
+			$hook = $this->getContainer()->query("FileHook");
+			$hook->runFavorite($userId, $fileId, "removeFavorite");
+		});
+	}
+
+	public function callFileHook($params) {
+		$container = $this->getContainer();
+		/** @var FileHook $fileHook */
+		$fileHook = $container->query("FileHook");
+		$fileHook->run($params);
 	}
 }

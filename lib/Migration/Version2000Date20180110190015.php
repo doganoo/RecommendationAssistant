@@ -19,6 +19,28 @@
  *
  */
 
+namespace OCA\RecommendationAssistant\Migration;
 
-/** @var $l \OCP\IL10N */
-/** @var $_ array */
+
+use Doctrine\DBAL\Schema\Schema;
+use Doctrine\DBAL\Types\Type;
+use OCA\RecommendationAssistant\Db\DbConstants;
+use OCP\Migration\IOutput;
+use OCP\Migration\SimpleMigrationStep;
+
+class Version2000Date20180110190015 extends SimpleMigrationStep {
+	public function changeSchema(IOutput $output, \Closure $schemaClosure, array $options) {
+		/** @var Schema $schema */
+		$schema = $schemaClosure();
+
+		if (!$schema->hasTable(DbConstants::TABLE_NAME_CHANGED_FILES_LOG)) {
+			$table = $schema->createTable(DbConstants::TABLE_NAME_CHANGED_FILES_LOG);
+			$table->addColumn(DbConstants::TB_CFL_TYPE, Type::STRING, [
+				DbConstants::NOTNULL => true,
+				DbConstants::LENGTH => 64,
+				DbConstants::DEFAULT => "",
+			]);
+		}
+		return $schema;
+	}
+}

@@ -23,6 +23,7 @@ namespace OCA\RecommendationAssistant\Recommendation;
 
 
 use OCA\RecommendationAssistant\Interfaces\IComputable;
+use OCA\RecommendationAssistant\Objects\ConsoleLogger;
 use OCA\RecommendationAssistant\Objects\Item;
 use OCA\RecommendationAssistant\Objects\Rater;
 use OCA\RecommendationAssistant\Objects\Similarity;

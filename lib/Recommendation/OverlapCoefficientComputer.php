@@ -109,7 +109,7 @@ class OverlapCoefficientComputer implements IComputable {
 			$similarity->setDescription("no keywords in item / user profile");
 		}
 		if ($count > 0 && $lower > 0) {
-			$similarity->setValue($count / $lower);
+			$similarity->setValue(($count / $lower) * 5);
 			$similarity->setStatus(Similarity::VALID);
 			$similarity->setDescription("valid calculation");
 		}

@@ -43,19 +43,9 @@ class Rater {
 	private $rating = self::NO_RATING;
 
 	/**
-	 * @const int LIKE
-	 */
-	const LIKE = 1;
-
-	/**
-	 * @const int DISLIKE
-	 */
-	const DISLIKE = 0;
-
-	/**
 	 * @const int NO_RATING
 	 */
-	const NO_RATING = -1;
+	const NO_RATING = 0;
 
 	/**
 	 * Class constructor gets an user injected
@@ -95,7 +85,7 @@ class Rater {
 	 * @since 1.0.0
 	 */
 	public function setRating(int $rating) {
-		if ($rating == self::LIKE || $rating == self::DISLIKE || $rating == self::NO_RATING) {
+		if ($rating >= 0 || $rating <= 5) {
 			$this->rating = $rating;
 		} else {
 			throw new InvalidRatingException("$rating is not a valid rating");

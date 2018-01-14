@@ -101,6 +101,7 @@ class RatingPredictor {
 
 		/** @var Item $item1 */
 		foreach ($this->itemList as $item1) {
+			//TODO limit itemlist to the k-nearest ones. Look in the literature for more information
 			if ($this->item->equals($item1)) {
 				continue;
 			}

@@ -46,7 +46,6 @@ class ItemList implements \IteratorAggregate {
 	 */
 	public function add(Item $item): bool {
 		if (!$item->isValid()) {
-			Logger::warn($item->getId() . " could not be added to the list because it is not valid");
 			return false;
 		}
 		if (isset($this->itemList[$item->getId()])) {

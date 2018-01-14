@@ -25,12 +25,14 @@ namespace OCA\RecommendationAssistant\Service;
 use OC\Files\Filesystem;
 use OCA\RecommendationAssistant\AppInfo\Application;
 use OCA\RecommendationAssistant\ContentReader\ContentReaderFactory;
+use OCA\RecommendationAssistant\Db\ChangedFilesManager;
 use OCA\RecommendationAssistant\Db\GroupWeightsManager;
 use OCA\RecommendationAssistant\Db\ProcessedFilesManager;
 use OCA\RecommendationAssistant\Db\RecommendationManager;
 use OCA\RecommendationAssistant\Db\UserProfileManager;
 use OCA\RecommendationAssistant\Exception\InvalidRatingException;
 use OCA\RecommendationAssistant\Objects\ConsoleLogger;
+use OCA\RecommendationAssistant\Objects\HybridItem;
 use OCA\RecommendationAssistant\Objects\HybridList;
 use OCA\RecommendationAssistant\Objects\Item;
 use OCA\RecommendationAssistant\Objects\ItemList;
@@ -110,6 +112,11 @@ class RecommenderService {
 	private $recommendationManager = null;
 
 	/**
+	 * @var ChangedFilesManager $changedFilesManager
+	 */
+	private $changedFilesManager = null;
+
+	/**
 	 * Class constructor gets multiple instances injected
 	 *
 	 * @param IRootFolder $rootFolder the rootfolder of each user
@@ -135,7 +142,8 @@ class RecommenderService {
 		UserProfileManager $userProfileManager,
 		ProcessedFilesManager $processedFilesManager,
 		GroupWeightsManager $groupWeightsManager,
-		RecommendationManager $recommendationManager
+		RecommendationManager $recommendationManager,
+		ChangedFilesManager $changedFilesManager
 	) {
 		$this->rootFolder = $rootFolder;
 		$this->userManager = $userManager;
@@ -145,6 +153,7 @@ class RecommenderService {
 		$this->processedFileManager = $processedFilesManager;
 		$this->groupWeightsManager = $groupWeightsManager;
 		$this->recommendationManager = $recommendationManager;
+		$this->changedFilesManager = $changedFilesManager;
 	}
 
 	/**
@@ -179,8 +188,8 @@ class RecommenderService {
 			foreach ($itemList as $item1) {
 				//not need to check if both items the same because
 				//an entire similarity matrix is needed
-				$pearson = new CosineComputer($item, $item1);
-				$pearsonSimilarity = $pearson->compute();
+				$cosineComputer = new CosineComputer($item, $item1);
+				$pearsonSimilarity = $cosineComputer->compute();
 				$itemItemMatrix->add($item, $item1, $pearsonSimilarity);
 			}
 
@@ -214,6 +223,17 @@ class RecommenderService {
 			}
 		}
 
+//		foreach ($hybridList as $key => $array) {
+//			/**
+//			 * @var  $key
+//			 * @var HybridItem $hybrid
+//			 */
+//			foreach ($array as $key => $hybrid) {
+//				$itemId = $hybrid->getItem()->getId();
+//				if (in_array($itemId, [245, 10, 8]))
+//					ConsoleLogger::debug($hybrid);
+//			}
+//		}
 //		$hybridList->removeNonRecommendable();
 		$this->recommendationManager->deleteAll();
 		$this->recommendationManager->insertHybridList($hybridList);
@@ -296,11 +316,11 @@ class RecommenderService {
 			return new Item();
 		}
 
-		if (Application::DEBUG) {
-			if (!in_array($file->getName(), ["d1.txt", "d2.txt", "d3.txt", "d4.txt", "d5.txt"])) {
-				return new Item();
-			}
-		}
+//		if (Application::DEBUG) {
+//			if (!in_array($file->getName(), ["d1.txt", "d2.txt", "d3.txt", "d4.txt", "d5.txt"])) {
+//				return new Item();
+//			}
+//		}
 
 		$item = $this->createItem($file);
 		$item = $this->addRater($item, $file, $currentUser);
@@ -321,21 +341,69 @@ class RecommenderService {
 	 * @since 1.0.0
 	 */
 	private function addRater(Item $item, File $file, IUser $currentUser) {
-		$fileId = -1;
-		try {
-			$fileId = $file->getId();
-		} catch (NotFoundException $exception) {
-			Logger::warn($exception->getMessage());
-			return $item;
-		} catch (InvalidPathException $exception) {
-			Logger::warn($exception->getMessage());
-			return $item;
-		}
-		$isFavorite = $this->checkForFavorite($currentUser, $fileId);
-		$rating = $isFavorite === true ? Rater::LIKE : Rater::DISLIKE;
+		$timeRating = $this->getChangeTimeRating($file);
+		$favoriteRating = $this->getFavoriteRating($file);
+		$rating = ((1 * $timeRating) + (0.0 * $favoriteRating));
 		$rater = $this->getRater($currentUser, $rating);
 		$item->addRater($rater);
 		return $item;
+	}
+
+	private function getChangeTimeRating(File $file): int {
+		$presentable = $this->changedFilesManager->isPresentable($file, "edit");
+		$changeTs = 0;
+		if ($presentable) {
+			$changeTs = $this->changedFilesManager->queryChangeTs($file, "edit");
+		}
+
+		$then = new \DateTime();
+		$then->setTimestamp($changeTs);
+
+		$now = new \DateTime();
+		$now->getTimestamp();
+
+		$difference = $now->diff($then);
+		$numberOfDays = $difference->format("%a");
+
+		return $this->calculateRating($numberOfDays);
+
+	}
+
+	private function getFavoriteRating(File $file) {
+		$presentable = $this->changedFilesManager->isPresentable($file, "favorite");
+		$changeTs = 0;
+		if ($presentable) {
+			$changeTs = $this->changedFilesManager->queryChangeTs($file, "favorite");
+		}
+
+		$then = new \DateTime();
+		$then->setTimestamp($changeTs);
+
+		$now = new \DateTime();
+		$now->getTimestamp();
+
+		$difference = $now->diff($then);
+		$numberOfDays = $difference->format("%a");
+		$rating = $this->calculateRating($numberOfDays);
+		return $rating;
+
+	}
+
+	private function calculateRating($numberOfDays): int {
+
+		if ($numberOfDays <= 3) {
+			return 5;
+		} else if ($numberOfDays > 3 && $numberOfDays <= 5) {
+			return 4;
+		} else if ($numberOfDays > 5 && $numberOfDays <= 10) {
+			return 3;
+		} else if ($numberOfDays > 10 && $numberOfDays <= 15) {
+			return 2;
+		} else if ($numberOfDays > 15 && $numberOfDays <= 20) {
+			return 1;
+		} else {
+			return 0;
+		}
 	}
 
 	/**
@@ -367,23 +435,6 @@ class RecommenderService {
 		$array = $textProcessor->getTextAsArray();
 		$item->setKeywords($array);
 		return $item;
-	}
-
-	/**
-	 * This method checks whether the file is tagged as favorite (is liked) by
-	 * a given user.
-	 *
-	 * @param IUser $user
-	 * @param int $fileId the actual file id
-	 * @return bool whether the file is liked or not
-	 * @since 1.0.0
-	 */
-	private
-	function checkForFavorite(IUser $user, $fileId): bool {
-		$tags = $this->tagManager->load("files", [], false, $user->getUID());
-		$favorites = $tags->getFavorites();
-		$isFavorite = in_array($fileId, $favorites);
-		return $isFavorite === true;
 	}
 
 	/**

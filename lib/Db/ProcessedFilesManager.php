@@ -60,10 +60,10 @@ class ProcessedFilesManager {
 	 */
 	public function insertFile(File $file): bool {
 		if (Application::DEBUG) {
-			return true;
+//			return true;
 		}
 		if ($this->isPresentable($file)) {
-			return true;
+//			return true;
 		}
 		$query = $this->dbConnection->getQueryBuilder();
 		try {
@@ -128,6 +128,19 @@ class ProcessedFilesManager {
 		$row = $result->fetch();
 		$result->closeCursor();
 		return $row !== false;
+	}
+
+	/**
+	 * deletes all keywords for a given user
+	 *
+	 * @param IUser $user the user whose keywords should be deleted
+	 * @since 1.0.0
+	 */
+	public function deleteFile(File $file) {
+		$query = $this->dbConnection->getQueryBuilder();
+		$query->delete(DbConstants::TABLE_NAME_FILES_PROCESSED)
+			->where($query->expr()->eq(DbConstants::TB_FP_FILE_ID, $query->createNamedParameter($file->getId())))
+			->execute();
 	}
 
 }

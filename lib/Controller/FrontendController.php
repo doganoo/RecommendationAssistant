@@ -26,6 +26,7 @@ use OCA\RecommendationAssistant\Db\RecommendationManager;
 use OCA\RecommendationAssistant\Objects\Recommendation;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http\DataResponse;
+use OCP\AppFramework\Http\JSONResponse;
 use OCP\AppFramework\Http\TemplateResponse;
 use OCP\Files\IRootFolder;
 use OCP\IRequest;
@@ -55,12 +56,8 @@ class FrontendController extends Controller {
 	 * @return TemplateResponse
 	 */
 	public function show() {
-		$recommendations = $this->recommendationManager->getKeywordListByUser($this->userId);
-
 		return new TemplateResponse(Application::APP_ID, 'index',
-			['appNavigation' => new Template(Application::APP_ID, 'stream.app.navigation', ''),
-				"recommendations" => $recommendations,
-				"rootFolder" => $this->rootFolder
+			[
 
 			]);
 	}

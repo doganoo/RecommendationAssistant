@@ -92,7 +92,6 @@ class Similarity {
 	const NOT_ENOUGH_ITEMS_IN_ITEM_BASE = 6;
 
 
-
 	/**
 	 * returns the similarity value
 	 *
@@ -115,13 +114,15 @@ class Similarity {
 	public function setValue(float $value) {
 		$precision = 10;
 		$compare = round($value, $precision, PHP_ROUND_HALF_EVEN);
-		$one = round(1, $precision, PHP_ROUND_HALF_EVEN);
+		$five = round(5, $precision, PHP_ROUND_HALF_EVEN);
 		$zero = round(0, $precision, PHP_ROUND_HALF_EVEN);
 		//TODO is this a valid approach?
-		if ($compare < $zero || $compare > $one) {
-			throw new InvalidSimilarityValueException("the similarity value has to be between 0 and 1, $value given");
+		if ($compare >= $zero || $compare <= $five) {
+			$this->value = $value;
+		} else {
+			throw new InvalidSimilarityValueException("the similarity value has to be between 0 and 5, $value given");
 		}
-		$this->value = $value;
+
 	}
 
 	/**

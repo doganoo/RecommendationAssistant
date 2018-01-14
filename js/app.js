@@ -17,36 +17,17 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
  */
-(function (OC, OCA, _, $) {
-	"use strict";
 
-	OCA = OCA || {};
 
-	OCA.RecommendationAssistant = {
-
-		initialise: function () {
-			this._loadData();
-		},
-
-		_loadData: function () {
-			$.ajax({
-				url: OC.linkToOCS('apps/recommendation_assistant', 2) + 'api',
-				beforeSend: function (request) {
-					request.setRequestHeader('Accept', 'application/json');
-				},
-				success: function (result) {
-					_.each(result.ocs.data, function (data) {
-						$('#container').append(data).append($('<br>'));
-					});
-				},
-				error: function () {
-					OC.Notification.showTemporary(t('recommendation_assistant', 'Failed to load data'));
-				}
-			});
-		}
-	};
-})(OC, OCA, _, $);
-
-$(document).ready(function () {
-	OCA.RecommendationAssistant.initialise();
+// example for calling the PUT /notes/1 URL
+var baseUrl = OC.generateUrl('/apps/recommendation_assistant_for_files');
+$.ajax({
+	url: baseUrl + '/recommendation_assistant_for_files/',
+	type: 'GET',
+	contentType: 'application/json',
+}).done(function (response) {
+	alert("success");
+}).fail(function (response, code) {
+	// handle failure
+	alert(code);
 });
