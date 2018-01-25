@@ -23,7 +23,7 @@ namespace OCA\RecommendationAssistant\BackgroundJob;
 
 use OC\BackgroundJob\TimedJob;
 use OCA\RecommendationAssistant\AppInfo\Application;
-use OCA\RecommendationAssistant\Objects\Logger;
+use OCA\RecommendationAssistant\Log\Logger;
 use OCP\AppFramework\QueryException;
 
 /**

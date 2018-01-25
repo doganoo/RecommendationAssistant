@@ -22,7 +22,7 @@
 namespace OCA\RecommendationAssistant\Db;
 
 use OCA\RecommendationAssistant\AppInfo\Application;
-use OCA\RecommendationAssistant\Objects\Logger;
+use OCA\RecommendationAssistant\Log\Logger;
 use OCP\Files\File;
 use OCP\Files\InvalidPathException;
 use OCP\Files\NotFoundException;
@@ -59,6 +59,7 @@ class ProcessedFilesManager {
 	 * @since 1.0.0
 	 */
 	public function insertFile(File $file): bool {
+		//TODO handle!
 		if (Application::DEBUG) {
 //			return true;
 		}
@@ -131,9 +132,9 @@ class ProcessedFilesManager {
 	}
 
 	/**
-	 * deletes all keywords for a given user
+	 * deletes a file from the database
 	 *
-	 * @param IUser $user the user whose keywords should be deleted
+	 * @param File $file the file that should be deleted
 	 * @since 1.0.0
 	 */
 	public function deleteFile(File $file) {

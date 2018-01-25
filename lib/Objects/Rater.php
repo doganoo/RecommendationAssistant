@@ -40,12 +40,17 @@ class Rater {
 	/**
 	 * @var int $rating
 	 */
-	private $rating = self::NO_RATING;
+	private $rating = self::NO_ACCESS;
 
 	/**
 	 * @const int NO_RATING
 	 */
 	const NO_RATING = 0;
+
+	/**
+	 * @const int NO_ACCESS
+	 */
+	const NO_ACCESS = -1;
 
 	/**
 	 * Class constructor gets an user injected
@@ -85,6 +90,7 @@ class Rater {
 	 * @since 1.0.0
 	 */
 	public function setRating(int $rating) {
+		//TODO define upper and lower limits and do not hardcode!
 		if ($rating >= 0 || $rating <= 5) {
 			$this->rating = $rating;
 		} else {

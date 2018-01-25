@@ -21,9 +21,8 @@
 
 namespace OCA\RecommendationAssistant\Db;
 
-use OCA\Files_External\NotFoundException;
-use OCA\RecommendationAssistant\Objects\ConsoleLogger;
-use OCA\RecommendationAssistant\Objects\Logger;
+use OCA\RecommendationAssistant\Log\ConsoleLogger;
+use OCA\RecommendationAssistant\Log\Logger;
 use OCP\Files\File;
 use OCP\Files\InvalidPathException;
 use OCP\IDBConnection;
@@ -52,9 +51,10 @@ class ChangedFilesManager {
 	}
 
 	/**
-	 * deletes all weights for a given group id
+	 * deletes a single file from the database
 	 *
-	 * @param string $groupId the group id for that the weights should be deleted
+	 * @param File $file the file that should be deleted
+	 * @param string $type the type of changed files
 	 * @since 1.0.0
 	 */
 	public function deleteFile(File $file, string $type) {
@@ -69,6 +69,7 @@ class ChangedFilesManager {
 	 * inserts information about a single file in the database
 	 *
 	 * @param File $file file whose information should be stored
+	 * @param string $type row type
 	 * @return bool whether the insertation was successfull or not
 	 * @since 1.0.0
 	 */
@@ -95,7 +96,16 @@ class ChangedFilesManager {
 		return is_int($lastInsertId);
 	}
 
+	/**
+	 * This method deletes first a file from the database if it is already inserted.
+	 * Then, the method calls a method to insert the file to the database.
+	 *
+	 * @param File $file
+	 * @param string $type
+	 * @since 1.0.0
+	 */
 	public function handle(File $file, string $type) {
+		//TODO change method name
 		$presentable = $this->isPresentable($file, $type);
 		if ($presentable) {
 			$this->deleteFile($file, $type);
@@ -103,8 +113,17 @@ class ChangedFilesManager {
 		$this->insertFile($file, $type);
 	}
 
+	/**
+	 * returns the last changed timestamp for a given file/type.
+	 *
+	 * @param File $file the file for that the query should be executed
+	 * @param string $type the type of the query
+	 * @return int
+	 * @since 1.0.0
+	 */
 	public function queryChangeTs(File $file, string $type): int {
 		$query = $this->dbConnection->getQueryBuilder();
+		$changeTs = 0;
 		try {
 			$query->select(DbConstants::TB_CFL_CHANGE_TS)
 				->from(DbConstants::TABLE_NAME_CHANGED_FILES_LOG)

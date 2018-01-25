@@ -21,7 +21,7 @@
 
 namespace OCA\RecommendationAssistant\Db;
 
-use OCA\RecommendationAssistant\Objects\ConsoleLogger;
+use OCA\RecommendationAssistant\Log\ConsoleLogger;
 use OCA\RecommendationAssistant\Objects\Keyword;
 use OCA\RecommendationAssistant\Objects\KeywordList;
 use OCP\IDBConnection;

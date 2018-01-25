@@ -49,7 +49,6 @@ class ApiController extends OCSController {
 	 *
 	 * @return DataResponse
 	 * @throws \RuntimeException
-	 * @throws \OCP\Files\NotPermittedException
 	 */
 	public function getData() {
 		return new DataResponse(explode("\n", ""));

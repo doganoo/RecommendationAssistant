@@ -56,9 +56,6 @@ class FrontendController extends Controller {
 	 * @return TemplateResponse
 	 */
 	public function show() {
-		return new TemplateResponse(Application::APP_ID, 'index',
-			[
-
-			]);
+		return new TemplateResponse(Application::APP_ID, 'index', []);
 	}
 }

@@ -32,7 +32,14 @@ $l = \OC::$server->getL10N(Application::APP_ID);
 /**
  * to add a script whenever the page refreshes
  */
-Util::addscript(\OCA\RecommendationAssistant\AppInfo\Application::APP_ID, 'app');
+$eventDispatcher = \OC::$server->getEventDispatcher();
+$eventDispatcher->addListener(
+	'OCA\Files::loadAdditionalScripts',
+	function () {
+		Util::addscript(\OCA\RecommendationAssistant\AppInfo\Application::APP_ID, 'app');
+		Util::addStyle(\OCA\RecommendationAssistant\AppInfo\Application::APP_ID, "style");
+	}
+);
 
 /**
  * RecommendationAssistant uses external libraries in order

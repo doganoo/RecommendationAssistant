@@ -23,7 +23,7 @@ namespace OCA\RecommendationAssistant\ContentReader;
 
 use OCA\RecommendationAssistant\AppInfo\Application;
 use OCA\RecommendationAssistant\Interfaces\IContentReader;
-use OCA\RecommendationAssistant\Objects\Logger;
+use OCA\RecommendationAssistant\Log\Logger;
 use OCP\Files\File;
 use OCP\Files\InvalidPathException;
 use OCP\Files\NotFoundException;

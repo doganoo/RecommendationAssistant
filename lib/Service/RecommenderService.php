@@ -31,13 +31,12 @@ use OCA\RecommendationAssistant\Db\ProcessedFilesManager;
 use OCA\RecommendationAssistant\Db\RecommendationManager;
 use OCA\RecommendationAssistant\Db\UserProfileManager;
 use OCA\RecommendationAssistant\Exception\InvalidRatingException;
-use OCA\RecommendationAssistant\Objects\ConsoleLogger;
-use OCA\RecommendationAssistant\Objects\HybridItem;
+use OCA\RecommendationAssistant\Log\ConsoleLogger;
+use OCA\RecommendationAssistant\Log\Logger;
 use OCA\RecommendationAssistant\Objects\HybridList;
 use OCA\RecommendationAssistant\Objects\Item;
 use OCA\RecommendationAssistant\Objects\ItemList;
 use OCA\RecommendationAssistant\Objects\ItemToItemMatrix;
-use OCA\RecommendationAssistant\Objects\Logger;
 use OCA\RecommendationAssistant\Objects\Rater;
 use OCA\RecommendationAssistant\Recommendation\CosineComputer;
 use OCA\RecommendationAssistant\Recommendation\GroupWeightComputer;
@@ -132,6 +131,7 @@ class RecommenderService {
 	 * group weights
 	 * @param RecommendationManager $recommendationManager database access to
 	 * recommendations
+	 * @param ChangedFilesManager $changedFilesManager database access to changed files
 	 * @since 1.0.0
 	 */
 	public function __construct(
@@ -189,13 +189,17 @@ class RecommenderService {
 				//not need to check if both items the same because
 				//an entire similarity matrix is needed
 				$cosineComputer = new CosineComputer($item, $item1);
-				$pearsonSimilarity = $cosineComputer->compute();
-				$itemItemMatrix->add($item, $item1, $pearsonSimilarity);
+				$cosineSimilarity = $cosineComputer->compute();
+				$itemItemMatrix->add($item, $item1, $cosineSimilarity);
 			}
 
 			/** @var IUser $user */
 			foreach ($users as $user) {
 				if (Util::sameUser($item->getOwner(), $user)) {
+					continue;
+				}
+				$item1Rater = $item->getRater($user->getUID());
+				if (!$item1Rater->isValid()) {
 					continue;
 				}
 				$hybrid = $hybridList->getHybridByUser($item, $user);
@@ -216,25 +220,22 @@ class RecommenderService {
 				$collaborativeSimilarity = $itemComputer->predict();
 				$hybrid->setContentBased($contentBasedSimilarity);
 				$hybrid->setCollaborative($collaborativeSimilarity);
-				if (!$item->raterPresent($user->getUID())) {
-					$hybridList->add($hybrid, $user, $item);
-				}
-
+				$hybridList->add($hybrid, $user, $item);
 			}
 		}
 
-//		foreach ($hybridList as $key => $array) {
-//			/**
-//			 * @var  $key
-//			 * @var HybridItem $hybrid
-//			 */
-//			foreach ($array as $key => $hybrid) {
-//				$itemId = $hybrid->getItem()->getId();
-//				if (in_array($itemId, [245, 10, 8]))
-//					ConsoleLogger::debug($hybrid);
-//			}
-//		}
-//		$hybridList->removeNonRecommendable();
+		foreach ($hybridList as $key => $array) {
+			/**
+			 * @var  $key
+			 * @var HybridItem $hybrid
+			 */
+			foreach ($array as $key => $hybrid) {
+				$itemId = $hybrid->getItem()->getId();
+				if (in_array($itemId, [245, 10, 8]))
+					ConsoleLogger::debug($hybrid);
+			}
+		}
+		$hybridList->removeNonRecommendable();
 		$this->recommendationManager->deleteAll();
 		$this->recommendationManager->insertHybridList($hybridList);
 
@@ -258,6 +259,7 @@ class RecommenderService {
 	 */
 	private
 	function handleFolder(Folder $folder, IUser $currentUser): ItemList {
+		//TODO is encrpyted auf folder ebene fur e2e
 		$itemList = new ItemList();
 		try {
 			foreach ($folder->getDirectoryListing() as $node) {
@@ -316,12 +318,6 @@ class RecommenderService {
 			return new Item();
 		}
 
-//		if (Application::DEBUG) {
-//			if (!in_array($file->getName(), ["d1.txt", "d2.txt", "d3.txt", "d4.txt", "d5.txt"])) {
-//				return new Item();
-//			}
-//		}
-
 		$item = $this->createItem($file);
 		$item = $this->addRater($item, $file, $currentUser);
 		$item = $this->addKeywords($item, $file);
@@ -343,7 +339,7 @@ class RecommenderService {
 	private function addRater(Item $item, File $file, IUser $currentUser) {
 		$timeRating = $this->getChangeTimeRating($file);
 		$favoriteRating = $this->getFavoriteRating($file);
-		$rating = ((1 * $timeRating) + (0.0 * $favoriteRating));
+		$rating = ((0.8 * $timeRating) + (0.2 * $favoriteRating));
 		$rater = $this->getRater($currentUser, $rating);
 		$item->addRater($rater);
 		return $item;

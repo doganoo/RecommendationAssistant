@@ -91,7 +91,6 @@ class Similarity {
 	 */
 	const NOT_ENOUGH_ITEMS_IN_ITEM_BASE = 6;
 
-
 	/**
 	 * returns the similarity value
 	 *

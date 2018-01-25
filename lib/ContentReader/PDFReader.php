@@ -22,7 +22,7 @@
 namespace OCA\RecommendationAssistant\ContentReader;
 
 use OCA\RecommendationAssistant\Interfaces\IContentReader;
-use OCA\RecommendationAssistant\Objects\Logger;
+use OCA\RecommendationAssistant\Log\Logger;
 use OCP\Files\File;
 use OCP\Files\NotPermittedException;
 use Smalot\PdfParser\Parser;

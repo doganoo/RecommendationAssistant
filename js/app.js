@@ -19,15 +19,49 @@
  */
 
 
-// example for calling the PUT /notes/1 URL
-var baseUrl = OC.generateUrl('/apps/recommendation_assistant_for_files');
-$.ajax({
-	url: baseUrl + '/recommendation_assistant_for_files/',
-	type: 'GET',
-	contentType: 'application/json',
-}).done(function (response) {
-	alert("success");
-}).fail(function (response, code) {
-	// handle failure
-	alert(code);
-});
+
+
+(function () {
+	'use strict';
+	var source = '<div class="apps-header">' +
+		'<h2 style="text-align: center">' + t('recommendation_assistant', 'Recommendations') + '</h2>' +
+		'<div class="recommendation_grid_wrapper">' +
+		'{{#each this}}' +
+		'<div class="recommendation_box">' +
+		'<a class="name" style="color: white" href="/nextcloud/remote.php/webdav/{{ fileName }}">' +
+		'{{ fileName }}' +
+		'</a>' +
+		'</div>' +
+		'{{/each}}' +
+		'</div>' +
+		'</div>'
+	;
+
+
+	var url = OC.generateUrl('apps/recommendation_assistant/recommendation_assistant_for_files');
+	$.ajax({
+		url: url,
+		type: 'GET',
+		contentType: 'application/json',
+	}).done(function (response) {
+
+		if (objectSize(response) > 0) {
+			var div = $('<div id="recommendations"><span class="icon-loading"></span></div>');
+			$('#controls').after(div);
+			var template = Handlebars.compile(source);
+			var html = template(response);
+			div.html(html);
+		}
+	}).fail(function (response, code) {
+	});
+
+})();
+
+
+function objectSize (obj) {
+	var L = 0;
+	$.each(obj, function (i, elem) {
+		L++;
+	});
+	return L;
+}

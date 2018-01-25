@@ -21,31 +21,78 @@
 
 namespace OCA\RecommendationAssistant\Hook;
 
-use OCA\Files_External\NotFoundException;
 use OCA\RecommendationAssistant\Db\ChangedFilesManager;
 use OCA\RecommendationAssistant\Db\ProcessedFilesManager;
-use OCA\RecommendationAssistant\Objects\Logger;
+use OCA\RecommendationAssistant\Log\Logger;
 use OCP\Files\File;
 use OCP\Files\IRootFolder;
 use OCP\Files\Node;
+use OCP\Files\NotFoundException;
 use OCP\IRequest;
 use OCP\IUserSession;
 
-
+/**
+ * FileHook class is registered as a hook in OCA\RecommendationAssistant\AppInfo\Application
+ * and is called when:
+ *
+ * <ul>a file is tagged as favorite</ul>
+ * <ul>a file is changed</ul>
+ *
+ * Shortdescription: the run method of this class is registered as a hook in
+ * OCA\RecommendationAssistant\AppInfo\Application.php.
+ * The method is executed when a file is changed or tagged as favorite.
+ *
+ * @package OCA\RecommendationAssistant\Service
+ * @since 1.0.0
+ */
 class FileHook {
-
+	/**
+	 * @var IUserSession $userSession the current user session
+	 */
 	private $userSession = null;
+
+	/**
+	 * @var IRequest $request the request
+	 */
 	private $request = null;
+
+	/**
+	 * @var IRootFolder $rootFolder the users root folder
+	 */
 	private $rootFolder = null;
+
+	/**
+	 * @var ProcessedFilesManager the database manager class for data queries
+	 */
 	private $processedFileManager = null;
+
+	/**
+	 * @var ChangedFilesManager $changedFilesManager the database manager
+	 * class for data queries
+	 */
 	private $changedFilesManager = null;
 
-	public function __construct(IUserSession $userSession,
-								IRequest $request,
-								IRootFolder $rootFolder,
-								ProcessedFilesManager $processedFilesManager,
-								ChangedFilesManager $changedFilesManager
-	) {
+	/**
+	 * Class constructor gets multiple instances injected
+	 *
+	 * @param IUserSession $userSession the current user session
+	 * @param IRequest $request the current request
+	 * @param IRootFolder $rootFolder the users root folder
+	 * @param ProcessedFilesManager $processedFilesManager database manager class
+	 * to query already processed files
+	 * @param ChangedFilesManager $changedFilesManager database manager class
+	 * to query changed files
+	 *
+	 * @package OCA\RecommendationAssistant\AppInfo
+	 * @since 1.0.0
+	 */
+	public function __construct(
+		IUserSession $userSession,
+		IRequest $request,
+		IRootFolder $rootFolder,
+		ProcessedFilesManager $processedFilesManager,
+		ChangedFilesManager $changedFilesManager) {
+
 		$this->userSession = $userSession;
 		$this->request = $request;
 		$this->rootFolder = $rootFolder;
@@ -53,36 +100,81 @@ class FileHook {
 		$this->changedFilesManager = $changedFilesManager;
 	}
 
-	public
-	function run($params) {
-		Logger::error("run");
-		$path = $params["path"];
+	/**
+	 * runs the file hook for edited files. The method inserts the last
+	 * changed timestamp for a given file path.
+	 *
+	 * @param $parameters
+	 * @return bool
+	 *
+	 * @since 1.0.0
+	 */
+	public function run($parameters): bool {
+		Logger::debug("FileHook start");
+		$path = $parameters["path"];
 
-		// Do not add activities for .part-files
+		/*
+		 * .part files are parts of a file. When transmitting,
+		 * large files are divided in multiple files.
+		 */
 		if (substr($path, -5) === '.part') {
-			return;
+			Logger::info("ignoring file because it is a .part file");
+			return false;
 		}
+
+		/*
+		 * No session available. User is not logged in. Therefore, returning
+		 * false.
+		 */
 		if ($this->userSession->getUser() === null) {
-			// User is not logged in, this download is handled by the files_sharing app
-			return;
+			Logger::info("ignoring file because user is not logged in");
+			return false;
 		}
+
+		/*
+		 * User has to make changes via the web UI. Otherwise, changes are
+		 * not recognized as "change".
+		 */
 		if (!$this->request->isUserAgent([IRequest::USER_AGENT_CLIENT_DESKTOP])) {
-//			return;
+			Logger::info("ignoring file because request is not from web UI");
+			return false;
 		}
+
+		/*
+		 * no path available, no file provided
+		 */
 		if ($path === '/' || $path === '' || $path === null) {
-			return;
+			Logger::info("ignoring file because no path available, no file provided");
+			return false;
 		}
+		/** @var Node $node */
+		$node = $this->getNode($path);
 
-
-		$node = $this->getSourcePathAndOwner($path);
+		if ($node == null) {
+			Logger::info("node returned null. Cannot process file");
+			return false;
+		}
 
 		if ($node instanceof File) {
 			$this->changedFilesManager->handle($node, "edit");
 			$this->processedFileManager->deleteFile($node);
+			return true;
 		}
-		Logger::error("run ende");
+
+		Logger::debug("FileHook end");
+		return false;
 	}
 
+	/**
+	 * runs the file hook for tagged files. The method inserts the last
+	 * changed timestamp for a given file id.
+	 *
+	 * @param string $userId
+	 * @param string $fileId
+	 * @param string $caller
+	 *
+	 * @since 1.0.0
+	 */
 	public function runFavorite(string $userId, string $fileId, string $caller) {
 		$node = $this->getNodeById($fileId);
 		if ($caller == "addFavorite") {
@@ -92,30 +184,38 @@ class FileHook {
 		}
 	}
 
-
-	private
-	function getNodeById($fileId): Node {
-		try {
-			$currentUserId = $this->userSession->getUser()->getUID();
-			$userFolder = $this->rootFolder->getUserFolder($currentUserId);
-			$node = $userFolder->getById($fileId);
-		} catch (NotFoundException $exception) {
-			Logger::error($exception->getMessage());
-		}
-		return $node[0];
-	}
-
-	private
-	function getSourcePathAndOwner($path): Node {
+	/**
+	 * returns the Node instance that correspondents to $path
+	 *
+	 * @param string $path the path
+	 * @return null|Node the node that is requested or null, if an error occures
+	 *
+	 * @since 1.0.0
+	 */
+	private function getNode($path) {
+		$node = null;
 		try {
 			$currentUserId = $this->userSession->getUser()->getUID();
 			$userFolder = $this->rootFolder->getUserFolder($currentUserId);
 			$node = $userFolder->get($path);
-		} catch (NotFoundException $exception) {
-			Logger::error($exception->getMessage());
+		} catch (NotFoundException $e) {
+			Logger::error($e->getMessage());
 		}
 		return $node;
 	}
 
-
+	/**
+	 * returns the Node instance that correspondents to $fileId
+	 *
+	 * @param string $fileId the file id
+	 * @return Node the node that is requested
+	 *
+	 * @since 1.0.0
+	 */
+	private function getNodeById($fileId) {
+		$currentUserId = $this->userSession->getUser()->getUID();
+		$userFolder = $this->rootFolder->getUserFolder($currentUserId);
+		$nodeArray = $userFolder->getById($fileId);
+		return $nodeArray[0];
+	}
 }

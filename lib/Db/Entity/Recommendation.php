@@ -19,31 +19,38 @@
  *
  */
 
-namespace OCA\RecommendationAssistant\Util;
+namespace OCA\RecommendationAssistant\Db\Entity;
 
-use OCP\IUser;
+
+use OCP\AppFramework\Db\Entity;
 
 /**
- * Utility class for helper methods.
+ * Recommendation class serves as an entity class that contains the recommendation
+ * data stored in the database.
  *
- * @package OCA\RecommendationAssistant\Util
+ * @package OCA\RecommendationAssistant\Db\Entity
  * @since 1.0.0
  */
-class Util {
+class Recommendation extends Entity implements \JsonSerializable {
 	/**
-	 * compares the IDs of $user1 and $user2. The comparision is case sensitive!
-	 *
-	 * @param IUser $user1
-	 * @param IUser $user2
-	 * @return bool
-	 * @since 1.0.0
+	 * @var string $fileId the file id
 	 */
-	public static function sameUser(IUser $user1, IUser $user2): bool {
-		return strcmp($user1->getUID(), $user2->getUID()) === 0;
-	}
+	public $fileId;
 
-	public static function hasAccess(string $nodeId, string $userId): bool {
-		$node = FileUtil::getNode($nodeId, $userId);
-		return $node !== null;
+	/**
+	 * @var string $fileName the file name
+	 */
+	public $fileName;
+
+	/**
+	 * Specify data which should be serialized to JSON
+	 *
+	 * @link http://php.net/manual/en/jsonserializable.jsonserialize.php
+	 * @return mixed data which can be serialized by <b>json_encode</b>,
+	 * which is a value of any type other than a resource.
+	 * @since 5.4.0
+	 */
+	public function jsonSerialize() {
+		return ["fileId" => $this->fileId, "fileName" => $this->fileName];
 	}
 }

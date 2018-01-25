@@ -57,6 +57,13 @@ class KeywordList implements \IteratorAggregate {
 		}
 	}
 
+	/**
+	 * this methods merges two keyword lists to one. The method iterates
+	 * over the keyword list and calls the add() method.
+	 *
+	 * @param KeywordList $keywordList
+	 * @since 1.0.0
+	 */
 	public function merge(KeywordList $keywordList) {
 		/** @var Keyword $keyword */
 		foreach ($keywordList as $keyword) {
@@ -154,6 +161,12 @@ class KeywordList implements \IteratorAggregate {
 		return new \ArrayIterator($this->keywordList);
 	}
 
+	/**
+	 * returns all keywords as an array
+	 *
+	 * @return array
+	 * @since 1.0.0
+	 */
 	public function getKeywords() {
 		$array = [];
 		if ($this->keywordList == null) {

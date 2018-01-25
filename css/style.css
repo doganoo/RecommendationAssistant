@@ -1,0 +1,17 @@
+.recommendation_grid_wrapper {
+	display: grid;
+	grid-template-columns: repeat(3, 1fr);
+	grid-gap: 10px;
+	background-color: #fff;
+	color: #FFFFFF !important;
+}
+
+.recommendation_box {
+	background-color: #0082c9;
+	color: #FFFFFF ;
+	border-radius: 3px;
+	padding: 20px;
+	font-size: 150%;
+	align-self: center;
+	justify-self: center;
+}

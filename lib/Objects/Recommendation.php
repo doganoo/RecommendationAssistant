@@ -48,6 +48,16 @@ class Recommendation {
 	private $fileId;
 
 	/**
+	 * @var int $fileName the filename
+	 */
+	private $fileName;
+
+	/**
+	 * @var float $score the recommendation score
+	 */
+	private $score;
+
+	/**
 	 * returns the id of the item owner
 	 *
 	 * @return string
@@ -107,4 +117,33 @@ class Recommendation {
 	public function setFileId(string $fileId) {
 		$this->fileId = $fileId;
 	}
+
+	/**
+	 * @return int
+	 */
+	public function getFileName(): int {
+		return $this->fileName;
+	}
+
+	/**
+	 * @param int $fileName
+	 */
+	public function setFileName(int $fileName) {
+		$this->fileName = $fileName;
+	}
+
+	/**
+	 * @return float
+	 */
+	public function getScore(): float {
+		return $this->score;
+	}
+
+	/**
+	 * @param float $score
+	 */
+	public function setScore(float $score) {
+		$this->score = $score;
+	}
+
 }

@@ -23,7 +23,6 @@ namespace OCA\RecommendationAssistant\Recommendation;
 
 
 use OCA\RecommendationAssistant\Interfaces\IComputable;
-use OCA\RecommendationAssistant\Objects\ConsoleLogger;
 use OCA\RecommendationAssistant\Objects\Item;
 use OCA\RecommendationAssistant\Objects\Rater;
 use OCA\RecommendationAssistant\Objects\Similarity;
@@ -68,6 +67,7 @@ class CosineComputer implements IComputable {
 	 * @since 1.0.0
 	 */
 	public function compute(): Similarity {
+		//TODO noch einmal ueberpruefen!
 		$similarity = new Similarity();
 		if ($this->sourceItem->equals($this->targetItem)) {
 			$similarity->setValue(1.0);

@@ -21,29 +21,16 @@
 
 namespace OCA\RecommendationAssistant\Util;
 
-use OCP\IUser;
 
-/**
- * Utility class for helper methods.
- *
- * @package OCA\RecommendationAssistant\Util
- * @since 1.0.0
- */
-class Util {
-	/**
-	 * compares the IDs of $user1 and $user2. The comparision is case sensitive!
-	 *
-	 * @param IUser $user1
-	 * @param IUser $user2
-	 * @return bool
-	 * @since 1.0.0
-	 */
-	public static function sameUser(IUser $user1, IUser $user2): bool {
-		return strcmp($user1->getUID(), $user2->getUID()) === 0;
+class FileUtil {
+
+	public static function getNode(string $fileId, string $userId) {
+		/** @var \OCP\Files\Folder $rootFolder */
+		$userFolder = \OC::$server->getRootFolder()->getUserFolder($userId);
+		/** @var \OCP\Files\Node[] $nodeArray */
+		$nodeArray = $userFolder->getById($fileId);
+		$return = empty($nodeArray[0]) ? null : $nodeArray[0];
+		return $return;
 	}
 
-	public static function hasAccess(string $nodeId, string $userId): bool {
-		$node = FileUtil::getNode($nodeId, $userId);
-		return $node !== null;
-	}
 }

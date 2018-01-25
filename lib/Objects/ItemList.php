@@ -34,7 +34,7 @@ class ItemList implements \IteratorAggregate {
 	/**
 	 * @var array $itemList
 	 */
-	private $itemList = array();
+	private $itemList = [];
 
 	/**
 	 * adds an item to the list. The ratings of the new item will be transfered

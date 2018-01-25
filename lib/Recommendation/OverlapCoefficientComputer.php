@@ -23,11 +23,11 @@ namespace OCA\RecommendationAssistant\Recommendation;
 
 
 use OCA\RecommendationAssistant\Interfaces\IComputable;
-use OCA\RecommendationAssistant\Objects\ConsoleLogger;
 use OCA\RecommendationAssistant\Objects\Item;
 use OCA\RecommendationAssistant\Objects\ItemList;
 use OCA\RecommendationAssistant\Objects\KeywordList;
 use OCA\RecommendationAssistant\Objects\Similarity;
+use OCP\IUser;
 
 /**
  * OverlapCoefficientComputer class that computes the similarity between two items
@@ -78,13 +78,10 @@ class OverlapCoefficientComputer implements IComputable {
 	 * @return Similarity the similarity object that represents the similarity
 	 */
 	public function compute(): Similarity {
+		//TODO overlap coefficient class ist in abgabe version falsch!
 		$similarity = new Similarity();
-		if ($this->item->keywordSize() === $this->itemList->size()) {
-			$similarity->setValue(0.0);
-			$similarity->setStatus(Similarity::NOT_ENOUGH_ITEMS_IN_ITEM_BASE);
-			$similarity->setDescription("number of items and item base is equal");
-		}
 		$tfIdf = new TFIDFComputer($this->item, $this->itemList);
+
 		/** @var KeywordList $itemKeywords */
 		$itemKeywords = $tfIdf->compute();
 		$itemKeywords->sort();
@@ -109,7 +106,8 @@ class OverlapCoefficientComputer implements IComputable {
 			$similarity->setDescription("no keywords in item / user profile");
 		}
 		if ($count > 0 && $lower > 0) {
-			$similarity->setValue(($count / $lower) * 5);
+			$factor = 5; //TODO ensure factor!
+			$similarity->setValue(($count / $lower) * $factor);
 			$similarity->setStatus(Similarity::VALID);
 			$similarity->setDescription("valid calculation");
 		}

@@ -22,11 +22,9 @@
 namespace OCA\RecommendationAssistant\Recommendation;
 
 
-use OCA\RecommendationAssistant\Objects\ConsoleLogger;
 use OCA\RecommendationAssistant\Objects\Item;
 use OCA\RecommendationAssistant\Objects\ItemList;
 use OCA\RecommendationAssistant\Objects\ItemToItemMatrix;
-use OCA\RecommendationAssistant\Objects\Rater;
 use OCA\RecommendationAssistant\Objects\Similarity;
 use OCP\IUser;
 
@@ -103,10 +101,6 @@ class RatingPredictor {
 		foreach ($this->itemList as $item1) {
 			//TODO limit itemlist to the k-nearest ones. Look in the literature for more information
 			if ($this->item->equals($item1)) {
-				continue;
-			}
-			$rating = $item1->getRater($this->user->getUID())->getRating();
-			if ($rating == Rater::NO_RATING) {
 				continue;
 			}
 

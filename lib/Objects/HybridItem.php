@@ -208,7 +208,8 @@ class HybridItem {
 
 	public function isRecommandable(): bool {
 		$val = HybridItem::weightedAverage($this);
-		if ($val > 0.4) {
+		//TODO define a threshold and do not hardcode it!
+		if ($val > 2) {
 			return true;
 		}
 		return false;

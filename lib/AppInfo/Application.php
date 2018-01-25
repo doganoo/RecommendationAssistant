@@ -25,8 +25,9 @@ use OCA\RecommendationAssistant\Db\ChangedFilesManager;
 use OCA\RecommendationAssistant\Db\ProcessedFilesManager;
 use OCA\RecommendationAssistant\Hook\FileConsumer;
 use OCA\RecommendationAssistant\Hook\FileHook;
-use OCA\RecommendationAssistant\Objects\Logger;
+use OCA\RecommendationAssistant\Log\Logger;
 use OCP\AppFramework\App;
+use OCP\AppFramework\QueryException;
 use OCP\IContainer;
 use OCP\Util;
 use Symfony\Component\EventDispatcher\GenericEvent;
@@ -81,6 +82,11 @@ class Application extends App {
 	 * @const HOOK_FILE_HOOK_NAME the file hook name
 	 */
 	const HOOK_FILE_HOOK_NAME = "OCA\RecommendationAssistant\Hook\FileHook";
+
+	/**
+	 * @const RECOMMENDATION_ENTITIY_NAME the entity name for recommendations for the view
+	 */
+	const RECOMMENDATION_ENTITIY_NAME = "\OCA\RecommendationAssistant\Db\Entity\Recommendation";
 
 	/**
 	 * Class constructor calls the parent constructor with APP_ID
@@ -145,8 +151,19 @@ class Application extends App {
 
 	public function callFileHook($params) {
 		$container = $this->getContainer();
-		/** @var FileHook $fileHook */
-		$fileHook = $container->query("FileHook");
-		$fileHook->run($params);
+		$fileHookExecuted = false;
+		try {
+			/** @var FileHook $fileHook */
+			$fileHook = $container->query("FileHook");
+			if ($fileHook instanceof FileHook) {
+				$fileHookExecuted = $fileHook->run($params);
+			}
+
+			if (!$fileHookExecuted) {
+				Logger::warn("file hook is not executed");
+			}
+		} catch (QueryException $e) {
+			Logger::error($e->getMessage());
+		}
 	}
 }

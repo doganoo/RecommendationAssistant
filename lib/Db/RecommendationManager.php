@@ -21,16 +21,12 @@
 
 namespace OCA\RecommendationAssistant\Db;
 
-use OC\Files\Filesystem;
-use OCA\RecommendationAssistant\Objects\ConsoleLogger;
+use OCA\RecommendationAssistant\Log\ConsoleLogger;
 use OCA\RecommendationAssistant\Objects\HybridItem;
 use OCA\RecommendationAssistant\Objects\HybridList;
-use OCA\RecommendationAssistant\Objects\Keyword;
-use OCA\RecommendationAssistant\Objects\KeywordList;
 use OCA\RecommendationAssistant\Objects\Recommendation;
-use OCP\Files\Folder;
+use OCA\RecommendationAssistant\Util\Util;
 use OCP\IDBConnection;
-use OCP\IUser;
 
 /**
  * Class that servers as a interface to the datastorage for the recommendations.
@@ -66,6 +62,7 @@ class RecommendationManager {
 		$query->insert(DbConstants::TABLE_NAME_RECOMMENDATIONS)->values(
 			[
 				DbConstants::TB_RC_FILE_ID => $query->createNamedParameter($hybridItem->getItem()->getId()),
+				DbConstants::TB_RC_FILE_NAME => $query->createNamedParameter($hybridItem->getItem()->getName()),
 				DbConstants::TB_RC_USER_ID => $query->createNamedParameter(($hybridItem->getUser()->getUID())),
 				DbConstants::TB_RC_OWNER_ID => $query->createNamedParameter($hybridItem->getItem()->getOwner()->getUID()),
 				DbConstants::TB_RC_CREATION_TS => $query->createNamedParameter((new \DateTime())->getTimestamp())

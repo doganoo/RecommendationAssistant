@@ -82,6 +82,11 @@ class TFIDFComputer {
 			if (trim($keyword) == "") {
 				continue;
 			}
+//			if ($this->item->keywordSize() === $this->itemList->size()) {
+//				$similarity->setValue(0.0);
+//				$similarity->setStatus(Similarity::NOT_ENOUGH_ITEMS_IN_ITEM_BASE);
+//				$similarity->setDescription("number of items and item base is equal");
+//			}
 			$tfIdfItem = new Keyword();
 			$termFrequency = $this->item->countKeyword($keyword) / $this->item->keywordSize();
 			$count = $this->itemBase->countKeyword($keyword);

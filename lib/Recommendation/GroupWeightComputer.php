@@ -23,7 +23,6 @@ namespace OCA\RecommendationAssistant\Recommendation;
 
 
 use OCA\RecommendationAssistant\Db\GroupWeightsManager;
-use OCA\RecommendationAssistant\Objects\ConsoleLogger;
 use OCP\IGroup;
 
 /**
