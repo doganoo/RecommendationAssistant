@@ -24,10 +24,12 @@ namespace OCA\RecommendationAssistant\Controller;
 
 use OCA\RecommendationAssistant\Db\Entity\Recommendation;
 use OCA\RecommendationAssistant\Db\Mapper\RecommendationMapper;
+use OCA\RecommendationAssistant\Log\Logger;
 use OCA\RecommendationAssistant\Util\FileUtil;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http\JSONResponse;
 use OCP\IRequest;
+use OpenCloud\Common\Constants\Datetime;
 
 /**
  * RecommendationController class serves as a gateway between the business logic
@@ -85,7 +87,11 @@ class RecommendationController extends Controller {
 			$id = $entity->fileId;
 			$node = FileUtil::getNode($id, $this->userId);
 			$name = $node == null ? "" : $node->getName();
+			$size = $node == null ? 0 : $node->getSize();
+			$mTime = $node == null ? (new \DateTime())->getTimestamp() : $node->getMTime();
 			$entity->fileName = $name;
+			$entity->mTime = $mTime;
+			$entity->fileSize = $size;
 		}
 		$jsonResponse = new JSONResponse($entities);
 		return $jsonResponse;
