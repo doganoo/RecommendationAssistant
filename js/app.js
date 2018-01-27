@@ -25,100 +25,21 @@
 	'use strict';
 	var source = '<div class="apps-header">' +
 		'<h2 style="text-align: center">' + t('recommendation_assistant', 'Recommendations') + '</h2>' +
-		'<table id="filestable" data-allow-public-upload="<?php p($_[\'publicUploadEnabled\'])?>" data-preview-x="32" data-preview-y="32">' +
-		'			<thead>' +
-		'				<tr>' +
-		'					<th id="headerSelection" class="hidden column-selection">' +
-		'					</th>' +
-		'					<th id="headerName" class="hidden column-name">' +
-		'						<div id="headerName-container">' +
-		'							<a class="name sort columntitle" data-sort="name">' +
-		'								<span>Name</span>' +
-		'								<span class="sort-indicator"></span>' +
-		'							</a>' +
-		'							<span id="selectedActionsList" class="selectedActions">' +
-		'								<a href="" class="copy-move">' +
-		'									<span class="icon icon-external"></span>' +
-		'									<span>Move or copy</span>' +
-		'								</a>' +
-		'								<a href="" class="download">' +
-		'									<span class="icon icon-download"></span>' +
-		'									<span>Download</span>' +
-		'								</a>' +
-		'								<a href="" class="delete-selected">' +
-		'									<span class="icon icon-delete"></span>' +
-		'									<span>Delete</span>' +
-		'								</a>' +
-		'							</span>' +
-		'						</div>' +
-		'					</th>' +
-		'					<th id="headerSize" class="hidden column-size">' +
-		'						<a class="size sort columntitle" data-sort="size">' +
-		'							<span>Size</span>' +
-		'							<span class="sort-indicator"></span>' +
-		'						</a>' +
-		'					</th>' +
-		'					<th id="headerDate" class="hidden column-mtime">' +
-		'						<a id="modified" class="columntitle" data-sort="mtime">' +
-		'							<span>Modified</span>' +
-		'							<span class="sort-indicator"></span>' +
-		'						</a>' +
-		'						<span class="selectedActions">' +
-		'							<a href="" class="delete-selected">' +
-		'								<span>Delete</span>' +
-		'								<span class="icon icon-delete"></span>' +
-		'							</a>' +
-		'						</span>' +
-		'					</th>' +
-		'			</tr>' +
-		'		</thead>' +
-		'		<tbody id="fileList">' +
+		'<div class="section group">' +
 		'{{#each this}}' +
-		'			<tr>' +
-		'				<td class="selection">' +
-		'					<input id="select-files-8" class="selectCheckBox checkbox" type="hidden">' +
-		'						<label for="select-files-8">' +
-		'							<span class="hidden-visually">Auswählen</span>' +
-		'						</label>' +
-		'				</td>' +
-		'				<td>' +
-		'					<a class="name" href="/nextcloud/remote.php/webdav/{{ fileName }}">' +
-		'						<div class="thumbnail-wrapper">' +
-		'							<div class="thumbnail" style="background-image: url(&quot;/nextcloud/index.php/core/preview.png?file=%2F' + '{{ fileName }}' + '&amp;c=05b8db27cc3c06f7e8305e3480096761&amp;x=64&amp;y=64&amp;forceIcon=0&quot;);">' +
-		'							</div>' +
-		'						</div>' +
-		'							<span class="nametext">' +
-		'								<span class="innernametext">{{ fileName }}</span>' +
-		'								<span class="fileactions">' +
-		'							</span>' +
-		'					</a>' +
-		'				</td>' +
-		'				<td class="filesize" style="color:rgb(160,160,160)">' + OC.Util.humanFileSize('{{ fileSize }}') + '</td>' +
-		'				<td>' +
-		'					<span class="modified live-relative-timestamp" title="" data-timestamp="{{ mTime }}" style="color:rgb(74,74,74)" data-original-title="10. Januar 2018 20:27">TODO</span>' +
-		'				</td>' +
-		'</tr>' +
-		'{{/each}}' +
-		'\t</tbody>\n' +
-		'<tfoot>' +
-		'	<tr style="height: 100px;">' +
-		'		<td>' +
-		'		</td>' +
-		'		<td>' +
-		'			<span class="info">' +
-		'				<span class="dirinfo hidden"></span>' +
-		'				<span class="connector hidden"></span>' +
-		'				<span class="fileinfo"></span>' +
-		'				<span class="hiddeninfo hidden"></span>' +
-		'				<span class="filter hidden"></span>' +
-		'				</span>' +
-		'		</td>' +
-		'		<td class="filesize"></td>' +
-		'		<td class="date"></td>' +
-		'	</tr>' +
-		'</tfoot>' +
-		'</table>' +
+		'<div class="col span_1_of_3">' +
+		'	<a class="name" href="/nextcloud/remote.php/webdav/{{ fileNameAndExtension }}">' +
+		' 	<div class="thumbnail-wrapper">' +
+		'		<div class="thumbnail" style="background-image: url(\'{{ getPreviewUrl fileNameAndExtension }}\');">' +
+		'		</div>' +
+		'	</div>' +
+		'		<span class="nametext">' +
+		'			<span class="innernametext">{{ fileName }}</span>' +
+		'			<span class="extension">.{{ extension }}</span>' +
+		'		</span>' +
+		'	</a>' +
 		'</div>' +
+		'{{/each}}' +
 		'</div>';
 
 
@@ -149,3 +70,28 @@ function objectSize (obj) {
 	});
 	return L;
 }
+
+function generatePreviewUrl (urlSpec) {
+	urlSpec.x = 64;
+	urlSpec.y = 64;
+	urlSpec.forceIcon = 0;
+	var url = OC.generateUrl('/core/preview.png?') + $.param(urlSpec);
+	return url;
+}
+
+Handlebars.registerHelper("getPreviewUrl", function (fileName) {
+	var url = generatePreviewUrl({
+		file: '/' + fileName,
+	});
+	url = url.replace('(', '%28').replace(')', '%29');
+	return url;
+
+});
+
+// function getPreviewUrl (fileName) {
+// 	var url = generatePreviewUrl({
+// 		file: '/' + fileName,
+// 	});
+// 	url = url.replace('(', '%28').replace(')', '%29');
+// 	return url;
+// }
