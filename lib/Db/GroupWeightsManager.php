@@ -47,19 +47,6 @@ class GroupWeightsManager {
 	}
 
 	/**
-	 * deletes all weights for a given group id
-	 *
-	 * @param string $groupId the group id for that the weights should be deleted
-	 * @since 1.0.0
-	 */
-	private function deleteForGroup(string $groupId) {
-		$query = $this->dbConnection->getQueryBuilder();
-		$query->delete(DbConstants::TABLE_NAME_GROUP_WEIGHTS)
-			->where($query->expr()->eq(DbConstants::TB_GW_SOURCE_GROUP_ID, $query->createNamedParameter($groupId)))
-			->execute();
-	}
-
-	/**
 	 * returns the weight for two given groups. This method returns the weight of
 	 * 1 if there is no weight available in the database yet. The value 1 means
 	 * that the groups are similar.

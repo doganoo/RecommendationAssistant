@@ -25,6 +25,7 @@ use OCA\RecommendationAssistant\Log\ConsoleLogger;
 use OCA\RecommendationAssistant\Log\Logger;
 use OCP\Files\File;
 use OCP\Files\InvalidPathException;
+use OCP\Files\NotFoundException;
 use OCP\IDBConnection;
 
 /**
@@ -88,7 +89,7 @@ class ChangedFilesManager {
 			Logger::error($e->getMessage());
 			ConsoleLogger::error($e->getMessage());
 			return false;
-		} catch (\OCP\Files\NotFoundException $e) {
+		} catch (NotFoundException $e) {
 			Logger::error($e->getMessage());
 			ConsoleLogger::error($e->getMessage());
 			return false;
@@ -134,7 +135,7 @@ class ChangedFilesManager {
 		} catch (InvalidPathException $e) {
 			Logger::error($e->getMessage());
 			return -1;
-		} catch (\OCP\Files\NotFoundException $e) {
+		} catch (NotFoundException $e) {
 			Logger::error($e->getMessage());
 			return -1;
 		}
@@ -151,6 +152,7 @@ class ChangedFilesManager {
 	 * checks whether a file is already inserted or not
 	 *
 	 * @param File $file file that should be checked
+	 * @param string $type the files type
 	 * @return bool whether the file inserted or not
 	 * @since 1.0.0
 	 */
@@ -165,7 +167,7 @@ class ChangedFilesManager {
 			ConsoleLogger::debug($e->getMessage());
 			Logger::error($e->getMessage());
 			return false;
-		} catch (\OCP\Files\NotFoundException $e) {
+		} catch (NotFoundException $e) {
 			ConsoleLogger::debug($e->getMessage());
 			Logger::error($e->getMessage());
 			return false;

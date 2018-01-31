@@ -25,7 +25,6 @@ use OCA\RecommendationAssistant\Log\ConsoleLogger;
 use OCA\RecommendationAssistant\Objects\HybridItem;
 use OCA\RecommendationAssistant\Objects\HybridList;
 use OCA\RecommendationAssistant\Objects\Recommendation;
-use OCA\RecommendationAssistant\Util\Util;
 use OCP\IDBConnection;
 
 /**

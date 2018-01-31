@@ -23,11 +23,39 @@ namespace OCA\RecommendationAssistant\Util;
 
 
 use OCA\RecommendationAssistant\Db\ChangedFilesManager;
+use OCA\RecommendationAssistant\Log\Logger;
 use OCP\Files\File;
+use OCP\Files\InvalidPathException;
 use OCP\Files\Node;
+use OCP\Files\NotFoundException;
 
-class FileUtil {
+/**
+ * NodeUtil is a utility class for all \OCP\Files\Node objects. It defines
+ * all helper methods that are relevant for nodes. This class is not instantiable
+ * because all methods are static.
+ *
+ * @package OCA\RecommendationAssistant\Util
+ * @since 1.0.0
+ */
+class NodeUtil {
 
+	/**
+	 * class constructor is private because all methods are public static.
+	 *
+	 * @since 1.0.0
+	 */
+	private function __construct() {
+	}
+
+	/**
+	 * creates a \OCP\Files\File instance for a given node id. The user
+	 * id is necessary for querying the root folder.
+	 *
+	 * @param string $nodeId
+	 * @param string $userId
+	 * @return null|File
+	 * @since 1.0.0
+	 */
 	public static function getFile(string $nodeId, string $userId) {
 		/** @var \OCP\Files\Folder $rootFolder */
 		$userFolder = \OC::$server->getRootFolder()->getUserFolder($userId);
@@ -44,6 +72,15 @@ class FileUtil {
 
 	}
 
+	/**
+	 * This method queries the changed files database in order to detect any
+	 * changes to a file.
+	 *
+	 * @param string $fileId
+	 * @param string $userId
+	 * @return bool
+	 * @since 1.0.0
+	 */
 	public static function hasChanges(string $fileId, string $userId): bool {
 		/** @var ChangedFilesManager $manager */
 		$manager = new ChangedFilesManager(\OC::$server->getDatabaseConnection());
@@ -55,6 +92,35 @@ class FileUtil {
 			}
 		}
 		return false;
+	}
+
+	/**
+	 * This method verifies that a given node is valid. The following steps
+	 *for verification are made:
+	 *
+	 *<ul>the node is not encrypted</ul>
+	 *<ul>the node is readable</ul>
+	 *
+	 * @param Node $node
+	 * @return bool
+	 * @since 1.0.0
+	 */
+	public static function validNode(Node $node): bool {
+		if ($node->isEncrypted()) {
+			return false;
+		}
+		try {
+			if (!$node->isReadable()) {
+				return false;
+			}
+		} catch (InvalidPathException $exception) {
+			Logger::warn($exception->getMessage());
+			return false;
+		} catch (NotFoundException $exception) {
+			Logger::warn($exception->getMessage());
+			return false;
+		}
+		return true;
 	}
 
 }

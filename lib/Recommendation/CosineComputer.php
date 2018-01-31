@@ -26,6 +26,7 @@ use OCA\RecommendationAssistant\Interfaces\IComputable;
 use OCA\RecommendationAssistant\Objects\Item;
 use OCA\RecommendationAssistant\Objects\Rater;
 use OCA\RecommendationAssistant\Objects\Similarity;
+use OCA\RecommendationAssistant\Util\Util;
 
 /**
  * CosineComputer class that computes the similarity between two items.
@@ -70,9 +71,7 @@ class CosineComputer implements IComputable {
 		//TODO noch einmal ueberpruefen!
 		$similarity = new Similarity();
 		if ($this->sourceItem->equals($this->targetItem)) {
-			$similarity->setValue(1.0);
-			$similarity->setStatus(Similarity::SAME_COSINE_ITEMS);
-			$similarity->setDescription("the items are the same");
+			$similarity = Util::createSimilarity(1.0, Similarity::SAME_COSINE_ITEMS, "the items are the same");
 			return $similarity;
 		}
 		$lowerA = 0;
@@ -98,13 +97,9 @@ class CosineComputer implements IComputable {
 		}
 		$lower = sqrt($lowerA) * sqrt($lowerB);
 		if ($lower == 0) {
-			$similarity->setValue(0.0);
-			$similarity->setStatus(Similarity::NO_COSINE_SQUARE_POSSIBLE);
-			$similarity->setDescription("multiplication of sqrt of both returned 0");
+			$similarity = Util::createSimilarity(0.0, Similarity::NO_COSINE_SQUARE_POSSIBLE, "multiplication of sqrt of both returned 0");
 		} else {
-			$similarity->setValue($upper / $lower);
-			$similarity->setStatus(Similarity::VALID);
-			$similarity->setDescription("ok");
+			$similarity = Util::createSimilarity($upper / $lower, Similarity::VALID, "ok");
 		}
 		return $similarity;
 	}

@@ -43,6 +43,7 @@ use OCA\RecommendationAssistant\Recommendation\GroupWeightComputer;
 use OCA\RecommendationAssistant\Recommendation\OverlapCoefficientComputer;
 use OCA\RecommendationAssistant\Recommendation\RatingPredictor;
 use OCA\RecommendationAssistant\Recommendation\TextProcessor;
+use OCA\RecommendationAssistant\Util\NodeUtil;
 use OCA\RecommendationAssistant\Util\Util;
 use OCP\Files\File;
 use OCP\Files\Folder;
@@ -232,17 +233,6 @@ class RecommenderService {
 			}
 		}
 
-		foreach ($hybridList as $key => $array) {
-			/**
-			 * @var  $key
-			 * @var HybridItem $hybrid
-			 */
-			foreach ($array as $key => $hybrid) {
-				$itemId = $hybrid->getItem()->getId();
-				if (in_array($itemId, [245, 10, 8]))
-					ConsoleLogger::debug($hybrid);
-			}
-		}
 		$hybridList->removeNonRecommendable();
 		$this->recommendationManager->deleteAll();
 		$this->recommendationManager->insertHybridList($hybridList);
@@ -274,12 +264,15 @@ class RecommenderService {
 		$itemList = new ItemList();
 		try {
 			foreach ($folder->getDirectoryListing() as $node) {
-				if ($node instanceof Folder) {
-					$return = $this->handleFolder($node, $currentUser);
-					$itemList->merge($return);
-				} else if ($node instanceof File) {
-					$return = $this->handleFile($node, $currentUser);
-					$itemList->add($return);
+				$valid = NodeUtil::validNode($node);
+				if ($valid) {
+					if ($node instanceof Folder) {
+						$return = $this->handleFolder($node, $currentUser);
+						$itemList->merge($return);
+					} else if ($node instanceof File) {
+						$return = $this->handleFile($node, $currentUser);
+						$itemList->add($return);
+					}
 				}
 			}
 		} catch (NotFoundException $exception) {
@@ -314,21 +307,6 @@ class RecommenderService {
 		if ($this->isProcessed($file)) {
 			return new Item();
 		}
-		if ($file->isEncrypted()) {
-			return new Item();
-		}
-		try {
-			if (!$file->isReadable()) {
-				return new Item();
-			}
-		} catch (InvalidPathException $exception) {
-			Logger::warn($exception->getMessage());
-			return new Item();
-		} catch (NotFoundException $exception) {
-			Logger::warn($exception->getMessage());
-			return new Item();
-		}
-
 		$item = $this->createItem($file);
 		$item = $this->addRater($item, $file, $currentUser);
 		$item = $this->addKeywords($item, $file);

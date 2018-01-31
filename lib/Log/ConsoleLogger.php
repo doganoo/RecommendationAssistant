@@ -44,6 +44,17 @@ class ConsoleLogger {
 	}
 
 	/**
+	 * Logs a message to the console with log level info and the
+	 * appname that is defined in the Application class.
+	 *
+	 * @param string $message the message that should be logged
+	 * @since 1.0.0
+	 */
+	public static function info($message) {
+		ConsoleLogger::log(Util::INFO, $message);
+	}
+
+	/**
 	 * Logs a message to the console with log level warn and the
 	 * appname that is defined in the Application class.
 	 *

@@ -32,12 +32,39 @@ use OCP\IUser;
  * @since 1.0.0
  */
 class HybridItem {
+	/**
+	 * @var Similarity $collaborative the collaborative similarity
+	 */
 	private $collaborative = null;
+
+	/**
+	 * @var Similarity $contentBased the content based similarity
+	 */
 	private $contentBased = null;
+
+	/**
+	 * @var Item $item the item
+	 */
 	private $item = null;
+
+	/**
+	 * @var IUser $user the user
+	 */
 	private $user = null;
+
+	/**
+	 * @var int $groupWeight the group weights
+	 */
 	private $groupWeight = 1;
+
+	/**
+	 * @var float $collaborativeWeight the collaborative weight
+	 */
 	private static $collaborativeWeight = 0.5;
+
+	/**
+	 * @var float $contentBasedWeight the content based weight
+	 */
 	private static $contentBasedWeight = 1 - 0.5;
 
 	/**
@@ -206,6 +233,12 @@ class HybridItem {
 		return $weightedAverage;
 	}
 
+	/**
+	 * decides whether the item is recommendaable or not
+	 *
+	 * @return bool item is recommendable
+	 * @since 1.0.0
+	 */
 	public function isRecommandable(): bool {
 		$val = HybridItem::weightedAverage($this);
 		//TODO define a threshold and do not hardcode it!

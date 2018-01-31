@@ -26,6 +26,7 @@ use OCA\RecommendationAssistant\Objects\Item;
 use OCA\RecommendationAssistant\Objects\ItemList;
 use OCA\RecommendationAssistant\Objects\ItemToItemMatrix;
 use OCA\RecommendationAssistant\Objects\Similarity;
+use OCA\RecommendationAssistant\Util\Util;
 use OCP\IUser;
 
 /**
@@ -110,13 +111,9 @@ class RatingPredictor {
 			$lower += $sim->getValue();
 		}
 		if ($lower == 0) {
-			$similarity->setValue(0.0);
-			$similarity->setStatus(Similarity::NO_SIMILARITY_AVAILABLE);
-			$similarity->setDescription("lower equals to 0");
+			$similarity = Util::createSimilarity(0.0, Similarity::NO_SIMILARITY_AVAILABLE, "lower equals to 0");
 		} else {
-			$similarity->setValue($upper / $lower);
-			$similarity->setStatus(Similarity::VALID);
-			$similarity->setDescription("ok");
+			$similarity = Util::createSimilarity($upper / $lower, Similarity::VALID, "ok");
 		}
 		return $similarity;
 	}

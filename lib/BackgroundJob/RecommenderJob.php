@@ -56,7 +56,7 @@ class RecommenderJob extends TimedJob {
 	/**
 	 * inherited method run ensures that the background job runs
 	 *
-	 * @param $argument argument passed to the job
+	 * @param string $argument passed to the job
 	 * @since 1.0.0
 	 */
 	protected function run($argument) {

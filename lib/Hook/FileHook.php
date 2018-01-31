@@ -24,6 +24,7 @@ namespace OCA\RecommendationAssistant\Hook;
 use OCA\RecommendationAssistant\Db\ChangedFilesManager;
 use OCA\RecommendationAssistant\Db\ProcessedFilesManager;
 use OCA\RecommendationAssistant\Log\Logger;
+use OCA\RecommendationAssistant\Util\NodeUtil;
 use OCP\Files\File;
 use OCP\Files\IRootFolder;
 use OCP\Files\Node;
@@ -183,7 +184,7 @@ class FileHook {
 	 * @since 1.0.0
 	 */
 	public function runFavorite(string $userId, string $fileId, string $caller) {
-		$node = $this->getNodeById($fileId);
+		$node = NodeUtil::getFile($fileId, $userId);
 		if ($caller == "addFavorite") {
 			$this->changedFilesManager->handle($node, "favorite");
 		} else if ($caller == "removeFavorite") {
@@ -209,20 +210,5 @@ class FileHook {
 			Logger::error($e->getMessage());
 		}
 		return $node;
-	}
-
-	/**
-	 * returns the Node instance that correspondents to $fileId
-	 *
-	 * @param string $fileId the file id
-	 * @return Node the node that is requested
-	 *
-	 * @since 1.0.0
-	 */
-	private function getNodeById($fileId) {
-		$currentUserId = $this->userSession->getUser()->getUID();
-		$userFolder = $this->rootFolder->getUserFolder($currentUserId);
-		$nodeArray = $userFolder->getById($fileId);
-		return $nodeArray[0];
 	}
 }

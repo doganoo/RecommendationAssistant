@@ -21,9 +21,9 @@
 
 namespace OCA\RecommendationAssistant\AppInfo;
 
+use OCA\Files\Service\TagService;
 use OCA\RecommendationAssistant\Db\ChangedFilesManager;
 use OCA\RecommendationAssistant\Db\ProcessedFilesManager;
-use OCA\RecommendationAssistant\Hook\FileConsumer;
 use OCA\RecommendationAssistant\Hook\FileHook;
 use OCA\RecommendationAssistant\Log\Logger;
 use OCP\AppFramework\App;
@@ -132,7 +132,7 @@ class Application extends App {
 	public function register() {
 		Util::connectHook('OC_Filesystem', 'read', $this, 'callFileHook');
 
-		$this->getContainer()->getServer()->getEventDispatcher()->addListener(\OCA\Files\Service\TagService::class . '::addFavorite', function (GenericEvent $event) {
+		$this->getContainer()->getServer()->getEventDispatcher()->addListener(TagService::class . '::addFavorite', function (GenericEvent $event) {
 			$userId = $event->getArgument('userId');
 			$fileId = $event->getArgument('fileId');
 			/** @var FileHook $hook */
@@ -140,7 +140,7 @@ class Application extends App {
 			$hook->runFavorite($userId, $fileId, "addFavorite");
 		});
 
-		$this->getContainer()->getServer()->getEventDispatcher()->addListener(\OCA\Files\Service\TagService::class . '::removeFavorite', function (GenericEvent $event) {
+		$this->getContainer()->getServer()->getEventDispatcher()->addListener(TagService::class . '::removeFavorite', function (GenericEvent $event) {
 			$userId = $event->getArgument('userId');
 			$fileId = $event->getArgument('fileId');
 			/** @var FileHook $hook */
@@ -149,6 +149,12 @@ class Application extends App {
 		});
 	}
 
+	/**
+	 * the file hook that is executed when a file is changed.
+	 *
+	 * @param $params
+	 * @since 1.0.0
+	 */
 	public function callFileHook($params) {
 		$container = $this->getContainer();
 		$fileHookExecuted = false;

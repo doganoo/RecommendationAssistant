@@ -27,7 +27,7 @@ use OCA\RecommendationAssistant\Objects\Item;
 use OCA\RecommendationAssistant\Objects\ItemList;
 use OCA\RecommendationAssistant\Objects\KeywordList;
 use OCA\RecommendationAssistant\Objects\Similarity;
-use OCP\IUser;
+use OCA\RecommendationAssistant\Util\Util;
 
 /**
  * OverlapCoefficientComputer class that computes the similarity between two items
@@ -93,23 +93,16 @@ class OverlapCoefficientComputer implements IComputable {
 		//item has more keywords than the user profile. Otherwise use the amount
 		//of the user profile
 		$lower = $itemKeywords->size() > $this->keywordList->size() ? $this->keywordList->size() : $itemKeywords->size();
-		$value = 0.0;
 
 		if ($count == 0) {
-			$similarity->setValue(0.0);
-			$similarity->setStatus(Similarity::NO_OVERLAPPING_KEYWORDS);
-			$similarity->setDescription("no overlapping keywords found");
+			$similarity = Util::createSimilarity(0.0, Similarity::NO_OVERLAPPING_KEYWORDS, "no overlapping keywords found");
 		}
 		if ($lower == 0) {
-			$similarity->setValue(0.0);
-			$similarity->setStatus(Similarity::ITEM_OR_USER_PROFILE_EMPTY);
-			$similarity->setDescription("no keywords in item / user profile");
+			$similarity = Util::createSimilarity(0.0, Similarity::ITEM_OR_USER_PROFILE_EMPTY, "no keywords in item / user profile");
 		}
 		if ($count > 0 && $lower > 0) {
 			$factor = 5; //TODO ensure factor!
-			$similarity->setValue(($count / $lower) * $factor);
-			$similarity->setStatus(Similarity::VALID);
-			$similarity->setDescription("valid calculation");
+			$similarity = Util::createSimilarity(($count / $lower) * $factor, Similarity::VALID, "valid calculation");
 		}
 		return $similarity;
 	}

@@ -22,6 +22,7 @@
 namespace OCA\RecommendationAssistant\Service;
 
 use OC\Files\Filesystem;
+use OC\Files\Node\Node;
 use OCA\RecommendationAssistant\AppInfo\Application;
 use OCA\RecommendationAssistant\ContentReader\ContentReaderFactory;
 use OCA\RecommendationAssistant\ContentReader\EmptyReader;
@@ -35,10 +36,12 @@ use OCA\RecommendationAssistant\Objects\KeywordList;
 use OCA\RecommendationAssistant\Objects\Rater;
 use OCA\RecommendationAssistant\Recommendation\TextProcessor;
 use OCA\RecommendationAssistant\Recommendation\TFIDFComputer;
-use OCA\RecommendationAssistant\Util\FileUtil;
+use OCA\RecommendationAssistant\Util\NodeUtil;
 use OCP\Files\File;
 use OCP\Files\Folder;
+use OCP\Files\InvalidPathException;
 use OCP\Files\IRootFolder;
+use OCP\Files\NotFoundException;
 use OCP\IUser;
 use OCP\IUserManager;
 
@@ -150,7 +153,7 @@ class UserProfileService {
 				$preparedList->sort();
 				$preparedList->removeStopwords();
 				$keywordList->merge($preparedList);
-				$file = FileUtil::getFile($item->getId(), $user->getUID());
+				$file = NodeUtil::getFile($item->getId(), $user->getUID());
 				$this->processedFilesManager->insertFile($file, "userprofile");
 			}
 			$this->userProfileManager->insertKeywords($keywordList, $user);
@@ -179,14 +182,21 @@ class UserProfileService {
 	 */
 	private function handleFolder(Folder $folder, IUser $user): ItemList {
 		$itemList = new ItemList();
-		foreach ($folder->getDirectoryListing() as $node) {
-			if ($node instanceof Folder) {
-				$return = $this->handleFolder($node, $user);
-				$itemList->merge($return);
-			} else if ($node instanceof File) {
-				$return = $this->handleFile($node, $user);
-				$itemList->add($return);
+		try {
+			foreach ($folder->getDirectoryListing() as $node) {
+				$valid = NodeUtil::validNode($node);
+				if ($valid) {
+					if ($node instanceof Folder) {
+						$return = $this->handleFolder($node, $user);
+						$itemList->merge($return);
+					} else if ($node instanceof File) {
+						$return = $this->handleFile($node, $user);
+						$itemList->add($return);
+					}
+				}
 			}
+		} catch (NotFoundException $exception) {
+			Logger::error($exception->getMessage());
 		}
 		return $itemList;
 	}
@@ -207,23 +217,34 @@ class UserProfileService {
 	 * The method will return null if one of the above described conditions are true.
 	 *
 	 * @param File $file the actual file
+	 * @param IUser $user the current user
 	 * @return null|Item the item that represents the file or null under some
 	 * circumstances
 	 * @since 1.0.0
 	 */
 	private function handleFile(File $file, IUser $user): Item {
 		$item = new Item();
-		$isSharedStorage = $file->getStorage()->instanceOfStorage(Application::SHARED_INSTANCE_STORAGE);
-		if ($file->isEncrypted()) {
-			return $item;
-		}
-		if (!$file->isReadable()) {
-			return $item;
+		$isSharedStorage = false;
+		$fileId = "";
+		try {
+			$isSharedStorage = $file->getStorage()->instanceOfStorage(Application::SHARED_INSTANCE_STORAGE);
+		} catch (NotFoundException $e) {
+			Logger::warn($e->getMessage());
 		}
 		if ($isSharedStorage) {
 			return $item;
 		}
-		$hasChanges = FileUtil::hasChanges($file->getId(), $user->getUID());
+
+		try {
+			$fileId = $file->getId();
+		} catch (InvalidPathException $e) {
+			Logger::error($e->getMessage());
+			return new  Item();
+		} catch (NotFoundException $e) {
+			Logger::error($e->getMessage());
+			return new  Item();
+		}
+		$hasChanges = NodeUtil::hasChanges($fileId, $user->getUID());
 		$processed = $this->processedFilesManager->isPresentable($file, "userprofile");
 
 		/*
@@ -250,7 +271,7 @@ class UserProfileService {
 		$textProcessor->toLower();
 		$array = $textProcessor->getTextAsArray();
 
-		$item->setId($file->getId());
+		$item->setId($fileId);
 		$item->setOwner($file->getOwner());
 		$item->setName($file->getName());
 		$rater = $this->getRater($user, true);

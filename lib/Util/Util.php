@@ -21,15 +21,28 @@
 
 namespace OCA\RecommendationAssistant\Util;
 
+use OCA\RecommendationAssistant\Exception\InvalidSimilarityValueException;
+use OCA\RecommendationAssistant\Log\Logger;
+use OCA\RecommendationAssistant\Objects\Similarity;
 use OCP\IUser;
 
+
 /**
- * Utility class for helper methods.
+ * Utility class for helper methods that are not specific.
+ * This class is not instantiable because all methods are static.
  *
  * @package OCA\RecommendationAssistant\Util
  * @since 1.0.0
  */
 class Util {
+	/**
+	 * class constructor is private because all methods are public static.
+	 *
+	 * @since 1.0.0
+	 */
+	private function __construct() {
+	}
+
 	/**
 	 * compares the IDs of $user1 and $user2. The comparision is case sensitive!
 	 *
@@ -42,8 +55,32 @@ class Util {
 		return strcmp($user1->getUID(), $user2->getUID()) === 0;
 	}
 
-	public static function hasAccess(string $nodeId, string $userId): bool {
-		$node = FileUtil::getFile($nodeId, $userId);
-		return $node !== null;
+
+//	public static function hasAccess(string $nodeId, string $userId): bool {
+//		$node = NodeUtil::getFile($nodeId, $userId);
+//		return $node !== null;
+//	}
+
+	/**
+	 * creates an instance of Similarity and returns it. The method catches
+	 * the InvalidSimilarityException and returns an empty Similarity instance
+	 * if the exception is thrown.
+	 *
+	 * @param int $value
+	 * @param int $status
+	 * @param string $description
+	 * @return Similarity
+	 * @since 1.0.0
+	 */
+	public static function createSimilarity(int $value, int $status, string $description): Similarity {
+		$similarity = new Similarity();
+		try {
+			$similarity->setValue($value);
+			$similarity->setStatus($status);
+			$similarity->setDescription($description);
+		} catch (InvalidSimilarityValueException $exception) {
+			Logger::error($exception->getMessage());
+		}
+		return $similarity;
 	}
 }

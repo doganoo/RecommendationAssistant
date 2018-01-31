@@ -38,8 +38,7 @@ class UserProfileJob extends TimedJob {
 	 * @const INTERVAL the interval in which the job should run.
 	 * Actually once a day.
 	 */
-//	 const INTERVAL = 1000 * 60 * 60 * 24;
-	const INTERVAL = 1;
+	const INTERVAL = 1000 * 60 * 60 * 24;
 
 	/**
 	 * Class constructor defines the interval in which the background job runs
@@ -57,7 +56,7 @@ class UserProfileJob extends TimedJob {
 	/**
 	 * inherited method run ensures that the background job runs
 	 *
-	 * @param $argument argument passed to the job
+	 * @param string $argument passed to the job
 	 * @since 1.0.0
 	 */
 	protected function run($argument) {

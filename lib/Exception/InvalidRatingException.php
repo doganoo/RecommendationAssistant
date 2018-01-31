@@ -21,7 +21,13 @@
 
 namespace OCA\RecommendationAssistant\Exception;
 
-
+/**
+ * Exception class for invalid ratings.
+ * Class extends PHP core Exception class.
+ *
+ * @package OCA\RecommendationAssistant\Exception
+ * @since 1.0.0
+ */
 class InvalidRatingException extends \Exception {
 
 }

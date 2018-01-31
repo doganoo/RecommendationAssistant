@@ -94,8 +94,8 @@ class ItemToItemMatrix {
 									[#similarity#][#{$similarity->getValue()}#]
 									[#similarityStatus#][#{$similarity->getDescription()}#]";
 			}
-			return $string;
 		}
+		return $string;
 	}
 
 }

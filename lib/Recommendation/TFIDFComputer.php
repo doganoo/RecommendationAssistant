@@ -82,6 +82,7 @@ class TFIDFComputer {
 			if (trim($keyword) == "") {
 				continue;
 			}
+			//TODO das gehoert hier hin! Ueberpruefen!
 //			if ($this->item->keywordSize() === $this->itemList->size()) {
 //				$similarity->setValue(0.0);
 //				$similarity->setStatus(Similarity::NOT_ENOUGH_ITEMS_IN_ITEM_BASE);

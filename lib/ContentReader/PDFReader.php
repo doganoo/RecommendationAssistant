@@ -23,10 +23,8 @@ namespace OCA\RecommendationAssistant\ContentReader;
 
 use OCA\RecommendationAssistant\AppInfo\Application;
 use OCA\RecommendationAssistant\Interfaces\IContentReader;
-use OCA\RecommendationAssistant\Log\ConsoleLogger;
 use OCA\RecommendationAssistant\Log\Logger;
 use OCP\Files\File;
-use OCP\Files\NotPermittedException;
 use Smalot\PdfParser\Parser;
 
 /**
@@ -49,7 +47,6 @@ class PDFReader implements IContentReader {
 	 * @since 1.0.0
 	 */
 	public function __construct() {
-		ConsoleLogger::error("new parser object");
 		$this->parser = new Parser();
 	}
 
@@ -65,12 +62,9 @@ class PDFReader implements IContentReader {
 	public function read(File $file): string {
 		$dataDir = Application::getDataDirectory();
 		$filePath = $dataDir . "/" . $file->getPath();
-		ConsoleLogger::error($file->getName());
 		try {
 			$content = $this->parser->parseContent($filePath);
-			ConsoleLogger::error("parsed file");
 			$text = $content->getText();
-			ConsoleLogger::error("got text");
 			return $text;
 		} catch (\Exception $e) {
 			Logger::error($e->getMessage());

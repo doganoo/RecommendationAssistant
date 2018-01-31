@@ -24,10 +24,13 @@ namespace OCA\RecommendationAssistant\Controller;
 
 use OCA\RecommendationAssistant\Db\Entity\Recommendation;
 use OCA\RecommendationAssistant\Db\Mapper\RecommendationMapper;
-use OCA\RecommendationAssistant\Util\FileUtil;
+use OCA\RecommendationAssistant\Log\Logger;
+use OCA\RecommendationAssistant\Util\NodeUtil;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http\JSONResponse;
 use OCP\Files\File;
+use OCP\Files\InvalidPathException;
+use OCP\Files\NotFoundException;
 use OCP\IRequest;
 
 /**
@@ -85,16 +88,30 @@ class RecommendationController extends Controller {
 		foreach ($entities as $key => &$entity) {
 			$id = $entity->fileId;
 			/** @var File $node */
-			$node = FileUtil::getFile($id, $this->userId);
+			$node = NodeUtil::getFile($id, $this->userId);
 			if ($node == null) {
 				unset($entities[$key]);
 				continue;
 			}
-			$name = $node == null ? "" : $node->getName();
-			$size = $node == null ? 0 : $node->getSize();
-			$mTime = $node == null ? (new \DateTime())->getTimestamp() : $node->getMTime();
-			$extension = $node == null ? "" : pathinfo($name, PATHINFO_EXTENSION);
-			$fileNameAndExtension = $node == null ? "" : "$name";
+			$name = $node->getName();
+			$size = 0;
+			$mTime = (new \DateTime())->getTimestamp();
+			try {
+				$size = $node->getSize();
+			} catch (InvalidPathException $e) {
+				Logger::warn($e->getMessage());
+			} catch (NotFoundException $e) {
+				Logger::warn($e->getMessage());
+			}
+			try {
+				$mTime = $node->getMTime();
+			} catch (InvalidPathException $e) {
+				Logger::warn($e->getMessage());
+			} catch (NotFoundException $e) {
+				Logger::warn($e->getMessage());
+			}
+			$extension = pathinfo($name, PATHINFO_EXTENSION);
+			$fileNameAndExtension = $name;
 			$entity->fileName = pathinfo($name, PATHINFO_FILENAME);
 			$entity->mTime = $mTime;
 			$entity->fileSize = $size;
