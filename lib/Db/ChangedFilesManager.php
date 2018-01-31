@@ -86,9 +86,11 @@ class ChangedFilesManager {
 			);
 		} catch (InvalidPathException $e) {
 			Logger::error($e->getMessage());
+			ConsoleLogger::error($e->getMessage());
 			return false;
 		} catch (\OCP\Files\NotFoundException $e) {
 			Logger::error($e->getMessage());
+			ConsoleLogger::error($e->getMessage());
 			return false;
 		}
 		$query->execute();

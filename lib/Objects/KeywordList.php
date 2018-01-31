@@ -36,7 +36,7 @@ class KeywordList implements \IteratorAggregate {
 	/**
 	 * @var array $keywordList
 	 */
-	private $keywordList = null;
+	private $keywordList = [];
 
 	/**
 	 * adds an keyword to the list. The highest TFIDF value will remain in

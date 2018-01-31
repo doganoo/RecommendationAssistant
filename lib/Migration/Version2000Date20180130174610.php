@@ -19,31 +19,28 @@
  *
  */
 
-namespace OCA\RecommendationAssistant\Util;
+namespace OCA\RecommendationAssistant\Migration;
 
-use OCP\IUser;
 
-/**
- * Utility class for helper methods.
- *
- * @package OCA\RecommendationAssistant\Util
- * @since 1.0.0
- */
-class Util {
-	/**
-	 * compares the IDs of $user1 and $user2. The comparision is case sensitive!
-	 *
-	 * @param IUser $user1
-	 * @param IUser $user2
-	 * @return bool
-	 * @since 1.0.0
-	 */
-	public static function sameUser(IUser $user1, IUser $user2): bool {
-		return strcmp($user1->getUID(), $user2->getUID()) === 0;
-	}
+use Doctrine\DBAL\Schema\Schema;
+use Doctrine\DBAL\Types\Type;
+use OCA\RecommendationAssistant\Db\DbConstants;
+use OCP\Migration\IOutput;
+use OCP\Migration\SimpleMigrationStep;
 
-	public static function hasAccess(string $nodeId, string $userId): bool {
-		$node = FileUtil::getFile($nodeId, $userId);
-		return $node !== null;
+class Version2000Date20180130174610 extends SimpleMigrationStep {
+	public function changeSchema(IOutput $output, \Closure $schemaClosure, array $options) {
+		/** @var Schema $schema */
+		$schema = $schemaClosure();
+
+		if ($schema->hasTable(DbConstants::TABLE_NAME_FILES_PROCESSED)) {
+			$table = $schema->getTable(DbConstants::TABLE_NAME_FILES_PROCESSED);
+			$table->addColumn(DbConstants::TB_FP_TYPE, Type::STRING, [
+				DbConstants::NOTNULL => true,
+				DbConstants::LENGTH => 64,
+				DbConstants::DEFAULT => "",
+			]);
+		}
+		return $schema;
 	}
 }

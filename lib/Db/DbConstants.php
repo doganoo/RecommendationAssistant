@@ -69,6 +69,7 @@ class DbConstants {
 	const TB_FP_FILE_ID = "file_id";
 	const TB_FP_KEYWORD = "keyword";
 	const TB_FP_TFIDF_VALUE = "tfidf_value";
+	const TB_FP_TYPE = "type";
 
 	/**
 	 * GROUP WEIGHTS TABLE

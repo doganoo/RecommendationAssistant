@@ -23,20 +23,24 @@
 
 (function () {
 	'use strict';
-	var source = '<div class="apps-header">' +
-		'<h2 style="text-align: center">' + t('recommendation_assistant', 'Recommendations') + '</h2>' +
+	var source = '<div class="apps-header" style="margin-top: 25px;">' +
+		'<span class="extension" style="margin-left: 109px;">' + t('recommendation_assistant', 'Recommendations') + '</span>' +
 		'<div class="section group">' +
 		'{{#each this}}' +
 		'<div class="col span_1_of_3">' +
 		'	<a class="name" href="/nextcloud/remote.php/webdav/{{ fileNameAndExtension }}">' +
-		' 	<div class="thumbnail-wrapper">' +
-		'		<div class="thumbnail" style="background-image: url(\'{{ getPreviewUrl fileNameAndExtension }}\');">' +
+		' 	<div class="thumbnail-wrapper" style="margin-left: 25px;">' +
+		'		<div class="thumbnail" style="background-image: url(\'{{ getPreviewUrl fileNameAndExtension }}\'); height: 64px; width: 64px; float: left">' +
 		'		</div>' +
-		'	</div>' +
-		'		<span class="nametext">' +
+		'		<span class="nametext" style="margin-left: 20px;">' +
 		'			<span class="innernametext">{{ fileName }}</span>' +
 		'			<span class="extension">.{{ extension }}</span>' +
 		'		</span>' +
+		'		<div style="clear: right;"></div>' +
+		'		<span class="nametext" style="margin-left: 20px;">' +
+		'			<span class="extension">created by Dogan</span>' +
+		'		</span>' +
+		'	</div>' +
 		'	</a>' +
 		'</div>' +
 		'{{/each}}' +
@@ -49,7 +53,6 @@
 		type: 'GET',
 		contentType: 'application/json',
 	}).done(function (response) {
-
 		if (objectSize(response) > 0) {
 			var div = $('<div id="recommendations"><span class="icon-loading"></span></div>');
 			$('#controls').after(div);

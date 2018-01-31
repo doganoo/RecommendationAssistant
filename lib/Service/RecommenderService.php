@@ -170,6 +170,14 @@ class RecommenderService {
 	public function run() {
 		Logger::debug("RecommenderService start");
 		ConsoleLogger::debug("RecommenderService start");
+
+		$iniVals = [];
+		$iniVals["max_execution_time"] = ini_get("max_execution_time");
+		$iniVals["memory_limit"] = ini_get("memory_limit");
+		set_time_limit(0);
+		ini_set("memory_limit", -1);
+
+
 		$itemList = new ItemList();
 		$users = [];
 		$hybridList = new HybridList();
@@ -238,6 +246,9 @@ class RecommenderService {
 		$hybridList->removeNonRecommendable();
 		$this->recommendationManager->deleteAll();
 		$this->recommendationManager->insertHybridList($hybridList);
+
+		set_time_limit($iniVals["max_execution_time"]);
+		ini_set("memory_limit", $iniVals["memory_limit"]);
 
 		Logger::debug("RecommenderService end");
 		ConsoleLogger::debug("RecommenderService end");
@@ -321,7 +332,7 @@ class RecommenderService {
 		$item = $this->createItem($file);
 		$item = $this->addRater($item, $file, $currentUser);
 		$item = $this->addKeywords($item, $file);
-		$this->processedFileManager->insertFile($file);
+		$this->processedFileManager->insertFile($file, "recommendation");
 		return $item;
 	}
 
@@ -471,7 +482,7 @@ class RecommenderService {
 			return false;
 		}
 		//TODO check the checksum of the file for changes?
-		$presentable = $this->processedFileManager->isPresentable($file);
+		$presentable = $this->processedFileManager->isPresentable($file, "recommendation");
 		return $presentable;
 	}
 

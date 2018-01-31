@@ -25,6 +25,7 @@ use OC\Files\Filesystem;
 use OCA\RecommendationAssistant\AppInfo\Application;
 use OCA\RecommendationAssistant\ContentReader\ContentReaderFactory;
 use OCA\RecommendationAssistant\ContentReader\EmptyReader;
+use OCA\RecommendationAssistant\Db\ProcessedFilesManager;
 use OCA\RecommendationAssistant\Db\UserProfileManager;
 use OCA\RecommendationAssistant\Log\ConsoleLogger;
 use OCA\RecommendationAssistant\Log\Logger;
@@ -34,6 +35,7 @@ use OCA\RecommendationAssistant\Objects\KeywordList;
 use OCA\RecommendationAssistant\Objects\Rater;
 use OCA\RecommendationAssistant\Recommendation\TextProcessor;
 use OCA\RecommendationAssistant\Recommendation\TFIDFComputer;
+use OCA\RecommendationAssistant\Util\FileUtil;
 use OCP\Files\File;
 use OCP\Files\Folder;
 use OCP\Files\IRootFolder;
@@ -75,6 +77,12 @@ class UserProfileService {
 	private $userProfileManager = null;
 
 	/**
+	 * @var ProcessedFilesManager $processedFilesManager manager class in order to
+	 * query the database
+	 */
+	private $processedFilesManager = null;
+
+	/**
 	 * Class constructor gets multiple instances injected
 	 *
 	 * @param IRootFolder $rootFolder the rootfolder of each user
@@ -82,15 +90,19 @@ class UserProfileService {
 	 * all users
 	 * @param UserProfileManager $userProfileManager data storage access instance
 	 * in order to get/set the keywords associated to a user profile
+	 * @param ProcessedFilesManager $processedFilesManager manager class in order to
+	 * query the database
 	 * @since 1.0.0
 	 */
 	public function __construct(
 		IRootFolder $rootFolder,
 		IUserManager $userManager,
-		UserProfileManager $userProfileManager) {
+		UserProfileManager $userProfileManager,
+		ProcessedFilesManager $processedFilesManager) {
 		$this->rootFolder = $rootFolder;
 		$this->userManager = $userManager;
 		$this->userProfileManager = $userProfileManager;
+		$this->processedFilesManager = $processedFilesManager;
 		$this->itemList = new ItemList();
 	}
 
@@ -108,6 +120,13 @@ class UserProfileService {
 	public function run() {
 		Logger::debug("UserProfileService start");
 		ConsoleLogger::debug("UserProfileService start");
+
+		$iniVals = [];
+		$iniVals["max_execution_time"] = ini_get("max_execution_time");
+		$iniVals["memory_limit"] = ini_get("memory_limit");
+		set_time_limit(0);
+		ini_set("memory_limit", -1);
+
 		$itemList = new ItemList();
 		$users = [];
 		$this->userManager->callForSeenUsers(function (IUser $user) use (&$itemList, &$users) {
@@ -117,6 +136,7 @@ class UserProfileService {
 			$itemList->merge($return);
 			$users[] = $user;
 		});
+		ConsoleLogger::debug($itemList->size());
 		/** @var IUser $user */
 		foreach ($users as $user) {
 			$keywordList = new KeywordList();
@@ -130,9 +150,15 @@ class UserProfileService {
 				$preparedList->sort();
 				$preparedList->removeStopwords();
 				$keywordList->merge($preparedList);
+				$file = FileUtil::getFile($item->getId(), $user->getUID());
+				$this->processedFilesManager->insertFile($file, "userprofile");
 			}
 			$this->userProfileManager->insertKeywords($keywordList, $user);
 		}
+
+		set_time_limit($iniVals["max_execution_time"]);
+		ini_set("memory_limit", $iniVals["memory_limit"]);
+
 		Logger::debug("UserProfileService end");
 		ConsoleLogger::debug("UserProfileService end");
 	}
@@ -146,6 +172,7 @@ class UserProfileService {
 	 * method.
 	 *
 	 * @param Folder $folder the actual folder
+	 * @param IUser $user the user
 	 * @return ItemList a list of all items that are processed either recursively
 	 * or by the handleFile() method
 	 * @since 1.0.0
@@ -196,12 +223,25 @@ class UserProfileService {
 		if ($isSharedStorage) {
 			return $item;
 		}
+		$hasChanges = FileUtil::hasChanges($file->getId(), $user->getUID());
+		$processed = $this->processedFilesManager->isPresentable($file, "userprofile");
+
+		/*
+		 * a file has to be:
+		 *
+		 * <ul>changed</ul>
+		 * <ul>not processed in the past</ul>
+		 *
+		 * in order to get processed
+		 */
+		if (!($hasChanges || !$processed)) {
+			return $item;
+		}
 		$contentReader = ContentReaderFactory::getContentReader($file->getMimeType());
 
 		if ($contentReader instanceof EmptyReader) {
 			return $item;
 		}
-
 
 		$content = $contentReader->read($file);
 		$textProcessor = new TextProcessor($content);

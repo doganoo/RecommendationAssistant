@@ -156,8 +156,15 @@ class FileHook {
 		}
 
 		if ($node instanceof File) {
+			/*
+			 * inserting the file to the changed files
+			 */
 			$this->changedFilesManager->handle($node, "edit");
-			$this->processedFileManager->deleteFile($node);
+
+			/*
+			 * deleting the file in order to re-recommend it after a change
+			 */
+			$this->processedFileManager->deleteFile($node, "recommendation");
 			return true;
 		}
 

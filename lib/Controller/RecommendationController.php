@@ -82,10 +82,14 @@ class RecommendationController extends Controller {
 	public function index() {
 		$entities = $this->mapper->findAll($this->userId);
 		/** @var Recommendation $entity */
-		foreach ($entities as &$entity) {
+		foreach ($entities as $key => &$entity) {
 			$id = $entity->fileId;
 			/** @var File $node */
-			$node = FileUtil::getNode($id, $this->userId);
+			$node = FileUtil::getFile($id, $this->userId);
+			if ($node == null) {
+				unset($entities[$key]);
+				continue;
+			}
 			$name = $node == null ? "" : $node->getName();
 			$size = $node == null ? 0 : $node->getSize();
 			$mTime = $node == null ? (new \DateTime())->getTimestamp() : $node->getMTime();

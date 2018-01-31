@@ -35,7 +35,7 @@ class Version2000Date20180116132029 extends SimpleMigrationStep {
 
 		if ($schema->hasTable(DbConstants::TABLE_NAME_CHANGED_FILES_LOG)) {
 			$table = $schema->getTable(DbConstants::TABLE_NAME_CHANGED_FILES_LOG);
-			$table->addColumn(DbConstants::TB_CFL_FILE_NAME, Type::STRING, [
+			$table->addColumn(DbConstants::TB_RC_FILE_NAME, Type::STRING, [
 				DbConstants::NOTNULL => true,
 				DbConstants::LENGTH => 64,
 				DbConstants::DEFAULT => "",

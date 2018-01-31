@@ -55,23 +55,28 @@ class ProcessedFilesManager {
 	 * inserts information about a single file in the database
 	 *
 	 * @param File $file file whose information should be stored
-	 * @return bool whether the insertation was successfull or not
+	 * @param string $type the type of being processed. Possible types:
+	 *
+	 * <ul>recommendation</ul>
+	 * <ul>userprofile</ul>
+	 *
+	 * @return bool whether the insertation was successful or not
 	 * @since 1.0.0
 	 */
-	public function insertFile(File $file): bool {
-		//TODO handle!
+	public function insertFile(File $file, string $type): bool {
 		if (Application::DEBUG) {
-//			return true;
+			return true;
 		}
-		if ($this->isPresentable($file)) {
-//			return true;
+		if ($this->isPresentable($file, $type)) {
+			return true;
 		}
 		$query = $this->dbConnection->getQueryBuilder();
 		try {
 			$query->insert(DbConstants::TABLE_NAME_FILES_PROCESSED)->values(
 				[
 					DbConstants::TB_FP_FILE_ID => $query->createNamedParameter($file->getId()),
-					DbConstants::TB_FP_CREATION_TS => $query->createNamedParameter(time())
+					DbConstants::TB_FP_CREATION_TS => $query->createNamedParameter(time()),
+					DbConstants::TB_FP_TYPE => $query->createNamedParameter($type),
 				]
 			);
 		} catch (InvalidPathException $e) {
@@ -87,36 +92,24 @@ class ProcessedFilesManager {
 	}
 
 	/**
-	 * inserts multiple files into the database. The method calls the
-	 * insertFile() method to insert the information.
-	 * The array elements have to be an instance of File otherwise they will
-	 * be ignored.
-	 *
-	 * @param array $fileArray files that should be stored into the database
-	 * @since 1.0.0
-	 */
-	public function insertFiles(array $fileArray) {
-		foreach ($fileArray as $file) {
-			if (!$file instanceof File) {
-				continue;
-			}
-			$this->insertFile($file);
-		}
-	}
-
-	/**
 	 * checks whether a file is already inserted or not
 	 *
 	 * @param File $file file that should be checked
+	 * @param string $type the type of being processed. Possible types:
+	 *
+	 * <ul>recommendation</ul>
+	 * <ul>userprofile</ul>
+	 *
 	 * @return bool whether the file inserted or not
 	 * @since 1.0.0
 	 */
-	public function isPresentable(File $file) {
+	public function isPresentable(File $file, string $type) {
 		$query = $this->dbConnection->getQueryBuilder();
 		try {
 			$query->select(DbConstants::TB_FP_FILE_ID)
 				->from(DbConstants::TABLE_NAME_FILES_PROCESSED)
-				->where($query->expr()->eq(DbConstants::TB_FP_FILE_ID, $query->createNamedParameter($file->getId())));
+				->where($query->expr()->eq(DbConstants::TB_FP_FILE_ID, $query->createNamedParameter($file->getId())))
+				->andWhere($query->expr()->eq(DbConstants::TB_FP_TYPE, $query->createNamedParameter($type)));
 		} catch (InvalidPathException $e) {
 			Logger::error($e->getMessage());
 			return false;
@@ -135,12 +128,18 @@ class ProcessedFilesManager {
 	 * deletes a file from the database
 	 *
 	 * @param File $file the file that should be deleted
+	 * @param string $type the type of being processed. Possible types:
+	 *
+	 * <ul>recommendation</ul>
+	 * <ul>userprofile</ul>
+	 *
 	 * @since 1.0.0
 	 */
-	public function deleteFile(File $file) {
+	public function deleteFile(File $file, string $type) {
 		$query = $this->dbConnection->getQueryBuilder();
 		$query->delete(DbConstants::TABLE_NAME_FILES_PROCESSED)
 			->where($query->expr()->eq(DbConstants::TB_FP_FILE_ID, $query->createNamedParameter($file->getId())))
+			->andWhere($query->expr()->eq(DbConstants::TB_FP_TYPE, $query->createNamedParameter($type)))
 			->execute();
 	}
 
