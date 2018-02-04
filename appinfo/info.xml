@@ -36,12 +36,4 @@
 		<job>OCA\RecommendationAssistant\BackgroundJob\RecommenderJob</job>
 		<job>OCA\RecommendationAssistant\BackgroundJob\UserProfileJob</job>
 	</background-jobs>
-
-	<navigations>
-		<navigation>
-			<name>Recommendation Assistant</name>
-			<route>recommendation_assistant.frontend.show</route>
-			<order>100</order>
-		</navigation>
-	</navigations>
 </info>

@@ -38,7 +38,7 @@
 		'		</span>' +
 		'		<div style="clear: right;"></div>' +
 		'		<span class="nametext" style="margin-left: 20px;">' +
-		'			<span class="extension">created by Dogan</span>' +
+		'			<span class="extension">not implemented yet</span>' +
 		'		</span>' +
 		'	</div>' +
 		'	</a>' +

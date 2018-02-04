@@ -69,33 +69,4 @@ class ItemToItemMatrix {
 		}
 		return $arr[$item1->getId()];
 	}
-
-	public function __toString() {
-		$string = "";
-		/**
-		 * @var string $itemId
-		 * @var array $array
-		 */
-		foreach ($this->matrix as $itemId => $array) {
-			/**
-			 * @var string $item1id
-			 * @var  Similarity $similarity
-			 */
-			foreach ($array as $item1id => $similarity) {
-				if (!$similarity->isValid()) {
-					continue;
-				}
-				if ($similarity->getStatus() === Similarity::SAME_COSINE_ITEMS){
-					continue;
-				}
-				$string = $string . "
-									[#item#][#$itemId#]
-									[#item1#][#$item1id#]
-									[#similarity#][#{$similarity->getValue()}#]
-									[#similarityStatus#][#{$similarity->getDescription()}#]";
-			}
-		}
-		return $string;
-	}
-
 }

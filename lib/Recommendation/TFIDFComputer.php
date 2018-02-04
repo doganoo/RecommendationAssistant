@@ -23,8 +23,8 @@ namespace OCA\RecommendationAssistant\Recommendation;
 
 use OCA\RecommendationAssistant\Objects\Item;
 use OCA\RecommendationAssistant\Objects\ItemList;
-use OCA\RecommendationAssistant\Objects\KeywordList;
 use OCA\RecommendationAssistant\Objects\Keyword;
+use OCA\RecommendationAssistant\Objects\KeywordList;
 
 /**
  * TFIDFComputer class that computes the Term Frequency / Inverse Document Frequency
@@ -47,11 +47,6 @@ class TFIDFComputer {
 	private $itemBase = null;
 
 	/**
-	 * @var KeywordList $result
-	 */
-	private $result = null;
-
-	/**
 	 * Class constructor gets the item and itembase injected for that the
 	 * TFIDF value has to be calculated.
 	 *
@@ -64,7 +59,6 @@ class TFIDFComputer {
 		ItemList $itemBase) {
 		$this->item = $item;
 		$this->itemBase = $itemBase;
-		$this->result = new KeywordList();
 	}
 
 	/**
@@ -77,20 +71,22 @@ class TFIDFComputer {
 	 * their TFIDF value
 	 */
 	public function compute() {
-		$itemBaseSize = $this->itemBase->size();
-		foreach ($this->item->getKeywords() as $keyword) {
-			if (trim($keyword) == "") {
-				continue;
-			}
-			//TODO das gehoert hier hin! Ueberpruefen!
+		//TODO das gehoert hier hin! Ueberpruefen!
 //			if ($this->item->keywordSize() === $this->itemList->size()) {
 //				$similarity->setValue(0.0);
 //				$similarity->setStatus(Similarity::NOT_ENOUGH_ITEMS_IN_ITEM_BASE);
 //				$similarity->setDescription("number of items and item base is equal");
 //			}
-			$tfIdfItem = new Keyword();
-			$termFrequency = $this->item->countKeyword($keyword) / $this->item->keywordSize();
-			$count = $this->itemBase->countKeyword($keyword);
+		$result = new KeywordList();
+		$itemBaseSize = $this->itemBase->size();
+
+		/** @var Keyword $keyword */
+		foreach ($this->item->getKeywordList() as $keyword) {
+			if (trim($keyword->getKeyword()) == "") {
+				continue;
+			}
+			$termFrequency = $this->item->countKeyword($keyword->getKeyword()) / $this->item->keywordSize();
+			$count = $this->itemBase->countKeyword($keyword->getKeyword());
 
 			if ($count == 0) {
 				$count = 1;
@@ -100,11 +96,10 @@ class TFIDFComputer {
 			if ($tfIdf < 0) {
 				$tfIdf = 0;
 			}
-			$tfIdfItem->setTfIdf($tfIdf);
-			$tfIdfItem->setKeyword($keyword);
-			$this->result->add($tfIdfItem);
+			$keyword->setTfIdf($tfIdf);
+			$result->add($keyword);
 		}
-		$this->result->removeStopwords();
-		return $this->result;
+		$result->removeStopwords();
+		return $result;
 	}
 }

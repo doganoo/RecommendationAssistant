@@ -107,8 +107,7 @@ class ChangedFilesManager {
 	 * @param string $type
 	 * @since 1.0.0
 	 */
-	public function handle(File $file, string $type) {
-		//TODO change method name
+	public function deleteBeforeInsert(File $file, string $type) {
 		$presentable = $this->isPresentable($file, $type);
 		if ($presentable) {
 			$this->deleteFile($file, $type);

@@ -34,7 +34,33 @@ class Keyword {
 	private $tfIdf;
 
 	/**
+	 * @var int $count the number of the keywords occurrence
+	 */
+	private $count = 1;
+
+	/**
+	 * sets the number of keyword occurrence
+	 *
+	 * @param int $count
+	 * @since 1.0.0
+	 */
+	public function setCount(int $count) {
+		$this->count = $count;
+	}
+
+	/**
+	 * returns the number of keyword occurrence
+	 *
+	 * @return int
+	 * @since 1.0.0
+	 */
+	public function getCount(): int {
+		return $this->count;
+	}
+
+	/**
 	 * @return string
+	 * @since 1.0.0
 	 */
 	public function getKeyword(): string {
 		return $this->keyword;
@@ -42,6 +68,7 @@ class Keyword {
 
 	/**
 	 * @param string $keyword
+	 * @since 1.0.0
 	 */
 	public function setKeyword(string $keyword) {
 		$this->keyword = $keyword;
@@ -49,6 +76,7 @@ class Keyword {
 
 	/**
 	 * @return float
+	 * @since 1.0.0
 	 */
 	public function getTfIdf(): float {
 		return floatval($this->tfIdf);
@@ -56,10 +84,9 @@ class Keyword {
 
 	/**
 	 * @param float $tfIdf
+	 * @since 1.0.0
 	 */
 	public function setTfIdf(float $tfIdf) {
 		$this->tfIdf = $tfIdf;
 	}
-
-
 }

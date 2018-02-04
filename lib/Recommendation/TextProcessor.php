@@ -22,6 +22,9 @@
 namespace OCA\RecommendationAssistant\Recommendation;
 
 
+use OCA\RecommendationAssistant\Objects\Keyword;
+use OCA\RecommendationAssistant\Objects\KeywordList;
+
 class TextProcessor {
 	private $text;
 	private $textArray;
@@ -56,8 +59,18 @@ class TextProcessor {
 		});
 	}
 
+	public function getText() {
+		return $this->text;
+	}
 
-	public function getTextAsArray() {
-		return $this->textArray;
+
+	public function getKeywordList(): KeywordList {
+		$keywordList = new KeywordList();
+		foreach ($this->textArray as $value) {
+			$keyword = new Keyword();
+			$keyword->setKeyword($value);
+			$keywordList->add($keyword);
+		}
+		return $keywordList;
 	}
 }

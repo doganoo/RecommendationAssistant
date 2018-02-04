@@ -175,12 +175,14 @@ class RecommenderService {
 		$iniVals = [];
 		$iniVals["max_execution_time"] = ini_get("max_execution_time");
 		$iniVals["memory_limit"] = ini_get("memory_limit");
+		$iniVals["pcre.backtrack_limit"] = ini_get("pcre.backtrack_limit");
 		set_time_limit(0);
 		ini_set("memory_limit", -1);
+		ini_set("pcre.backtrack_limit", -1);
 
 
-		$itemList = new ItemList();
 		$users = [];
+		$itemList = new ItemList();
 		$hybridList = new HybridList();
 		$this->userManager->callForSeenUsers(function (IUser $user) use (&$itemList, &$users) {
 			Filesystem::initMountPoints($user->getUID());
@@ -190,7 +192,6 @@ class RecommenderService {
 			$users[] = $user;
 		});
 		$itemItemMatrix = new ItemToItemMatrix();
-
 		/** @var Item $item */
 		foreach ($itemList as $item) {
 			/** @var Item $item1 */
@@ -229,16 +230,21 @@ class RecommenderService {
 				$collaborativeSimilarity = $itemComputer->predict();
 				$hybrid->setContentBased($contentBasedSimilarity);
 				$hybrid->setCollaborative($collaborativeSimilarity);
-				$hybridList->add($hybrid, $user, $item);
+				if ($item->raterPresent($user->getUID())) {
+					$hybridList->add($hybrid, $user, $item);
+				}
 			}
 		}
 
-		$hybridList->removeNonRecommendable();
+		if (!Application::DEBUG) {
+			$hybridList->removeNonRecommendable();
+		}
 		$this->recommendationManager->deleteAll();
 		$this->recommendationManager->insertHybridList($hybridList);
 
 		set_time_limit($iniVals["max_execution_time"]);
 		ini_set("memory_limit", $iniVals["memory_limit"]);
+		ini_set("pcre.backtrack_limit", $iniVals["pcre.backtrack_limit"]);
 
 		Logger::debug("RecommenderService end");
 		ConsoleLogger::debug("RecommenderService end");
@@ -260,7 +266,6 @@ class RecommenderService {
 	 */
 	private
 	function handleFolder(Folder $folder, IUser $currentUser): ItemList {
-		//TODO is encrpyted auf folder ebene fur e2e
 		$itemList = new ItemList();
 		try {
 			foreach ($folder->getDirectoryListing() as $node) {
@@ -302,11 +307,15 @@ class RecommenderService {
 	 * circumstances
 	 * @since 1.0.0
 	 */
-	private
-	function handleFile(File $file, IUser $currentUser): Item {
+	private function handleFile(File $file, IUser $currentUser): Item {
 		if ($this->isProcessed($file)) {
 			return new Item();
 		}
+		$valid = Util::validMimetype($file->getMimeType());
+		if (!$valid) {
+			return new Item();
+		}
+
 		$item = $this->createItem($file);
 		$item = $this->addRater($item, $file, $currentUser);
 		$item = $this->addKeywords($item, $file);
@@ -334,6 +343,15 @@ class RecommenderService {
 		return $item;
 	}
 
+	/**
+	 * queries the database for the last change timestamp for an rating.
+	 * If there is no timestamp available, 01.01.1970 will be returned which
+	 * means that the file is not changed since then.
+	 *
+	 * @param File $file
+	 * @return int
+	 * @since 1.0.0
+	 */
 	private function getChangeTimeRating(File $file): int {
 		$presentable = $this->changedFilesManager->isPresentable($file, "edit");
 		$changeTs = 0;
@@ -354,6 +372,15 @@ class RecommenderService {
 
 	}
 
+	/**
+	 * queries the database for the change timestamp for an favorites.
+	 * If there is no timestamp available, 01.01.1970 will be returned which
+	 * means that the file is not rated since then.
+	 *
+	 * @param File $file
+	 * @return int
+	 * @since 1.0.0
+	 */
 	private function getFavoriteRating(File $file) {
 		$presentable = $this->changedFilesManager->isPresentable($file, "favorite");
 		$changeTs = 0;
@@ -374,6 +401,13 @@ class RecommenderService {
 
 	}
 
+	/**
+	 * returns the rating based on date difference in days.
+	 *
+	 * @param $numberOfDays
+	 * @return int
+	 * @since 1.0.0
+	 */
 	private function calculateRating($numberOfDays): int {
 
 		if ($numberOfDays <= 3) {
@@ -417,8 +451,8 @@ class RecommenderService {
 		$contentReader = ContentReaderFactory::getContentReader($file->getMimeType());
 		$content = $contentReader->read($file);
 		$textProcessor = new TextProcessor($content);
-		$array = $textProcessor->getTextAsArray();
-		$item->setKeywords($array);
+		$array = $textProcessor->getKeywordList();
+		$item->setKeywordList($array);
 		return $item;
 	}
 
@@ -459,7 +493,6 @@ class RecommenderService {
 		if (Application::DEBUG) {
 			return false;
 		}
-		//TODO check the checksum of the file for changes?
 		$presentable = $this->processedFileManager->isPresentable($file, "recommendation");
 		return $presentable;
 	}

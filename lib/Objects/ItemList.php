@@ -49,21 +49,15 @@ class ItemList implements \IteratorAggregate {
 			return false;
 		}
 		if (isset($this->itemList[$item->getId()])) {
-			foreach ($item->getRaters() as $rater) {
-				$this->itemList[$item->getId()]->addRater($rater);
-			}
-			$this->itemList[$item->getId()]->mergeKeywords($item->getKeywords());
+			/** @var Item $item1 */
+			$item1 = $this->itemList[$item->getId()];
+			$item1->addRaters($item->getRaters());
+			$item1->mergeKeywords($item->getKeywordList());
+			$this->itemList[$item->getId()] = $item1;
 		} else {
 			$this->itemList[$item->getId()] = $item;
 		}
 		return true;
-	}
-
-	public function getItem(string $index): Item {
-		if (isset($this->itemList[$index])) {
-			return $this->itemList[$index];
-		}
-		return new Item();
 	}
 
 	/**
@@ -98,12 +92,9 @@ class ItemList implements \IteratorAggregate {
 	 */
 	public function countKeyword(string $needle) {
 		$count = 0;
+		/** @var Item $item */
 		foreach ($this->itemList as $item) {
-			foreach ($item->getKeywords() as $keyword) {
-				if (strcasecmp($keyword, $needle) === 0) {
-					$count++;
-				}
-			}
+			$count += $item->countKeyword($needle);
 		}
 		return $count;
 	}
@@ -116,8 +107,7 @@ class ItemList implements \IteratorAggregate {
 	 * <b>Traversable</b>
 	 * @since 5.0.0
 	 */
-	public
-	function getIterator() {
+	public function getIterator() {
 		return new \ArrayIterator($this->itemList);
 	}
 }

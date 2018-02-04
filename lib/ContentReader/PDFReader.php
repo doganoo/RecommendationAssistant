@@ -21,11 +21,10 @@
 
 namespace OCA\RecommendationAssistant\ContentReader;
 
+use chv\pdftotext\PdfToText;
 use OCA\RecommendationAssistant\AppInfo\Application;
 use OCA\RecommendationAssistant\Interfaces\IContentReader;
-use OCA\RecommendationAssistant\Log\Logger;
 use OCP\Files\File;
-use Smalot\PdfParser\Parser;
 
 /**
  * ContentReader class that is responsible for Portable Document Format pdf documents.
@@ -35,20 +34,6 @@ use Smalot\PdfParser\Parser;
  * @since 1.0.0
  */
 class PDFReader implements IContentReader {
-	/**
-	 * @var Parser $parser the pdf parser
-	 */
-	private $parser = null;
-
-	/**
-	 * Class constructor creates the parser object that reads the PDF file
-	 * content.
-	 *
-	 * @since 1.0.0
-	 */
-	public function __construct() {
-		$this->parser = new Parser();
-	}
 
 	/**
 	 * Method implementation that is declared in the interface IContentReader.
@@ -62,13 +47,16 @@ class PDFReader implements IContentReader {
 	public function read(File $file): string {
 		$dataDir = Application::getDataDirectory();
 		$filePath = $dataDir . "/" . $file->getPath();
-		try {
-			$content = $this->parser->parseContent($filePath);
-			$text = $content->getText();
-			return $text;
-		} catch (\Exception $e) {
-			Logger::error($e->getMessage());
-			return "";
-		}
+
+		$pdf = new PdfToText($filePath);
+		$text = $pdf->Text;
+		/**
+		 * Strip non-ASCII characters from a String
+		 *
+		 * see http://hawkee.com/snippet/4224/
+		 * last visit: 02.02.18
+		 */
+		$text = preg_replace('/[^(\x20-\x7F)]*/', '', $text);
+		return $text;
 	}
 }

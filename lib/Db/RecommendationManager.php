@@ -68,11 +68,11 @@ class RecommendationManager {
 			]
 		);
 
-		//TODO find a solution
 		try {
 			$query->execute();
 		} catch (\Exception $exception) {
 			ConsoleLogger::debug($exception->getMessage());
+			return false;
 		}
 		$lastInsertId = $query->getLastInsertId();
 		return is_int($lastInsertId);
@@ -83,15 +83,19 @@ class RecommendationManager {
 	 * This method calls the insertHybrid() method of this class.
 	 *
 	 * @param HybridList $hybridList the list with all items
+	 * @return int $i number of items inserted
 	 * @since 1.0.0
 	 */
 	public function insertHybridList(HybridList $hybridList) {
+		$i = 0;
 		foreach ($hybridList as $userId => $array) {
 			/** @var HybridItem $hybrid */
 			foreach ($array as $itemId => $hybrid) {
 				$this->insertHybrid($hybrid);
+				$i++;
 			}
 		}
+		return $i;
 	}
 
 	/**

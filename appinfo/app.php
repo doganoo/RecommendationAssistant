@@ -37,7 +37,6 @@ $eventDispatcher->addListener(
 	'OCA\Files::loadAdditionalScripts',
 	function () {
 		Util::addscript(\OCA\RecommendationAssistant\AppInfo\Application::APP_ID, 'app');
-		Util::addStyle(\OCA\RecommendationAssistant\AppInfo\Application::APP_ID, "style");
 	}
 );
 

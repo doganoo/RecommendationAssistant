@@ -46,15 +46,23 @@ class KeywordList implements \IteratorAggregate {
 	 * @since 1.0.0
 	 */
 	public function add(Keyword $keyword) {
-		//TODO check whether this approach (survival of the highest) is valid
 		if (isset($this->keywordList[$keyword->getKeyword()])) {
+			/** @var Keyword $oldValue */
 			$oldValue = $this->keywordList[$keyword->getKeyword()];
 			if ($keyword->getTfIdf() > $oldValue->getTfIdf()) {
+				$keyword->setCount($oldValue->getCount() + 1);
 				$this->keywordList[$keyword->getKeyword()] = $keyword;
+			} else {
+				$oldValue->setCount($oldValue->getCount() + 1);
+				$this->keywordList[$keyword->getKeyword()] = $oldValue;
 			}
 		} else {
 			$this->keywordList[$keyword->getKeyword()] = $keyword;
 		}
+	}
+
+	public function getKeyword(string $keyword) {
+		return isset($this->keywordList[$keyword]) ? $this->keywordList[$keyword] : null;
 	}
 
 	/**
@@ -124,6 +132,7 @@ class KeywordList implements \IteratorAggregate {
 				return $floatVal !== 0.0;
 			}, ARRAY_FILTER_USE_BOTH);
 		/**
+		 * TODO find a solution
 		 * the following code removes the last 1/10 of the keywords that are
 		 * in the list. The code is useless actually because we want to see
 		 * the results without.
@@ -132,18 +141,6 @@ class KeywordList implements \IteratorAggregate {
 		//$size = $this->size();
 		//$last = round(($size / 10), 0, PHP_ROUND_HALF_UP);
 		//$this->keywordList = array_slice($this->keywordList, 0, $size - $last, true);
-	}
-
-	/**
-	 * returns the TFIDF value for a single keyword. The method will return the
-	 * value of 0 if the keyword is not present in the list.
-	 *
-	 * @param string $keyword the keyword that is searched for
-	 * @return int|Keyword
-	 * @since 1.0.0
-	 */
-	public function getValueByKeyword(string $keyword) {
-		return isset($this->keywordList[$keyword]) ? $this->keywordList[$keyword] : 0;
 	}
 
 	/**

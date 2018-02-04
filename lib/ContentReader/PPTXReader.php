@@ -76,7 +76,9 @@ class PPTXReader implements IContentReader {
 				$i = 1;
 				while (false !== ($entry = readdir($handle))) {
 					$pathInfo = pathinfo($entry);
-					if ($pathInfo["extension"] === "xml") {
+					$pathInfoExtension = isset($pathInfo["extension"]) ? $pathInfo["extension"] : "";
+					$pathInfoExtension = strtolower($pathInfoExtension);
+					if ($pathInfoExtension === "xml") {
 						$contentDocument = $zipPath . "/ppt/slides/slide$i.xml";
 						$content = file_get_contents($contentDocument);
 						$dom = new \DOMDocument();

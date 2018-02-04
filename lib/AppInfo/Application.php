@@ -76,7 +76,7 @@ class Application extends App {
 	 * <li>UserProfileService interval equals to 1</li>
 	 * <li>ConsoleLogger logs the messages to the console</li>
 	 */
-	const DEBUG = true;
+	const DEBUG = false;
 
 	/**
 	 * @const HOOK_FILE_HOOK_NAME the file hook name
@@ -87,6 +87,14 @@ class Application extends App {
 	 * @const RECOMMENDATION_ENTITIY_NAME the entity name for recommendations for the view
 	 */
 	const RECOMMENDATION_ENTITIY_NAME = "\OCA\RecommendationAssistant\Db\Entity\Recommendation";
+
+	/**
+	 * @const RECOMMENDATION_THRESHOLD defines the threshold that has to be exceeded in
+	 * order to get recommended.
+	 *
+	 * TODO define
+	 */
+	const RECOMMENDATION_THRESHOLD = 2;
 
 	/**
 	 * Class constructor calls the parent constructor with APP_ID
@@ -131,7 +139,6 @@ class Application extends App {
 
 	public function register() {
 		Util::connectHook('OC_Filesystem', 'read', $this, 'callFileHook');
-
 		$this->getContainer()->getServer()->getEventDispatcher()->addListener(TagService::class . '::addFavorite', function (GenericEvent $event) {
 			$userId = $event->getArgument('userId');
 			$fileId = $event->getArgument('fileId');

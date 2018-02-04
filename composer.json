@@ -1,11 +1,17 @@
 {
   "require": {
-    "smalot/pdfparser": "*",
-    "henck/rtf-to-html": "dev-master"
+    "henck/rtf-to-html": "dev-master",
+    "chv/pdftotext": "dev-master"
   },
   "autoload": {
     "psr-4": {
       "Henck\\RTFTOHTML\\": "vendor/henck"
     }
-  }
+  },
+  "repositories": [
+    {
+      "type": "vcs",
+      "url": "https://github.com/doganoo/PdfToText.git"
+    }
+  ]
 }

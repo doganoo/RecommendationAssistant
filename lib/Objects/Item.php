@@ -39,9 +39,9 @@ class Item {
 	 */
 	private $name;
 	/**
-	 * @var array $keywords
+	 * @var KeywordList $keywordList
 	 */
-	private $keywords;
+	private $keywordList;
 	/**
 	 * @var array $raters
 	 */
@@ -115,42 +115,38 @@ class Item {
 	/**
 	 * Returns the keywords that describe the item
 	 *
-	 * @return array the keywords
+	 * @return KeywordList the keywords
 	 * @since 1.0.0
 	 */
-	public function getKeywords(): array {
-		if ($this->keywords == null) {
-			return [];
+	public function getKeywordList(): KeywordList {
+		if ($this->keywordList == null) {
+			return new KeywordList();
 		}
-		return $this->keywords;
+		return $this->keywordList;
 	}
 
 	/**
 	 * sets the keywords that describe the item
 	 *
-	 * @param array $keywords the items name
+	 * @param KeywordList $keywordList the items name
 	 * @since 1.0.0
 	 */
-	public function setKeywords(array $keywords) {
-		$this->keywords = $keywords;
+	public function setKeywordList(KeywordList $keywordList) {
+		$this->keywordList = $keywordList;
 	}
 
 	/**
 	 * merges given keywords to the existing ones. The keyword will be ignored
 	 * if it is already in the list.
 	 *
-	 * @param array $keywords
+	 * @param KeywordList $keywords
 	 * @since 1.0.0
 	 */
-	public function mergeKeywords(array $keywords) {
-		foreach ($keywords as $keyword) {
-			if (trim($keyword) == "") {
-				continue;
-			}
-			if ($this->keywords == null ||
-				!in_array($keyword, $this->keywords, false)) {
-				$this->keywords[] = $keyword;
-			}
+	public function mergeKeywords(KeywordList $keywords) {
+		if ($this->keywordList == null) {
+			$this->setKeywordList($keywords);
+		} else {
+			$this->keywordList->merge($keywords);
 		}
 	}
 
@@ -224,10 +220,12 @@ class Item {
 	 * @since 1.0.0
 	 */
 	public function countKeyword(string $needle) {
-		$array = array_filter($this->getKeywords(), function ($value, $key) use ($needle) {
-			return strcasecmp($value, $needle) === 0;
-		}, ARRAY_FILTER_USE_BOTH);
-		return count($array);
+		/** @var Keyword $keyword */
+		$keyword = $this->getKeywordList()->getKeyword($needle);
+		if ($keyword == null) {
+			return 0;
+		}
+		return $keyword->getCount();
 	}
 
 	/**
@@ -237,7 +235,7 @@ class Item {
 	 * @since 1.0.0
 	 */
 	public function keywordSize(): int {
-		return count($this->getKeywords());
+		return $this->keywordList->size();
 	}
 
 	/**
@@ -251,5 +249,19 @@ class Item {
 		$hasOwner = $this->owner !== null;
 		$hasId = $this->id !== -1;
 		return $hasOwner && $hasId;
+	}
+
+	/**
+	 * adds a set of raters
+	 *
+	 * @param array $raters
+	 * @since 1.0.0
+	 */
+	public function addRaters(array $raters) {
+		foreach ($raters as $rater) {
+			if ($rater instanceof Rater) {
+				$this->addRater($rater);
+			}
+		}
 	}
 }

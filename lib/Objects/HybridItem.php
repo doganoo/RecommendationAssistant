@@ -22,6 +22,7 @@
 namespace OCA\RecommendationAssistant\Objects;
 
 
+use OCA\RecommendationAssistant\AppInfo\Application;
 use OCA\RecommendationAssistant\Exception\InvalidSimilarityValueException;
 use OCP\IUser;
 
@@ -241,8 +242,7 @@ class HybridItem {
 	 */
 	public function isRecommandable(): bool {
 		$val = HybridItem::weightedAverage($this);
-		//TODO define a threshold and do not hardcode it!
-		if ($val > 2) {
+		if ($val > Application::RECOMMENDATION_THRESHOLD) {
 			return true;
 		}
 		return false;

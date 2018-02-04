@@ -22,7 +22,6 @@
 namespace OCA\RecommendationAssistant\Service;
 
 use OC\Files\Filesystem;
-use OC\Files\Node\Node;
 use OCA\RecommendationAssistant\AppInfo\Application;
 use OCA\RecommendationAssistant\ContentReader\ContentReaderFactory;
 use OCA\RecommendationAssistant\ContentReader\EmptyReader;
@@ -37,6 +36,7 @@ use OCA\RecommendationAssistant\Objects\Rater;
 use OCA\RecommendationAssistant\Recommendation\TextProcessor;
 use OCA\RecommendationAssistant\Recommendation\TFIDFComputer;
 use OCA\RecommendationAssistant\Util\NodeUtil;
+use OCA\RecommendationAssistant\Util\Util;
 use OCP\Files\File;
 use OCP\Files\Folder;
 use OCP\Files\InvalidPathException;
@@ -127,8 +127,10 @@ class UserProfileService {
 		$iniVals = [];
 		$iniVals["max_execution_time"] = ini_get("max_execution_time");
 		$iniVals["memory_limit"] = ini_get("memory_limit");
+		$iniVals["pcre.backtrack_limit"] = ini_get("pcre.backtrack_limit");
 		set_time_limit(0);
 		ini_set("memory_limit", -1);
+		ini_set("pcre.backtrack_limit", -1);
 
 		$itemList = new ItemList();
 		$users = [];
@@ -139,7 +141,6 @@ class UserProfileService {
 			$itemList->merge($return);
 			$users[] = $user;
 		});
-		ConsoleLogger::debug($itemList->size());
 		/** @var IUser $user */
 		foreach ($users as $user) {
 			$keywordList = new KeywordList();
@@ -158,9 +159,9 @@ class UserProfileService {
 			}
 			$this->userProfileManager->insertKeywords($keywordList, $user);
 		}
-
 		set_time_limit($iniVals["max_execution_time"]);
 		ini_set("memory_limit", $iniVals["memory_limit"]);
+		ini_set("pcre.backtrack_limit", $iniVals["pcre.backtrack_limit"]);
 
 		Logger::debug("UserProfileService end");
 		ConsoleLogger::debug("UserProfileService end");
@@ -225,6 +226,12 @@ class UserProfileService {
 	private function handleFile(File $file, IUser $user): Item {
 		$item = new Item();
 		$isSharedStorage = false;
+
+		$valid = Util::validMimetype($file->getMimeType());
+		if (!$valid) {
+			return new Item();
+		}
+
 		$fileId = "";
 		try {
 			$isSharedStorage = $file->getStorage()->instanceOfStorage(Application::SHARED_INSTANCE_STORAGE);
@@ -234,6 +241,7 @@ class UserProfileService {
 		if ($isSharedStorage) {
 			return $item;
 		}
+
 
 		try {
 			$fileId = $file->getId();
@@ -269,14 +277,14 @@ class UserProfileService {
 		$textProcessor->removeNumeric();
 		$textProcessor->removeDate();
 		$textProcessor->toLower();
-		$array = $textProcessor->getTextAsArray();
+		$array = $textProcessor->getKeywordList();
 
 		$item->setId($fileId);
 		$item->setOwner($file->getOwner());
 		$item->setName($file->getName());
 		$rater = $this->getRater($user, true);
 		$item->addRater($rater);
-		$item->setKeywords($array);
+		$item->setKeywordList($array);
 		return $item;
 	}
 

@@ -23,6 +23,7 @@ namespace OCA\RecommendationAssistant\Hook;
 
 use OCA\RecommendationAssistant\Db\ChangedFilesManager;
 use OCA\RecommendationAssistant\Db\ProcessedFilesManager;
+use OCA\RecommendationAssistant\Log\ConsoleLogger;
 use OCA\RecommendationAssistant\Log\Logger;
 use OCA\RecommendationAssistant\Util\NodeUtil;
 use OCP\Files\File;
@@ -112,6 +113,7 @@ class FileHook {
 	 */
 	public function run($parameters): bool {
 		Logger::debug("FileHook start");
+		ConsoleLogger::debug("FileHook start");
 		$path = $parameters["path"];
 
 		/*
@@ -160,7 +162,7 @@ class FileHook {
 			/*
 			 * inserting the file to the changed files
 			 */
-			$this->changedFilesManager->handle($node, "edit");
+			$this->changedFilesManager->deleteBeforeInsert($node, "edit");
 
 			/*
 			 * deleting the file in order to re-recommend it after a change
@@ -170,6 +172,7 @@ class FileHook {
 		}
 
 		Logger::debug("FileHook end");
+		ConsoleLogger::debug("FileHook end");
 		return false;
 	}
 
@@ -186,7 +189,7 @@ class FileHook {
 	public function runFavorite(string $userId, string $fileId, string $caller) {
 		$node = NodeUtil::getFile($fileId, $userId);
 		if ($caller == "addFavorite") {
-			$this->changedFilesManager->handle($node, "favorite");
+			$this->changedFilesManager->deleteBeforeInsert($node, "favorite");
 		} else if ($caller == "removeFavorite") {
 			$this->changedFilesManager->deleteFile($node, "favorite");
 		}

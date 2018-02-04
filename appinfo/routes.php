@@ -25,13 +25,7 @@
 
 return [
 	'routes' => [
-		['name' => 'frontend#show', 'url' => '/', 'verb' => 'GET'],
-		['name' => 'page#index', 'url' => '/', 'verb' => 'GET'],
 		['name' => 'recommendation#index', 'url' => '/recommendation_assistant_for_files', 'verb' => 'GET'],
-	],
-	'ocs' => [
-		['name' => 'api#getData', 'url' => '/api', 'verb' => 'GET'],
-	],
-	['name' => 'page#index', 'url' => '/', 'verb' => 'GET'],
+	]
 ];
 

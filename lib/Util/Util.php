@@ -22,6 +22,8 @@
 namespace OCA\RecommendationAssistant\Util;
 
 use OCA\RecommendationAssistant\Exception\InvalidSimilarityValueException;
+use OCA\RecommendationAssistant\Interfaces\IContentReader;
+use OCA\RecommendationAssistant\Log\ConsoleLogger;
 use OCA\RecommendationAssistant\Log\Logger;
 use OCA\RecommendationAssistant\Objects\Similarity;
 use OCP\IUser;
@@ -56,11 +58,6 @@ class Util {
 	}
 
 
-//	public static function hasAccess(string $nodeId, string $userId): bool {
-//		$node = NodeUtil::getFile($nodeId, $userId);
-//		return $node !== null;
-//	}
-
 	/**
 	 * creates an instance of Similarity and returns it. The method catches
 	 * the InvalidSimilarityException and returns an empty Similarity instance
@@ -82,5 +79,30 @@ class Util {
 			Logger::error($exception->getMessage());
 		}
 		return $similarity;
+	}
+
+	/**
+	 * This method uses PHP class reflection in order to get the specified mime types
+	 * in OCA\RecommendationAssistant\Interfaces\IContentReader. The method returns
+	 * true if the given mime type corresponds to one of those defined in IContentReader.
+	 *
+	 * @param string $mimeType
+	 * @return bool
+	 * @since 1.0.0
+	 */
+	public static function validMimetype(string $mimeType): bool {
+		$mimeType = strtolower($mimeType);
+		try {
+			$class = new \ReflectionClass(IContentReader::class);
+			$constants = $class->getConstants();
+			array_walk($constants, function (&$value, $key) {
+				$value = strtolower($value);
+			});
+			return in_array($mimeType, $constants);
+		} catch (\ReflectionException $exception) {
+			ConsoleLogger::error($exception->getMessage());
+			Logger::error($exception->getMessage());
+			return false;
+		}
 	}
 }

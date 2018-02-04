@@ -67,11 +67,11 @@ class UserProfileManager {
 				DbConstants::TB_UP_TFIDF_VALUE => $query->createNamedParameter($item->getTfIdf())
 			]
 		);
-		//TODO find a solution
 		try {
 			$query->execute();
 		} catch (\Exception $exception) {
 			ConsoleLogger::debug($exception->getMessage());
+			return false;
 		}
 		$lastInsertId = $query->getLastInsertId();
 		return is_int($lastInsertId);
@@ -88,6 +88,7 @@ class UserProfileManager {
 	 * @since 1.0.0
 	 */
 	public function insertKeywords(KeywordList $keywordList, IUser $user) {
+		//TODO remove this!
 		$this->deleteForUser($user);
 		foreach ($keywordList as $keywordItem) {
 			$this->insertKeyword($keywordItem, $user);
