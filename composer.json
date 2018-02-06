@@ -1,7 +1,10 @@
 {
   "require": {
     "henck/rtf-to-html": "dev-master",
-    "chv/pdftotext": "dev-master"
+    "chv/pdftotext": "dev-master",
+    "phpoffice/phpspreadsheet": "dev-master",
+    "phpoffice/phpword": "dev-master",
+    "phpoffice/phppresentation": "dev-master"
   },
   "autoload": {
     "psr-4": {

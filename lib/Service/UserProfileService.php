@@ -27,6 +27,7 @@ use OCA\RecommendationAssistant\ContentReader\ContentReaderFactory;
 use OCA\RecommendationAssistant\ContentReader\EmptyReader;
 use OCA\RecommendationAssistant\Db\ProcessedFilesManager;
 use OCA\RecommendationAssistant\Db\UserProfileManager;
+use OCA\RecommendationAssistant\Exception\InvalidRatingException;
 use OCA\RecommendationAssistant\Log\ConsoleLogger;
 use OCA\RecommendationAssistant\Log\Logger;
 use OCA\RecommendationAssistant\Objects\Item;
@@ -151,7 +152,6 @@ class UserProfileService {
 				}
 				$tfidf = new TFIDFComputer($item, $itemList);
 				$preparedList = $tfidf->compute();
-				$preparedList->sort();
 				$preparedList->removeStopwords();
 				$keywordList->merge($preparedList);
 				$file = NodeUtil::getFile($item->getId(), $user->getUID());
@@ -277,14 +277,13 @@ class UserProfileService {
 		$textProcessor->removeNumeric();
 		$textProcessor->removeDate();
 		$textProcessor->toLower();
-		$array = $textProcessor->getKeywordList();
-
+		$keywordList = $textProcessor->getKeywordList();
 		$item->setId($fileId);
 		$item->setOwner($file->getOwner());
 		$item->setName($file->getName());
 		$rater = $this->getRater($user, true);
 		$item->addRater($rater);
-		$item->setKeywordList($array);
+		$item->setKeywordList($keywordList);
 		return $item;
 	}
 
@@ -299,7 +298,11 @@ class UserProfileService {
 	private
 	function getRater(IUser $user, bool $rating) {
 		$rater = new Rater($user);
-		$rater->setRating($rating ? 1 : 0);
+		try {
+			$rater->setRating($rating ? 1 : 0);
+		} catch (InvalidRatingException $exception) {
+			Logger::error($exception->getMessage());
+		}
 		return $rater;
 	}
 

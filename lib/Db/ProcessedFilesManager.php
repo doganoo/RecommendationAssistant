@@ -136,11 +136,22 @@ class ProcessedFilesManager {
 	 * @since 1.0.0
 	 */
 	public function deleteFile(File $file, string $type) {
-		$query = $this->dbConnection->getQueryBuilder();
-		$query->delete(DbConstants::TABLE_NAME_FILES_PROCESSED)
-			->where($query->expr()->eq(DbConstants::TB_FP_FILE_ID, $query->createNamedParameter($file->getId())))
-			->andWhere($query->expr()->eq(DbConstants::TB_FP_TYPE, $query->createNamedParameter($type)))
-			->execute();
+		try {
+			$query = $this->dbConnection->getQueryBuilder();
+			$query->delete(DbConstants::TABLE_NAME_FILES_PROCESSED)
+				->where($query->expr()->eq(DbConstants::TB_FP_FILE_ID, $query->createNamedParameter($file->getId())))
+				->andWhere($query->expr()->eq(DbConstants::TB_FP_TYPE, $query->createNamedParameter($type)))
+				->execute();
+			return true;
+		} catch (InvalidPathException $exception) {
+			Logger::error($exception->getMessage());
+			return false;
+		} catch (NotFoundException $exception) {
+			Logger::error($exception->getMessage());
+			return false;
+		}
+		return false;
+
 	}
 
 }

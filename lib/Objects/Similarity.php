@@ -113,9 +113,8 @@ class Similarity {
 	public function setValue(float $value) {
 		$precision = 10;
 		$compare = round($value, $precision, PHP_ROUND_HALF_EVEN);
-		$five = round(5, $precision, PHP_ROUND_HALF_EVEN);
-		$zero = round(0, $precision, PHP_ROUND_HALF_EVEN);
-		//TODO is this a valid approach?
+		$five = round(Rater::RATING_UPPER_LIMIT, $precision, PHP_ROUND_HALF_EVEN);
+		$zero = round(Rater::RATING_LOWER_LIMIT, $precision, PHP_ROUND_HALF_EVEN);
 		if ($compare >= $zero || $compare <= $five) {
 			$this->value = $value;
 		} else {

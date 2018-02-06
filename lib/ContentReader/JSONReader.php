@@ -45,32 +45,15 @@ class JSONReader implements IContentReader {
 	 * @return string the file content
 	 */
 	public function read(File $file): string {
+		$string = "";
 		try {
 			$array = json_decode($file->getContent(), true);
+			array_walk_recursive($array, function ($value, $key) use (&$string) {
+				$string .= " " . $value;
+			});
 		} catch (NotPermittedException $e) {
 			Logger::error($e->getMessage());
 			return "";
-		}
-		$string = $this->handleArray($array);
-		return $string;
-	}
-
-	/**
-	 * This method gets an array and iterates over it in order to build
-	 * an string with the array elements.
-	 *
-	 * @param array $array
-	 * @since 1.0.0
-	 * @return string
-	 */
-	private function handleArray(array $array) {
-		$string = "";
-		foreach ($array as $ar) {
-			if (is_array($ar)) {
-				$string = $string . $this->handleArray($ar);
-			} else {
-				$string = $string . " " . $ar;
-			}
 		}
 		return $string;
 	}

@@ -132,7 +132,11 @@ class Item {
 	 * @since 1.0.0
 	 */
 	public function setKeywordList(KeywordList $keywordList) {
-		$this->keywordList = $keywordList;
+		if ($this->keywordList == null) {
+			$this->keywordList = $keywordList;
+		} else {
+			$this->keywordList->merge($keywordList);
+		}
 	}
 
 	/**

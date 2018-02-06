@@ -61,7 +61,6 @@ class RecommendationManager {
 		$query->insert(DbConstants::TABLE_NAME_RECOMMENDATIONS)->values(
 			[
 				DbConstants::TB_RC_FILE_ID => $query->createNamedParameter($hybridItem->getItem()->getId()),
-				DbConstants::TB_RC_FILE_NAME => $query->createNamedParameter($hybridItem->getItem()->getName()),
 				DbConstants::TB_RC_USER_ID => $query->createNamedParameter(($hybridItem->getUser()->getUID())),
 				DbConstants::TB_RC_OWNER_ID => $query->createNamedParameter($hybridItem->getItem()->getOwner()->getUID()),
 				DbConstants::TB_RC_CREATION_TS => $query->createNamedParameter((new \DateTime())->getTimestamp())

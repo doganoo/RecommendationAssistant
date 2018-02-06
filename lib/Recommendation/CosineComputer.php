@@ -68,7 +68,6 @@ class CosineComputer implements IComputable {
 	 * @since 1.0.0
 	 */
 	public function compute(): Similarity {
-		//TODO noch einmal ueberpruefen!
 		$similarity = new Similarity();
 		if ($this->sourceItem->equals($this->targetItem)) {
 			$similarity = Util::createSimilarity(1.0, Similarity::SAME_COSINE_ITEMS, "the items are the same");
@@ -88,7 +87,6 @@ class CosineComputer implements IComputable {
 			}
 			$sourceRating = $rater->getRating();
 			$targetRating = $this->targetItem->getRater($rater->getUser()->getUID())->getRating();
-
 			$upper += $sourceRating * $targetRating;
 			$powX = pow($sourceRating, 2);
 			$powY = pow($targetRating, 2);

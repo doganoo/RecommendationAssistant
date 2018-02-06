@@ -21,6 +21,7 @@
 
 namespace OCA\RecommendationAssistant\Db;
 
+use OCA\RecommendationAssistant\AppInfo\Application;
 use OCA\RecommendationAssistant\Log\ConsoleLogger;
 use OCA\RecommendationAssistant\Objects\Keyword;
 use OCA\RecommendationAssistant\Objects\KeywordList;
@@ -64,6 +65,7 @@ class UserProfileManager {
 			[
 				DbConstants::TB_UP_USER_ID => $query->createNamedParameter($user->getUID()),
 				DbConstants::TB_UP_KEYWORD => $query->createNamedParameter(($item->getKeyword())),
+				DbConstants::TB_UP_CREATION_TS => $query->createNamedParameter((time())),
 				DbConstants::TB_UP_TFIDF_VALUE => $query->createNamedParameter($item->getTfIdf())
 			]
 		);
@@ -88,25 +90,27 @@ class UserProfileManager {
 	 * @since 1.0.0
 	 */
 	public function insertKeywords(KeywordList $keywordList, IUser $user) {
-		//TODO remove this!
-		$this->deleteForUser($user);
+		$this->deleteOldKeywords(Application::KEYWORD_REMOVAL_DAYS, $user);
 		foreach ($keywordList as $keywordItem) {
 			$this->insertKeyword($keywordItem, $user);
-
 		}
 	}
-
 
 	/**
 	 * deletes all keywords for a given user
 	 *
+	 * @param int $days the number of days
 	 * @param IUser $user the user whose keywords should be deleted
 	 * @since 1.0.0
 	 */
-	private function deleteForUser(IUser $user) {
+	private function deleteOldKeywords(int $days, IUser $user) {
+		$dateTime = new \DateTime();
+		$dateTime->modify("-$days day");
+
 		$query = $this->dbConnection->getQueryBuilder();
 		$query->delete(DbConstants::TABLE_NAME_USER_PROFILE)
-			->where($query->expr()->eq(DbConstants::TB_UP_USER_ID, $query->createNamedParameter($user->getUID())))
+			->where($query->expr()->lte(DbConstants::TB_UP_CREATION_TS, $query->createNamedParameter($dateTime->getTimestamp())))
+			->andWhere($query->expr()->eq(DbConstants::TB_UP_USER_ID, $query->createNamedParameter($user->getUID())))
 			->execute();
 	}
 

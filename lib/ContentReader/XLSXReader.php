@@ -26,8 +26,8 @@ use OCA\RecommendationAssistant\AppInfo\Application;
 use OCA\RecommendationAssistant\Interfaces\IContentReader;
 use OCA\RecommendationAssistant\Log\Logger;
 use OCP\Files\File;
-use OCP\Files\InvalidPathException;
-use OCP\Files\NotFoundException;
+use PhpOffice\PhpSpreadsheet\Exception;
+use PhpOffice\PhpSpreadsheet\Reader\Xlsx;
 
 /**
  * ContentReader class that is responsible for MS Excel .xlsx documents.
@@ -40,11 +40,7 @@ class XLSXReader implements IContentReader {
 
 	/**
 	 * Method implementation that is declared in the interface IContentReader.
-	 * This method unzips the .xlsx MS Excel document and reads
-	 * the XML documents within the zip located at xl/worksheets/slide<number>.xml.
-	 * Each PPTX slide has its own xml file and therefore, the method iterates
-	 * over each XML file that is located in xl/worksheets. The XML file content
-	 * is parsed with the PHP internal \DOMDocument class.
+	 * This method uses the PHPOffice/PHPSpreadsheet library to parse the ods document.
 	 *
 	 * @param File $file the file whose content is to be read
 	 * @since 1.0.0
@@ -53,46 +49,41 @@ class XLSXReader implements IContentReader {
 	public function read(File $file): string {
 		$dataDir = Application::getDataDirectory();
 		$filePath = $dataDir . "/" . $file->getPath();
-		try {
-			$zipPath = $dataDir . "/" . $file->getId();
-		} catch (InvalidPathException $e) {
-			Logger::error($e->getMessage());
-			return "";
-		} catch (NotFoundException $e) {
-			Logger::error($e->getMessage());
-			return "";
-		}
-		if (!is_file($filePath)) {
-			return "";
-		}
+		$ods = new Xlsx();
 
-		$archive = new \ZipArchive();
-		$opened = $archive->open($filePath);
-		$textContent = "";
-		if (true === $opened) {
-			$archive->extractTo($zipPath);
-			if ($handle = opendir($zipPath . "/xl/worksheets/")) {
-				$entry = readdir($handle);
-				$i = 1;
-				while (false !== ($entry = readdir($handle))) {
-					$pathInfo = pathinfo($entry);
-					$pathInfoExtension = isset($pathInfo["extension"]) ? $pathInfo["extension"] : "";
-					$pathInfoExtension = strtolower($pathInfoExtension);
-					if ($pathInfoExtension === "xml") {
-						$contentDocument = $zipPath . "/xl/worksheets/sheet$i.xml";
-						$content = file_get_contents($contentDocument);
-						$dom = new \DOMDocument();
-						$dom->loadXML($content);
-						$textContent .= $dom->textContent;
-						$i++;
+		if (!is_file($filePath)) {
+			Logger::warn("$filePath not found");
+			return "";
+		}
+		try {
+			if (!$ods->canRead($filePath)) {
+				Logger::warn("can not read $filePath");
+				return "";
+			}
+
+			$content = $ods->load($filePath);
+			$sheets = $content->getAllSheets();
+			$string = "";
+			foreach ($sheets as $sheet) {
+				$iterator = $sheet->getRowIterator();
+				while ($iterator->valid()) {
+					$row = $iterator->current();
+					$cellIterator = $row->getCellIterator();
+					while ($cellIterator->valid()) {
+						$value = $cellIterator->current()->getValue();
+						if ($value !== null) {
+							$string .= " " . $value;
+						}
+						$cellIterator->next();
 					}
+					$iterator->next();
 				}
 			}
+		} catch (Exception $exception) {
+			Logger::error($exception->getMessage());
+			return "";
 		}
-		if (is_dir($zipPath)) {
-			system("rm -rf " . escapeshellarg($zipPath));
-		}
-		return $textContent;
+		return $string;
 	}
 
 }

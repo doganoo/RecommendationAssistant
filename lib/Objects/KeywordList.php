@@ -22,6 +22,7 @@
 namespace OCA\RecommendationAssistant\Objects;
 
 
+use OCA\RecommendationAssistant\AppInfo\Application;
 use Traversable;
 
 /**
@@ -37,6 +38,9 @@ class KeywordList implements \IteratorAggregate {
 	 * @var array $keywordList
 	 */
 	private $keywordList = [];
+
+	private $maxTfIdf = 0;
+
 
 	/**
 	 * adds an keyword to the list. The highest TFIDF value will remain in
@@ -58,6 +62,9 @@ class KeywordList implements \IteratorAggregate {
 			}
 		} else {
 			$this->keywordList[$keyword->getKeyword()] = $keyword;
+		}
+		if ($this->maxTfIdf < $keyword->getTfIdf()) {
+			$this->maxTfIdf = $keyword->getTfIdf();
 		}
 	}
 
@@ -86,30 +93,11 @@ class KeywordList implements \IteratorAggregate {
 	 * @since 1.0.0
 	 */
 	public function size(): int {
-		return count($this->keywordList);
-	}
-
-	/**
-	 * sorts the keyword list
-	 *
-	 * @since 1.0.0
-	 */
-	public function sort() {
-		uasort($this->keywordList, function (Keyword $a, Keyword $b) {
-			$aValue = floatval($a->getTfIdf());
-			$bValue = floatval($b->getTfIdf());
-			$epsilon = 0.00001;
-			$equals = abs($aValue - $bValue) < $epsilon;
-			//never compare two floating point numbers with == or ===.
-			//The reason lies in the limited precision of the numbers.
-			//more information are available at:
-			//http://php.net/manual/en/language.types.float.php
-
-			if ($equals) {
-				return 0;
-			}
-			return ($aValue > $bValue) ? -1 : 1;
-		});
+		$count = 0;
+		array_walk($this->keywordList, function (Keyword $keyword, string $key) use (&$count) {
+			$count += $keyword->getCount();
+		}, ARRAY_FILTER_USE_BOTH);
+		return $count;
 	}
 
 	/**
@@ -122,25 +110,18 @@ class KeywordList implements \IteratorAggregate {
 		/**
 		 * PHP core function array_filter removes all array elements defined by
 		 * a callback. The callback function removes all TFIDFItems that have
-		 * the TFIDF value of 0.
+		 * the TFIDF value of 0 or have a TFIDF value less then 1/3 of the max
+		 * TFIDF value.
 		 */
 		$this->keywordList = array_filter($this->keywordList,
 			function (Keyword $item, string $keyword) {
+				$precision = 10;
 				$floatVal = floatval($item->getTfIdf());
-				//TODO never compare floats with ==
-				//return (abs($floatVal - 0.0) < 0.1);
-				return $floatVal !== 0.0;
+				$zero = round(0, $precision, PHP_ROUND_HALF_EVEN);
+				$tfidf = round($floatVal, $precision, PHP_ROUND_HALF_EVEN);
+				$maxTfIdf = round($this->maxTfIdf * Application::STOPWORD_REMOVAL_PERCENTAGE, $precision, PHP_ROUND_HALF_EVEN);
+				return ($tfidf > $zero) || ($tfidf > $maxTfIdf);
 			}, ARRAY_FILTER_USE_BOTH);
-		/**
-		 * TODO find a solution
-		 * the following code removes the last 1/10 of the keywords that are
-		 * in the list. The code is useless actually because we want to see
-		 * the results without.
-		 */
-		//$this->sort();
-		//$size = $this->size();
-		//$last = round(($size / 10), 0, PHP_ROUND_HALF_UP);
-		//$this->keywordList = array_slice($this->keywordList, 0, $size - $last, true);
 	}
 
 	/**

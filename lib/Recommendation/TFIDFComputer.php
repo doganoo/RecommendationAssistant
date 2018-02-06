@@ -42,9 +42,9 @@ class TFIDFComputer {
 	private $item = null;
 
 	/**
-	 * @var ItemList $itemBase
+	 * @var ItemList $itemList
 	 */
-	private $itemBase = null;
+	private $itemList = null;
 
 	/**
 	 * Class constructor gets the item and itembase injected for that the
@@ -58,7 +58,7 @@ class TFIDFComputer {
 		Item $item,
 		ItemList $itemBase) {
 		$this->item = $item;
-		$this->itemBase = $itemBase;
+		$this->itemList = $itemBase;
 	}
 
 	/**
@@ -71,14 +71,8 @@ class TFIDFComputer {
 	 * their TFIDF value
 	 */
 	public function compute() {
-		//TODO das gehoert hier hin! Ueberpruefen!
-//			if ($this->item->keywordSize() === $this->itemList->size()) {
-//				$similarity->setValue(0.0);
-//				$similarity->setStatus(Similarity::NOT_ENOUGH_ITEMS_IN_ITEM_BASE);
-//				$similarity->setDescription("number of items and item base is equal");
-//			}
 		$result = new KeywordList();
-		$itemBaseSize = $this->itemBase->size();
+		$itemBaseSize = $this->itemList->size();
 
 		/** @var Keyword $keyword */
 		foreach ($this->item->getKeywordList() as $keyword) {
@@ -86,10 +80,13 @@ class TFIDFComputer {
 				continue;
 			}
 			$termFrequency = $this->item->countKeyword($keyword->getKeyword()) / $this->item->keywordSize();
-			$count = $this->itemBase->countKeyword($keyword->getKeyword());
+			$count = $this->itemList->countKeyword($keyword->getKeyword());
 
 			if ($count == 0) {
 				$count = 1;
+			}
+			if ($count == $itemBaseSize) {
+//				Logger::warn("number of keyword in list and number of items in list are the same. TFIDF is going to be 0");
 			}
 			$inverseDocumentFrequency = log10($itemBaseSize / $count);
 			$tfIdf = $termFrequency * $inverseDocumentFrequency;
@@ -99,7 +96,6 @@ class TFIDFComputer {
 			$keyword->setTfIdf($tfIdf);
 			$result->add($keyword);
 		}
-		$result->removeStopwords();
 		return $result;
 	}
 }

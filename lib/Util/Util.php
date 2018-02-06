@@ -69,7 +69,7 @@ class Util {
 	 * @return Similarity
 	 * @since 1.0.0
 	 */
-	public static function createSimilarity(int $value, int $status, string $description): Similarity {
+	public static function createSimilarity(float $value, int $status, string $description): Similarity {
 		$similarity = new Similarity();
 		try {
 			$similarity->setValue($value);

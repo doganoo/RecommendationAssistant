@@ -25,8 +25,8 @@ use OCA\RecommendationAssistant\AppInfo\Application;
 use OCA\RecommendationAssistant\Interfaces\IContentReader;
 use OCA\RecommendationAssistant\Log\Logger;
 use OCP\Files\File;
-use OCP\Files\InvalidPathException;
-use OCP\Files\NotFoundException;
+use PhpOffice\PhpSpreadsheet\Exception;
+use PhpOffice\PhpSpreadsheet\Reader\Ods;
 
 /**
  * ContentReader class that is responsible for Open Office .ods spreadsheet documents.
@@ -39,9 +39,7 @@ class ODSReader implements IContentReader {
 
 	/**
 	 * Method implementation that is declared in the interface IContentReader.
-	 * This method unzips the .ods Open Office Spreadsheet document and reads
-	 * the XML document within the zip located at content.xml. The XML document
-	 * is parsed with the PHP internal \DOMDocument class.
+	 * This method uses the PHPOffice/PHPSpreadsheet library to parse the ods document.
 	 *
 	 * @param File $file the file whose content is to be read
 	 * @since 1.0.0
@@ -50,33 +48,40 @@ class ODSReader implements IContentReader {
 	public function read(File $file): string {
 		$dataDir = Application::getDataDirectory();
 		$filePath = $dataDir . "/" . $file->getPath();
-		try {
-			$zipPath = $dataDir . "/" . $file->getId();
-		} catch (InvalidPathException $e) {
-			Logger::error($e->getMessage());
-			return "";
-		} catch (NotFoundException $e) {
-			Logger::error($e->getMessage());
-			return "";
-		}
-		if (!is_file($filePath)) {
-			return "";
-		}
+		$ods = new Ods();
 
-		$archive = new \ZipArchive();
-		$opened = $archive->open($filePath);
-		$textContent = "";
-		if (true === $opened) {
-			$archive->extractTo($zipPath);
-			$contentDocument = $zipPath . "/content.xml";
-			$content = file_get_contents($contentDocument);
-			$dom = new \DOMDocument();
-			$dom->loadXML($content);
-			$textContent = $dom->textContent;
+		if (!is_file($filePath)) {
+			Logger::warn("$filePath not found");
+			return "";
 		}
-		if (is_dir($zipPath)) {
-			system("rm -rf " . escapeshellarg($zipPath));
+		try {
+			if (!$ods->canRead($filePath)) {
+				Logger::warn("can not read $filePath");
+				return "";
+			}
+
+			$content = $ods->load($filePath);
+			$sheets = $content->getAllSheets();
+			$string = "";
+			foreach ($sheets as $sheet) {
+				$iterator = $sheet->getRowIterator();
+				while ($iterator->valid()) {
+					$row = $iterator->current();
+					$cellIterator = $row->getCellIterator();
+					while ($cellIterator->valid()) {
+						$value = $cellIterator->current()->getValue();
+						if ($value !== null) {
+							$string .= " " . $value;
+						}
+						$cellIterator->next();
+					}
+					$iterator->next();
+				}
+			}
+		} catch (Exception $exception) {
+			Logger::error($exception->getMessage());
+			return "";
 		}
-		return $textContent;
+		return $string;
 	}
 }

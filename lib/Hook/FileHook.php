@@ -23,7 +23,6 @@ namespace OCA\RecommendationAssistant\Hook;
 
 use OCA\RecommendationAssistant\Db\ChangedFilesManager;
 use OCA\RecommendationAssistant\Db\ProcessedFilesManager;
-use OCA\RecommendationAssistant\Log\ConsoleLogger;
 use OCA\RecommendationAssistant\Log\Logger;
 use OCA\RecommendationAssistant\Util\NodeUtil;
 use OCP\Files\File;
@@ -31,6 +30,7 @@ use OCP\Files\IRootFolder;
 use OCP\Files\Node;
 use OCP\Files\NotFoundException;
 use OCP\IRequest;
+use OCP\IUser;
 use OCP\IUserSession;
 
 /**
@@ -113,8 +113,9 @@ class FileHook {
 	 */
 	public function run($parameters): bool {
 		Logger::debug("FileHook start");
-		ConsoleLogger::debug("FileHook start");
 		$path = $parameters["path"];
+		/** @var IUser $user */
+		$user = $this->userSession->getUser();
 
 		/*
 		 * .part files are parts of a file. When transmitting,
@@ -129,7 +130,7 @@ class FileHook {
 		 * No session available. User is not logged in. Therefore, returning
 		 * false.
 		 */
-		if ($this->userSession->getUser() === null) {
+		if ($user === null) {
 			Logger::info("ignoring file because user is not logged in");
 			return false;
 		}
@@ -138,6 +139,7 @@ class FileHook {
 		 * User has to make changes via the web UI. Otherwise, changes are
 		 * not recognized as "change".
 		 */
+		// FIXME method returns false on web ui requests
 		if (!$this->request->isUserAgent([IRequest::USER_AGENT_CLIENT_DESKTOP])) {
 			Logger::info("ignoring file because request is not from web UI");
 			return false;
@@ -162,7 +164,7 @@ class FileHook {
 			/*
 			 * inserting the file to the changed files
 			 */
-			$this->changedFilesManager->deleteBeforeInsert($node, "edit");
+			$this->changedFilesManager->deleteBeforeInsert($node, $user->getUID(), "edit");
 
 			/*
 			 * deleting the file in order to re-recommend it after a change
@@ -172,7 +174,6 @@ class FileHook {
 		}
 
 		Logger::debug("FileHook end");
-		ConsoleLogger::debug("FileHook end");
 		return false;
 	}
 
@@ -189,9 +190,9 @@ class FileHook {
 	public function runFavorite(string $userId, string $fileId, string $caller) {
 		$node = NodeUtil::getFile($fileId, $userId);
 		if ($caller == "addFavorite") {
-			$this->changedFilesManager->deleteBeforeInsert($node, "favorite");
+			$this->changedFilesManager->deleteBeforeInsert($node, $userId, "favorite");
 		} else if ($caller == "removeFavorite") {
-			$this->changedFilesManager->deleteFile($node, "favorite");
+			$this->changedFilesManager->deleteFile($node, $userId, "favorite");
 		}
 	}
 

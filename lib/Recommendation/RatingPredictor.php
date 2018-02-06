@@ -22,6 +22,7 @@
 namespace OCA\RecommendationAssistant\Recommendation;
 
 
+use OCA\RecommendationAssistant\AppInfo\Application;
 use OCA\RecommendationAssistant\Objects\Item;
 use OCA\RecommendationAssistant\Objects\ItemList;
 use OCA\RecommendationAssistant\Objects\ItemToItemMatrix;
@@ -98,13 +99,19 @@ class RatingPredictor {
 		$upper = 0;
 		$lower = 0;
 
+		/*
+		 * k-nearest neighbor approach: remove all items that have a similarity less than 0.5
+		 */
+		$itemArray = array_filter($this->itemList->getItems(), function (Item $item, string $key) {
+			$sim = $this->matrix->get($this->item, $item);
+			return $sim->getValue() > Application::K_NEAREST_NEIGHBOR_SIMILARITY_THRESHOLD;
+		}, ARRAY_FILTER_USE_BOTH);
+
 		/** @var Item $item1 */
-		foreach ($this->itemList as $item1) {
-			//TODO limit itemlist to the k-nearest ones. Look in the literature for more information
+		foreach ($itemArray as $item1) {
 			if ($this->item->equals($item1)) {
 				continue;
 			}
-
 			$sim = $this->matrix->get($this->item, $item1);
 			$rating = $item1->getRater($this->user->getUID())->getRating();
 			$upper += $sim->getValue() * $rating;

@@ -46,7 +46,7 @@ class XMLReader implements IContentReader {
 	 */
 	public function read(File $file): string {
 		try {
-			return strip_tags($file->getContent());
+			return strip_tags(str_replace('<', ' <', $file->getContent()));
 		} catch (NotPermittedException $e) {
 			Logger::error($e->getMessage());
 			return "";

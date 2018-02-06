@@ -26,8 +26,8 @@ use OCA\RecommendationAssistant\AppInfo\Application;
 use OCA\RecommendationAssistant\Interfaces\IContentReader;
 use OCA\RecommendationAssistant\Log\Logger;
 use OCP\Files\File;
-use OCP\Files\InvalidPathException;
-use OCP\Files\NotFoundException;
+use PhpOffice\PhpWord\Element\Text;
+use PhpOffice\PhpWord\Reader\Word2007;
 
 /**
  * ContentReader class that is responsible for Microsoft Word .docx documents.
@@ -40,9 +40,7 @@ class DocxReader implements IContentReader {
 
 	/**
 	 * Method implementation that is declared in the interface IContentReader.
-	 * This method unzips the .docx MS Word document and reads the XML document
-	 * within the zip located at word/document.xml. The XML document is parsed with
-	 * the PHP internal \DOMDocument class.
+	 * This method uses the PHPOffice/PHPWord library to parse the word document.
 	 *
 	 * @param File $file the file whose content is to be read
 	 * @since 1.0.0
@@ -51,35 +49,30 @@ class DocxReader implements IContentReader {
 	public function read(File $file): string {
 		$dataDir = Application::getDataDirectory();
 		$filePath = $dataDir . "/" . $file->getPath();
-		try {
-			$zipPath = $dataDir . "/" . $file->getId();
-		} catch (InvalidPathException $e) {
-			Logger::error($e->getMessage());
-			return "";
-		} catch (NotFoundException $e) {
-			Logger::error($e->getMessage());
-			return "";
-		}
+		$word = new Word2007();
+
 		if (!is_file($filePath)) {
+			Logger::warn("$filePath not found");
+			return "";
+		}
+		if (!$word->canRead($filePath)) {
+			Logger::warn("can not read $filePath");
 			return "";
 		}
 
-		$archive = new \ZipArchive();
-		$opened = $archive->open($filePath);
-		$textContent = "";
-		if (true === $opened) {
-			$archive->extractTo($zipPath);
-			$contentDocument = $zipPath . "/word/document.xml";
-			$content = file_get_contents($contentDocument);
-			$dom = new \DOMDocument();
-			$dom->loadXML($content);
-			$textContent = $dom->textContent;
-		}
+		$reader = $word->load($filePath);
+		$sections = $reader->getSections();
 
-		if (is_dir($zipPath)) {
-			system("rm -rf " . escapeshellarg($zipPath));
+		$string = "";
+		foreach ($sections as $section) {
+			foreach ($section->getElements() as $element) {
+				if ($element instanceof Text) {
+					if (null !== $element->getText()) {
+						$string .= $element->getText();
+					}
+				}
+			}
 		}
-		return $textContent;
+		return $string;
 	}
-
 }

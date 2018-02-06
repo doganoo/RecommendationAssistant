@@ -98,12 +98,6 @@ class RecommendationController extends Controller {
 			$mTime = (new \DateTime())->getTimestamp();
 			try {
 				$size = $node->getSize();
-			} catch (InvalidPathException $e) {
-				Logger::warn($e->getMessage());
-			} catch (NotFoundException $e) {
-				Logger::warn($e->getMessage());
-			}
-			try {
 				$mTime = $node->getMTime();
 			} catch (InvalidPathException $e) {
 				Logger::warn($e->getMessage());

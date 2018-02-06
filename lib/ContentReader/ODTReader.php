@@ -25,8 +25,8 @@ use OCA\RecommendationAssistant\AppInfo\Application;
 use OCA\RecommendationAssistant\Interfaces\IContentReader;
 use OCA\RecommendationAssistant\Log\Logger;
 use OCP\Files\File;
-use OCP\Files\InvalidPathException;
-use OCP\Files\NotFoundException;
+use PhpOffice\PhpWord\Element\Text;
+use PhpOffice\PhpWord\Reader\ODText;
 
 /**
  * ContentReader class that is responsible for Open Office .odt documents.
@@ -39,9 +39,7 @@ class ODTReader implements IContentReader {
 
 	/**
 	 * Method implementation that is declared in the interface IContentReader.
-	 * This method unzips the .odt Open Office document and reads
-	 * the XML document within the zip located at content.xml. The XML document
-	 * is parsed with the PHP internal \DOMDocument class.
+	 * This method uses the PHPOffice/PHPWord library to parse the word document.
 	 *
 	 * @param File $file the file whose content is to be read
 	 * @since 1.0.0
@@ -50,34 +48,27 @@ class ODTReader implements IContentReader {
 	public function read(File $file): string {
 		$dataDir = Application::getDataDirectory();
 		$filePath = $dataDir . "/" . $file->getPath();
-		try {
-			$zipPath = $dataDir . "/" . $file->getId();
-		} catch (InvalidPathException $e) {
-			Logger::error($e->getMessage());
-			return "";
-		} catch (NotFoundException $e) {
-			Logger::error($e->getMessage());
-			return "";
-		}
+		$odt = new ODText();
+
 		if (!is_file($filePath)) {
+			Logger::warn("$filePath not found");
 			return "";
 		}
 
-		$archive = new \ZipArchive();
-		$opened = $archive->open($filePath);
-		$textContent = "";
-		if (true === $opened) {
-			$archive->extractTo($zipPath);
-			$contentDocument = $zipPath . "/content.xml";
-			$content = file_get_contents($contentDocument);
-			$dom = new \DOMDocument();
-			$dom->loadXML($content);
-			$textContent = $dom->textContent;
+		if (!$odt->canRead($filePath)) {
+			Logger::warn("can not read $filePath");
+			return "";
 		}
 
-		if (is_dir($zipPath)) {
-			system("rm -rf " . escapeshellarg($zipPath));
+		$reader = $odt->load($filePath);
+		$sections = $reader->getSections();
+		$string = "";
+		foreach ($sections as $section) {
+			/** @var Text $element */
+			foreach ($section->getElements() as $element) {
+				$string .= $element->getText();
+			}
 		}
-		return $textContent;
+		return $string;
 	}
 }

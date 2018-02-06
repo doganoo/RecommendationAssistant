@@ -26,6 +26,7 @@ use OCA\RecommendationAssistant\Interfaces\IComputable;
 use OCA\RecommendationAssistant\Objects\Item;
 use OCA\RecommendationAssistant\Objects\ItemList;
 use OCA\RecommendationAssistant\Objects\KeywordList;
+use OCA\RecommendationAssistant\Objects\Rater;
 use OCA\RecommendationAssistant\Objects\Similarity;
 use OCA\RecommendationAssistant\Util\Util;
 
@@ -78,13 +79,11 @@ class OverlapCoefficientComputer implements IComputable {
 	 * @return Similarity the similarity object that represents the similarity
 	 */
 	public function compute(): Similarity {
-		//TODO overlap coefficient class ist in abgabe version falsch!
 		$similarity = new Similarity();
 		$tfIdf = new TFIDFComputer($this->item, $this->itemList);
 
 		/** @var KeywordList $itemKeywords */
 		$itemKeywords = $tfIdf->compute();
-		$itemKeywords->sort();
 		$itemKeywords->removeStopwords();
 		$arr = array_intersect($itemKeywords->getKeywords(), $this->keywordList->getKeywords());
 		$arr = array_unique($arr);
@@ -101,7 +100,15 @@ class OverlapCoefficientComputer implements IComputable {
 			$similarity = Util::createSimilarity(0.0, Similarity::ITEM_OR_USER_PROFILE_EMPTY, "no keywords in item / user profile");
 		}
 		if ($count > 0 && $lower > 0) {
-			$factor = 5; //TODO ensure factor!
+			/*
+			 * since overlap coefficient measures the similarity between two
+			 * items in range between 0 and 1 and the cosine computer can compute
+			 * between greater ranges, we need to define a factor that is the
+			 * upper limit of possible ratings. For example, if the range is between
+			 * 0 and 5, all similarity values that are computed by this class
+			 * have to multiplied with 5.
+			 */
+			$factor = Rater::RATING_UPPER_LIMIT;
 			$similarity = Util::createSimilarity(($count / $lower) * $factor, Similarity::VALID, "valid calculation");
 		}
 		return $similarity;

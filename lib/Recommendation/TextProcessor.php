@@ -31,7 +31,6 @@ class TextProcessor {
 
 	public function __construct(string $text) {
 		$this->text = $text;
-		//TODO valid solution?
 		$this->text = mb_convert_encoding($this->text, "ASCII", mb_detect_encoding($this->text));
 		$this->toArray();
 	}
@@ -66,10 +65,12 @@ class TextProcessor {
 
 	public function getKeywordList(): KeywordList {
 		$keywordList = new KeywordList();
+		$i = 0;
 		foreach ($this->textArray as $value) {
 			$keyword = new Keyword();
 			$keyword->setKeyword($value);
 			$keywordList->add($keyword);
+			$i++;
 		}
 		return $keywordList;
 	}

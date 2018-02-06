@@ -200,6 +200,7 @@ class RecommenderService {
 				//an entire similarity matrix is needed
 				$cosineComputer = new CosineComputer($item, $item1);
 				$cosineSimilarity = $cosineComputer->compute();
+//				ConsoleLogger::error($item->getId() . ";" . $item1->getId() . ";" . $cosineSimilarity->getValue());
 				$itemItemMatrix->add($item, $item1, $cosineSimilarity);
 			}
 
@@ -228,6 +229,8 @@ class RecommenderService {
 
 				$itemComputer = new RatingPredictor($item, $user, $itemList, $itemItemMatrix);
 				$collaborativeSimilarity = $itemComputer->predict();
+//				ConsoleLogger::error("content based similarity: " . $contentBasedSimilarity->getValue());
+//				ConsoleLogger::error("collaborative similarity: " . $collaborativeSimilarity->getValue());
 				$hybrid->setContentBased($contentBasedSimilarity);
 				$hybrid->setCollaborative($collaborativeSimilarity);
 				if ($item->raterPresent($user->getUID())) {
@@ -236,6 +239,11 @@ class RecommenderService {
 			}
 		}
 
+//		foreach ($hybridList as $array) {
+//			foreach ($array as $hybrid) {
+//				ConsoleLogger::error($hybrid);
+//			}
+//		}
 		if (!Application::DEBUG) {
 			$hybridList->removeNonRecommendable();
 		}
@@ -266,6 +274,7 @@ class RecommenderService {
 	 */
 	private
 	function handleFolder(Folder $folder, IUser $currentUser): ItemList {
+		//TODO do not process files twice
 		$itemList = new ItemList();
 		try {
 			foreach ($folder->getDirectoryListing() as $node) {
@@ -335,9 +344,9 @@ class RecommenderService {
 	 * @since 1.0.0
 	 */
 	private function addRater(Item $item, File $file, IUser $currentUser) {
-		$timeRating = $this->getChangeTimeRating($file);
-		$favoriteRating = $this->getFavoriteRating($file);
-		$rating = ((0.8 * $timeRating) + (0.2 * $favoriteRating));
+		$timeRating = $this->getChangeTimeRating($file, $currentUser);
+		$favoriteRating = $this->getFavoriteRating($file, $currentUser);
+		$rating = ((Application::RATING_WEIGHT_LAST_CHANGE * $timeRating) + (Application::RATING_WEIGHT_LAST_FAVORITE * $favoriteRating));
 		$rater = $this->getRater($currentUser, $rating);
 		$item->addRater($rater);
 		return $item;
@@ -349,14 +358,16 @@ class RecommenderService {
 	 * means that the file is not changed since then.
 	 *
 	 * @param File $file
+	 * @param IUser $user
 	 * @return int
 	 * @since 1.0.0
 	 */
-	private function getChangeTimeRating(File $file): int {
-		$presentable = $this->changedFilesManager->isPresentable($file, "edit");
+	private function getChangeTimeRating(File $file, IUser $user): int {
+		$presentable = $this->changedFilesManager->isPresentable($file, $user->getUID(), "edit");
+
 		$changeTs = 0;
 		if ($presentable) {
-			$changeTs = $this->changedFilesManager->queryChangeTs($file, "edit");
+			$changeTs = $this->changedFilesManager->queryChangeTs($file, $user->getUID(), "edit");
 		}
 
 		$then = new \DateTime();
@@ -378,14 +389,15 @@ class RecommenderService {
 	 * means that the file is not rated since then.
 	 *
 	 * @param File $file
+	 * @param IUser $user
 	 * @return int
 	 * @since 1.0.0
 	 */
-	private function getFavoriteRating(File $file) {
-		$presentable = $this->changedFilesManager->isPresentable($file, "favorite");
+	private function getFavoriteRating(File $file, IUser $user) {
+		$presentable = $this->changedFilesManager->isPresentable($file, $user->getUID(), "favorite");
 		$changeTs = 0;
 		if ($presentable) {
-			$changeTs = $this->changedFilesManager->queryChangeTs($file, "favorite");
+			$changeTs = $this->changedFilesManager->queryChangeTs($file, $user->getUID(), "favorite");
 		}
 
 		$then = new \DateTime();
@@ -451,8 +463,8 @@ class RecommenderService {
 		$contentReader = ContentReaderFactory::getContentReader($file->getMimeType());
 		$content = $contentReader->read($file);
 		$textProcessor = new TextProcessor($content);
-		$array = $textProcessor->getKeywordList();
-		$item->setKeywordList($array);
+		$keywordList = $textProcessor->getKeywordList();
+		$item->setKeywordList($keywordList);
 		return $item;
 	}
 

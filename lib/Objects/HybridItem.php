@@ -121,7 +121,6 @@ class HybridItem {
 		$compare = round($groupWeight, $precision, PHP_ROUND_HALF_EVEN);
 		$one = round(1, $precision, PHP_ROUND_HALF_EVEN);
 		$zero = round(0, $precision, PHP_ROUND_HALF_EVEN);
-		//TODO is this a valid approach?
 		if ($compare < $zero || $compare > $one) {
 			throw new InvalidSimilarityValueException("the similarity value has to be between 0 and 1, $groupWeight given");
 		}

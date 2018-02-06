@@ -33,7 +33,6 @@ class RTFReader implements IContentReader {
 		}
 		$formatter = new \RtfHtml();
 		$text = $formatter->Format($parser->root);
-		$text = strip_tags($text);
-		return $text;
+		return strip_tags(str_replace('<', ' <', $text));
 	}
 }

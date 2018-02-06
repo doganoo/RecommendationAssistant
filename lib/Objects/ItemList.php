@@ -110,4 +110,8 @@ class ItemList implements \IteratorAggregate {
 	public function getIterator() {
 		return new \ArrayIterator($this->itemList);
 	}
+
+	public function getItems() {
+		return $this->itemList;
+	}
 }

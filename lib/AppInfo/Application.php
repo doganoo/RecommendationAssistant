@@ -91,10 +91,37 @@ class Application extends App {
 	/**
 	 * @const RECOMMENDATION_THRESHOLD defines the threshold that has to be exceeded in
 	 * order to get recommended.
-	 *
-	 * TODO define
 	 */
 	const RECOMMENDATION_THRESHOLD = 2;
+
+	/**
+	 * @const KEYWORD_REMOVAL_DAYS number of days after that keywords of an user
+	 * profile is deleted
+	 */
+	const KEYWORD_REMOVAL_DAYS = 180;
+
+	/**
+	 * @const K_NEAREST_NEIGHBOR_SIMILARITY_THRESHOLD the minimum similarity of
+	 * two items that are necessary for rating prediction
+	 */
+	const K_NEAREST_NEIGHBOR_SIMILARITY_THRESHOLD = 0.5;
+
+	/**
+	 * @const STOPWORD_REMOVAL_PERCENTAGE the percentage of removing stopwords
+	 */
+	const STOPWORD_REMOVAL_PERCENTAGE = 0.33;
+
+	/**
+	 * @const RATING_WEIGHT_LAST_CHANGE the weight for the rating used in
+	 * RecommenderService for the last modification timestamp rating
+	 */
+	const RATING_WEIGHT_LAST_CHANGE = 1;
+
+	/**
+	 * @const RATING_WEIGHT_LAST_FAVORITE the weight for the rating used in
+	 * RecommenderService for the last favorite tagging timestamp
+	 */
+	const RATING_WEIGHT_LAST_FAVORITE = 0;
 
 	/**
 	 * Class constructor calls the parent constructor with APP_ID

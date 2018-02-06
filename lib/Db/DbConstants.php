@@ -57,6 +57,7 @@ class DbConstants {
 	const TABLE_NAME_USER_PROFILE = "user_profile";
 	const TB_UP_ID = "id";
 	const TB_UP_USER_ID = "user_id";
+	const TB_UP_CREATION_TS = "creation_ts";
 	const TB_UP_KEYWORD = "keyword";
 	const TB_UP_TFIDF_VALUE = "tfidf_value";
 
@@ -90,5 +91,6 @@ class DbConstants {
 	const TB_CFL_CHANGE_TS = "change_ts";
 	const TB_CFL_CREATION_TS = "creation_ts";
 	const TB_CFL_TYPE = "type";
+	const TB_CFL_USER_ID = "user_id";
 
 }

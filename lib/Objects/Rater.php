@@ -43,6 +43,16 @@ class Rater {
 	private $rating = self::NO_ACCESS;
 
 	/**
+	 * @const RATING_UPPER_LIMIT the upper limit of an rating
+	 */
+	const RATING_UPPER_LIMIT = 5;
+
+	/**
+	 * @const RATING_LOWER_LIMIT the lower limit of an rating
+	 */
+	const RATING_LOWER_LIMIT = 0;
+
+	/**
 	 * @const int NO_RATING
 	 */
 	const NO_RATING = 0;
@@ -90,8 +100,7 @@ class Rater {
 	 * @since 1.0.0
 	 */
 	public function setRating(int $rating) {
-		//TODO define upper and lower limits and do not hardcode!
-		if ($rating >= 0 || $rating <= 5) {
+		if ($rating >= self::RATING_LOWER_LIMIT || $rating <= self::RATING_UPPER_LIMIT) {
 			$this->rating = $rating;
 		} else {
 			throw new InvalidRatingException("$rating is not a valid rating");

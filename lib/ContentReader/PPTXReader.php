@@ -26,8 +26,9 @@ use OCA\RecommendationAssistant\AppInfo\Application;
 use OCA\RecommendationAssistant\Interfaces\IContentReader;
 use OCA\RecommendationAssistant\Log\Logger;
 use OCP\Files\File;
-use OCP\Files\InvalidPathException;
-use OCP\Files\NotFoundException;
+use PhpOffice\PhpPresentation\IOFactory;
+use PhpOffice\PhpPresentation\PhpPresentation;
+use PhpOffice\PhpPresentation\Shape\RichText;
 
 /**
  * ContentReader class that is responsible for MS PowerPoint .pptx documents.
@@ -53,46 +54,38 @@ class PPTXReader implements IContentReader {
 	public function read(File $file): string {
 		$dataDir = Application::getDataDirectory();
 		$filePath = $dataDir . "/" . $file->getPath();
-		try {
-			$zipPath = $dataDir . "/" . $file->getId();
-		} catch (InvalidPathException $e) {
-			Logger::error($e->getMessage());
-			return "";
-		} catch (NotFoundException $e) {
-			Logger::error($e->getMessage());
+
+		if (!is_file($filePath)) {
+			Logger::warn("$filePath not found");
 			return "";
 		}
-		if (!is_file($filePath)) {
+		$oReader = IOFactory::createReader('PowerPoint2007');
+		if (!$oReader->canRead($filePath)) {
+			Logger::warn("can not read $filePath");
 			return "";
 		}
 
-		$archive = new \ZipArchive();
-		$opened = $archive->open($filePath);
-		$textContent = "";
-		if (true === $opened) {
-			$archive->extractTo($zipPath);
-			if ($handle = opendir($zipPath . "/ppt/slides/")) {
-				$entry = readdir($handle);
-				$i = 1;
-				while (false !== ($entry = readdir($handle))) {
-					$pathInfo = pathinfo($entry);
-					$pathInfoExtension = isset($pathInfo["extension"]) ? $pathInfo["extension"] : "";
-					$pathInfoExtension = strtolower($pathInfoExtension);
-					if ($pathInfoExtension === "xml") {
-						$contentDocument = $zipPath . "/ppt/slides/slide$i.xml";
-						$content = file_get_contents($contentDocument);
-						$dom = new \DOMDocument();
-						$dom->loadXML($content);
-						$textContent .= $dom->textContent;
-						$i++;
+		try {
+			/** @var PhpPresentation $reader */
+			$reader = $oReader->load($filePath);
+			$string = "";
+			foreach ($reader->getAllSlides() as $slide) {
+				$iterator = $slide->getShapeCollection()->getIterator();
+				while ($iterator->valid()) {
+					/** @var RichText $current */
+					$current = $iterator->current();
+					$plainText = $current->getPlainText();
+					if ($plainText !== "") {
+						$string = $string . " " . $plainText;
 					}
+					$iterator->next();
 				}
 			}
+		} catch (\Exception $exception) {
+			Logger::error($exception->getMessage());
+			return "";
 		}
-		if (is_dir($zipPath)) {
-			system("rm -rf " . escapeshellarg($zipPath));
-		}
-		return $textContent;
+		return $string;
 	}
 
 }

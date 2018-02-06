@@ -87,7 +87,7 @@ class NodeUtil {
 		$node = self::getFile($fileId, $userId);
 		if ($node !== null) {
 			if ($node instanceof File) {
-				$presentable = $manager->isPresentable($node, "edit");
+				$presentable = $manager->isPresentable($node, $userId, "edit");
 				return $presentable;
 			}
 		}
