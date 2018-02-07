@@ -344,8 +344,8 @@ class RecommenderService {
 	 * @since 1.0.0
 	 */
 	private function addRater(Item $item, File $file, IUser $currentUser) {
-		$timeRating = $this->getChangeTimeRating($file, $currentUser);
-		$favoriteRating = $this->getFavoriteRating($file, $currentUser);
+		$timeRating = $this->getChangeTimestamp($file, $currentUser, "edit");
+		$favoriteRating = $this->getChangeTimestamp($file, $currentUser, "favorite");
 		$rating = ((Application::RATING_WEIGHT_LAST_CHANGE * $timeRating) + (Application::RATING_WEIGHT_LAST_FAVORITE * $favoriteRating));
 		$rater = $this->getRater($currentUser, $rating);
 		$item->addRater($rater);
@@ -359,15 +359,16 @@ class RecommenderService {
 	 *
 	 * @param File $file
 	 * @param IUser $user
+	 * @param string $type
 	 * @return int
 	 * @since 1.0.0
 	 */
-	private function getChangeTimeRating(File $file, IUser $user): int {
-		$presentable = $this->changedFilesManager->isPresentable($file, $user->getUID(), "edit");
+	private function getChangeTimestamp(File $file, IUser $user, string $type): int {
+		$presentable = $this->changedFilesManager->isPresentable($file, $user->getUID(), $type);
 
 		$changeTs = 0;
 		if ($presentable) {
-			$changeTs = $this->changedFilesManager->queryChangeTs($file, $user->getUID(), "edit");
+			$changeTs = $this->changedFilesManager->queryChangeTs($file, $user->getUID(), $type);
 		}
 
 		$then = new \DateTime();
@@ -380,36 +381,6 @@ class RecommenderService {
 		$numberOfDays = $difference->format("%a");
 
 		return $this->calculateRating($numberOfDays);
-
-	}
-
-	/**
-	 * queries the database for the change timestamp for an favorites.
-	 * If there is no timestamp available, 01.01.1970 will be returned which
-	 * means that the file is not rated since then.
-	 *
-	 * @param File $file
-	 * @param IUser $user
-	 * @return int
-	 * @since 1.0.0
-	 */
-	private function getFavoriteRating(File $file, IUser $user) {
-		$presentable = $this->changedFilesManager->isPresentable($file, $user->getUID(), "favorite");
-		$changeTs = 0;
-		if ($presentable) {
-			$changeTs = $this->changedFilesManager->queryChangeTs($file, $user->getUID(), "favorite");
-		}
-
-		$then = new \DateTime();
-		$then->setTimestamp($changeTs);
-
-		$now = new \DateTime();
-		$now->getTimestamp();
-
-		$difference = $now->diff($then);
-		$numberOfDays = $difference->format("%a");
-		$rating = $this->calculateRating($numberOfDays);
-		return $rating;
 
 	}
 

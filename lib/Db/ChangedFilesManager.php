@@ -57,6 +57,7 @@ class ChangedFilesManager {
 	 * @param File $file the file that should be deleted
 	 * @param string $userId the user that made the change/tag
 	 * @param string $type the type of changed files
+	 * @return bool delete operation was successful or not
 	 * @since 1.0.0
 	 */
 	public function deleteFile(File $file, string $userId, string $type) {
