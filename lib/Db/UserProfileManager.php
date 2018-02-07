@@ -60,6 +60,7 @@ class UserProfileManager {
 	 * @since 1.0.0
 	 */
 	private function insertKeyword(Keyword $item, IUser $user): bool {
+		//TODO check if keyword is already in UP
 		$query = $this->dbConnection->getQueryBuilder();
 		$query->insert(DbConstants::TABLE_NAME_USER_PROFILE)->values(
 			[

@@ -139,8 +139,10 @@ class FileHook {
 		 * User has to make changes via the web UI. Otherwise, changes are
 		 * not recognized as "change".
 		 */
-		// FIXME method returns false on web ui requests
-		if (!$this->request->isUserAgent([IRequest::USER_AGENT_CLIENT_DESKTOP])) {
+		if ($this->request->isUserAgent([
+			IRequest::USER_AGENT_CLIENT_DESKTOP,
+			IRequest::USER_AGENT_CLIENT_ANDROID,
+			IRequest::USER_AGENT_CLIENT_IOS])) {
 			Logger::info("ignoring file because request is not from web UI");
 			return false;
 		}

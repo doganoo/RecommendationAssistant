@@ -200,7 +200,6 @@ class RecommenderService {
 				//an entire similarity matrix is needed
 				$cosineComputer = new CosineComputer($item, $item1);
 				$cosineSimilarity = $cosineComputer->compute();
-//				ConsoleLogger::error($item->getId() . ";" . $item1->getId() . ";" . $cosineSimilarity->getValue());
 				$itemItemMatrix->add($item, $item1, $cosineSimilarity);
 			}
 
@@ -229,8 +228,6 @@ class RecommenderService {
 
 				$itemComputer = new RatingPredictor($item, $user, $itemList, $itemItemMatrix);
 				$collaborativeSimilarity = $itemComputer->predict();
-//				ConsoleLogger::error("content based similarity: " . $contentBasedSimilarity->getValue());
-//				ConsoleLogger::error("collaborative similarity: " . $collaborativeSimilarity->getValue());
 				$hybrid->setContentBased($contentBasedSimilarity);
 				$hybrid->setCollaborative($collaborativeSimilarity);
 				if ($item->raterPresent($user->getUID())) {
@@ -239,11 +236,6 @@ class RecommenderService {
 			}
 		}
 
-//		foreach ($hybridList as $array) {
-//			foreach ($array as $hybrid) {
-//				ConsoleLogger::error($hybrid);
-//			}
-//		}
 		if (!Application::DEBUG) {
 			$hybridList->removeNonRecommendable();
 		}
@@ -375,7 +367,6 @@ class RecommenderService {
 		$then->setTimestamp($changeTs);
 
 		$now = new \DateTime();
-		$now->getTimestamp();
 
 		$difference = $now->diff($then);
 		$numberOfDays = $difference->format("%a");

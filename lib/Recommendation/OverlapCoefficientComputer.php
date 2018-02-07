@@ -101,7 +101,7 @@ class OverlapCoefficientComputer implements IComputable {
 		}
 		if ($count > 0 && $lower > 0) {
 			/*
-			 * since overlap coefficient measures the similarity between two
+			 * since overlap coefficient measures the similarity of two
 			 * items in range between 0 and 1 and the cosine computer can compute
 			 * between greater ranges, we need to define a factor that is the
 			 * upper limit of possible ratings. For example, if the range is between
