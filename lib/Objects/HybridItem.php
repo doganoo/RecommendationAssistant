@@ -24,6 +24,7 @@ namespace OCA\RecommendationAssistant\Objects;
 
 use OCA\RecommendationAssistant\AppInfo\Application;
 use OCA\RecommendationAssistant\Exception\InvalidSimilarityValueException;
+use OCA\RecommendationAssistant\Log\ConsoleLogger;
 use OCP\IUser;
 
 /**
@@ -188,7 +189,7 @@ class HybridItem {
 	 * @since 1.0.0
 	 */
 	public function __toString() {
-		$val = HybridItem::weightedAverage($this);
+		$val = $this->weightedAverage();
 		return "
 				[#itemId#][#{$this->item->getId()}#]
 				[#itemName#][#{$this->item->getName()}#]
@@ -208,28 +209,28 @@ class HybridItem {
 	 * @return float
 	 * @since 1.0.0
 	 */
-	public static function weightedAverage(HybridItem $hybrid): float {
-		$collaborative = 0.5;
-		$contentBased = 0.5;
+	public function weightedAverage(): float {
+		$collaborative = self::$collaborativeWeight;
+		$contentBased = self::$contentBasedWeight;
 
-		if (!$hybrid->getCollaborative()->isValid() &&
-			!$hybrid->getContentBased()->isValid()) {
+		if (!$this->getCollaborative()->isValid() &&
+			!$this->getContentBased()->isValid()) {
 			return 0.0;
 		}
-		if (!$hybrid->getContentBased()->isValid() &&
-			$hybrid->getCollaborative()->isValid()) {
+		if (!$this->getContentBased()->isValid() &&
+			$this->getCollaborative()->isValid()) {
 			$collaborative = 1;
 			$contentBased = 0;
 		}
-		if (!$hybrid->getCollaborative()->isValid() &&
-			$hybrid->getContentBased()->isValid()) {
+		if (!$this->getCollaborative()->isValid() &&
+			$this->getContentBased()->isValid()) {
 			$collaborative = 0;
 			$contentBased = 1;
 
 		}
-		$contentBasedResult = $contentBased * $hybrid->getContentBased()->getValue();
-		$collaborativeResult = $collaborative * $hybrid->getCollaborative()->getValue();
-		$weightedAverage = $hybrid->getGroupWeight() * ($contentBasedResult + $collaborativeResult);
+		$contentBasedResult = $contentBased * $this->getContentBased()->getValue();
+		$collaborativeResult = $collaborative * $this->getCollaborative()->getValue();
+		$weightedAverage = $this->getGroupWeight() * ($contentBasedResult + $collaborativeResult);
 		return $weightedAverage;
 	}
 
@@ -240,7 +241,7 @@ class HybridItem {
 	 * @since 1.0.0
 	 */
 	public function isRecommandable(): bool {
-		$val = HybridItem::weightedAverage($this);
+		$val = $this->weightedAverage($this);
 		if ($val > Application::RECOMMENDATION_THRESHOLD) {
 			return true;
 		}

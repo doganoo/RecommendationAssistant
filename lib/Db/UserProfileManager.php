@@ -60,7 +60,9 @@ class UserProfileManager {
 	 * @since 1.0.0
 	 */
 	private function insertKeyword(Keyword $item, IUser $user): bool {
-		//TODO check if keyword is already in UP
+		if ($this->isPresentable($item, $user)) {
+			return true;
+		}
 		$query = $this->dbConnection->getQueryBuilder();
 		$query->insert(DbConstants::TABLE_NAME_USER_PROFILE)->values(
 			[
@@ -139,5 +141,27 @@ class UserProfileManager {
 		}
 		$result->closeCursor();
 		return $keywordList;
+	}
+
+	/**
+	 * checks whether a keyword is already inserted or not
+	 *
+	 * @param Keyword $keyword
+	 * @param IUser $user
+	 *
+	 * @return bool whether the file inserted or not
+	 * @since 1.0.0
+	 */
+	private function isPresentable(Keyword $keyword, IUser $user) {
+		$query = $this->dbConnection->getQueryBuilder();
+		$query->select(DbConstants::TB_UP_ID)
+			->from(DbConstants::TABLE_NAME_USER_PROFILE)
+			->where($query->expr()->eq(DbConstants::TB_UP_USER_ID, $query->createNamedParameter($user->getUID())))
+			->andWhere($query->expr()->eq(DbConstants::TB_UP_KEYWORD, $query->createNamedParameter($keyword->getKeyword())));
+
+		$result = $query->execute();
+		$row = $result->fetch();
+		$result->closeCursor();
+		return $row !== false;
 	}
 }

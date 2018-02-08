@@ -45,7 +45,7 @@ class Rater {
 	/**
 	 * @const RATING_UPPER_LIMIT the upper limit of an rating
 	 */
-	const RATING_UPPER_LIMIT = 5;
+	const RATING_UPPER_LIMIT = 1;
 
 	/**
 	 * @const RATING_LOWER_LIMIT the lower limit of an rating

@@ -98,14 +98,16 @@ class RatingPredictor {
 		$similarity = new Similarity();
 		$upper = 0;
 		$lower = 0;
-
-		/*
-		 * k-nearest neighbor approach: remove all items that have a similarity less than 0.5
-		 */
-		$itemArray = array_filter($this->itemList->getItems(), function (Item $item, string $key) {
-			$sim = $this->matrix->get($this->item, $item);
-			return $sim->getValue() > Application::K_NEAREST_NEIGHBOR_SIMILARITY_THRESHOLD;
-		}, ARRAY_FILTER_USE_BOTH);
+		$itemArray = $this->itemList;
+		if (!Application::DEBUG) {
+			/*
+			 * k-nearest neighbor approach: remove all items that have a similarity less than a defined threshold
+			 */
+			$itemArray = array_filter($this->itemList->getItems(), function (Item $item, string $key) {
+				$sim = $this->matrix->get($this->item, $item);
+				return $sim->getValue() > Application::K_NEAREST_NEIGHBOR_SIMILARITY_THRESHOLD;
+			}, ARRAY_FILTER_USE_BOTH);
+		}
 
 		/** @var Item $item1 */
 		foreach ($itemArray as $item1) {

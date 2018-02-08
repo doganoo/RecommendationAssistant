@@ -21,16 +21,7 @@
 
 namespace OCA\RecommendationAssistant\AppInfo;
 
-use OCA\Files\Service\TagService;
-use OCA\RecommendationAssistant\Db\ChangedFilesManager;
-use OCA\RecommendationAssistant\Db\ProcessedFilesManager;
-use OCA\RecommendationAssistant\Hook\FileHook;
-use OCA\RecommendationAssistant\Log\Logger;
 use OCP\AppFramework\App;
-use OCP\AppFramework\QueryException;
-use OCP\IContainer;
-use OCP\Util;
-use Symfony\Component\EventDispatcher\GenericEvent;
 
 /**
  * All controller instances that are registered by IContainer::registerService
@@ -76,7 +67,7 @@ class Application extends App {
 	 * <li>UserProfileService interval equals to 1</li>
 	 * <li>ConsoleLogger logs the messages to the console</li>
 	 */
-	const DEBUG = false;
+	const DEBUG = true;
 
 	/**
 	 * @const HOOK_FILE_HOOK_NAME the file hook name
@@ -92,7 +83,7 @@ class Application extends App {
 	 * @const RECOMMENDATION_THRESHOLD defines the threshold that has to be exceeded in
 	 * order to get recommended.
 	 */
-	const RECOMMENDATION_THRESHOLD = 2;
+	const RECOMMENDATION_THRESHOLD = 0.5;
 
 	/**
 	 * @const KEYWORD_REMOVAL_DAYS number of days after that keywords of an user
@@ -130,28 +121,6 @@ class Application extends App {
 	 */
 	public function __construct() {
 		parent::__construct(Application::APP_ID);
-		$container = $this->getContainer();
-		$server = $container->getServer();
-		$container->registerService('ProcessedFileManager', function (IContainer $c) use ($server) {
-			return new ProcessedFilesManager(
-				$server->getDatabaseConnection()
-			);
-		});
-		$container->registerService('ChangedFilesManager', function (IContainer $c) use ($server) {
-			return new ChangedFilesManager(
-				$server->getDatabaseConnection()
-			);
-		});
-
-		$container->registerService('FileHook', function (IContainer $c) use ($server) {
-			return new FileHook(
-				$server->getUserSession(),
-				$server->getRequest(),
-				$server->getRootFolder(),
-				$c->query("ProcessedFileManager"),
-				$c->query("ChangedFilesManager")
-			);
-		});
 	}
 
 	/**
@@ -162,48 +131,5 @@ class Application extends App {
 	 */
 	public static function getDataDirectory(): string {
 		return $dataDir = \OC::$server->getConfig()->getSystemValue('datadirectory', '');
-	}
-
-	public function register() {
-		Util::connectHook('OC_Filesystem', 'read', $this, 'callFileHook');
-		$this->getContainer()->getServer()->getEventDispatcher()->addListener(TagService::class . '::addFavorite', function (GenericEvent $event) {
-			$userId = $event->getArgument('userId');
-			$fileId = $event->getArgument('fileId');
-			/** @var FileHook $hook */
-			$hook = $this->getContainer()->query("FileHook");
-			$hook->runFavorite($userId, $fileId, "addFavorite");
-		});
-
-		$this->getContainer()->getServer()->getEventDispatcher()->addListener(TagService::class . '::removeFavorite', function (GenericEvent $event) {
-			$userId = $event->getArgument('userId');
-			$fileId = $event->getArgument('fileId');
-			/** @var FileHook $hook */
-			$hook = $this->getContainer()->query("FileHook");
-			$hook->runFavorite($userId, $fileId, "removeFavorite");
-		});
-	}
-
-	/**
-	 * the file hook that is executed when a file is changed.
-	 *
-	 * @param $params
-	 * @since 1.0.0
-	 */
-	public function callFileHook($params) {
-		$container = $this->getContainer();
-		$fileHookExecuted = false;
-		try {
-			/** @var FileHook $fileHook */
-			$fileHook = $container->query("FileHook");
-			if ($fileHook instanceof FileHook) {
-				$fileHookExecuted = $fileHook->run($params);
-			}
-
-			if (!$fileHookExecuted) {
-				Logger::warn("file hook is not executed");
-			}
-		} catch (QueryException $e) {
-			Logger::error($e->getMessage());
-		}
 	}
 }

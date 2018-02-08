@@ -33,6 +33,7 @@ use OCA\RecommendationAssistant\Db\UserProfileManager;
 use OCA\RecommendationAssistant\Exception\InvalidRatingException;
 use OCA\RecommendationAssistant\Log\ConsoleLogger;
 use OCA\RecommendationAssistant\Log\Logger;
+use OCA\RecommendationAssistant\Objects\HybridItem;
 use OCA\RecommendationAssistant\Objects\HybridList;
 use OCA\RecommendationAssistant\Objects\Item;
 use OCA\RecommendationAssistant\Objects\ItemList;
@@ -336,67 +337,37 @@ class RecommenderService {
 	 * @since 1.0.0
 	 */
 	private function addRater(Item $item, File $file, IUser $currentUser) {
-		$timeRating = $this->getChangeTimestamp($file, $currentUser, "edit");
-		$favoriteRating = $this->getChangeTimestamp($file, $currentUser, "favorite");
-		$rating = ((Application::RATING_WEIGHT_LAST_CHANGE * $timeRating) + (Application::RATING_WEIGHT_LAST_FAVORITE * $favoriteRating));
+		$fileId = -1;
+		try {
+			$fileId = $file->getId();
+		} catch (NotFoundException $exception) {
+			Logger::warn($exception->getMessage());
+			return $item;
+		} catch (InvalidPathException $exception) {
+			Logger::warn($exception->getMessage());
+			return $item;
+		}
+		$isFavorite = $this->checkForFavorite($currentUser, $fileId);
+		$rating = $isFavorite === true ? 1 : 0;
 		$rater = $this->getRater($currentUser, $rating);
 		$item->addRater($rater);
 		return $item;
 	}
 
 	/**
-	 * queries the database for the last change timestamp for an rating.
-	 * If there is no timestamp available, 01.01.1970 will be returned which
-	 * means that the file is not changed since then.
+	 * This method checks whether the file is tagged as favorite (is liked) by
+	 * a given user.
 	 *
-	 * @param File $file
 	 * @param IUser $user
-	 * @param string $type
-	 * @return int
+	 * @param int $fileId the actual file id
+	 * @return bool whether the file is liked or not
 	 * @since 1.0.0
 	 */
-	private function getChangeTimestamp(File $file, IUser $user, string $type): int {
-		$presentable = $this->changedFilesManager->isPresentable($file, $user->getUID(), $type);
-
-		$changeTs = 0;
-		if ($presentable) {
-			$changeTs = $this->changedFilesManager->queryChangeTs($file, $user->getUID(), $type);
-		}
-
-		$then = new \DateTime();
-		$then->setTimestamp($changeTs);
-
-		$now = new \DateTime();
-
-		$difference = $now->diff($then);
-		$numberOfDays = $difference->format("%a");
-
-		return $this->calculateRating($numberOfDays);
-
-	}
-
-	/**
-	 * returns the rating based on date difference in days.
-	 *
-	 * @param $numberOfDays
-	 * @return int
-	 * @since 1.0.0
-	 */
-	private function calculateRating($numberOfDays): int {
-
-		if ($numberOfDays <= 3) {
-			return 5;
-		} else if ($numberOfDays > 3 && $numberOfDays <= 5) {
-			return 4;
-		} else if ($numberOfDays > 5 && $numberOfDays <= 10) {
-			return 3;
-		} else if ($numberOfDays > 10 && $numberOfDays <= 15) {
-			return 2;
-		} else if ($numberOfDays > 15 && $numberOfDays <= 20) {
-			return 1;
-		} else {
-			return 0;
-		}
+	private function checkForFavorite(IUser $user, $fileId): bool {
+		$tags = $this->tagManager->load("files", [], false, $user->getUID());
+		$favorites = $tags->getFavorites();
+		$isFavorite = in_array($fileId, $favorites);
+		return $isFavorite === true;
 	}
 
 	/**

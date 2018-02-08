@@ -54,4 +54,3 @@ if ((@include_once __DIR__ . '/../vendor/autoload.php') === false) {
 }
 
 $app = new Application();
-$app->register();
