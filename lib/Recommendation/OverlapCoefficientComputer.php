@@ -89,7 +89,7 @@ class OverlapCoefficientComputer implements IComputable {
 		$arr = array_unique($arr);
 		$count = count($arr);
 		//this source code part means: use the amount of item keywords if the
-		//item has more keywords than the user profile. Otherwise use the amount
+		//item has less keywords than the user profile. Otherwise use the amount
 		//of the user profile
 		$lower = $itemKeywords->size() > $this->keywordList->size() ? $this->keywordList->size() : $itemKeywords->size();
 
@@ -106,7 +106,7 @@ class OverlapCoefficientComputer implements IComputable {
 			 * between greater ranges, we need to define a factor that is the
 			 * upper limit of possible ratings. For example, if the range is between
 			 * 0 and 5, all similarity values that are computed by this class
-			 * have to multiplied with 5.
+			 * have to be multiplied by 5.
 			 */
 			$factor = Rater::RATING_UPPER_LIMIT;
 			$similarity = Util::createSimilarity(($count / $lower) * $factor, Similarity::VALID, "valid calculation");

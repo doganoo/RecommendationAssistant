@@ -65,12 +65,10 @@ class TextProcessor {
 
 	public function getKeywordList(): KeywordList {
 		$keywordList = new KeywordList();
-		$i = 0;
 		foreach ($this->textArray as $value) {
 			$keyword = new Keyword();
 			$keyword->setKeyword($value);
 			$keywordList->add($keyword);
-			$i++;
 		}
 		return $keywordList;
 	}

@@ -115,13 +115,13 @@ class Application extends App {
 	 * @const RATING_WEIGHT_LAST_CHANGE the weight for the rating used in
 	 * RecommenderService for the last modification timestamp rating
 	 */
-	const RATING_WEIGHT_LAST_CHANGE = 1;
+	const RATING_WEIGHT_LAST_CHANGE = 0.75;
 
 	/**
 	 * @const RATING_WEIGHT_LAST_FAVORITE the weight for the rating used in
 	 * RecommenderService for the last favorite tagging timestamp
 	 */
-	const RATING_WEIGHT_LAST_FAVORITE = 0;
+	const RATING_WEIGHT_LAST_FAVORITE = 0.25;
 
 	/**
 	 * Class constructor calls the parent constructor with APP_ID
