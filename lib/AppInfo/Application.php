@@ -22,14 +22,13 @@
 namespace OCA\RecommendationAssistant\AppInfo;
 
 use OCA\Files\Service\TagService;
-use OCA\RecommendationAssistant\Db\ChangedFilesManager;
-use OCA\RecommendationAssistant\Db\ProcessedFilesManager;
 use OCA\RecommendationAssistant\Hook\FileHook;
 use OCA\RecommendationAssistant\Log\Logger;
 use OCP\AppFramework\App;
 use OCP\AppFramework\QueryException;
+use OCP\Files\IRootFolder;
+use OCP\Files\Node;
 use OCP\IContainer;
-use OCP\Util;
 use Symfony\Component\EventDispatcher\GenericEvent;
 
 /**
@@ -132,16 +131,6 @@ class Application extends App {
 		parent::__construct(Application::APP_ID);
 		$container = $this->getContainer();
 		$server = $container->getServer();
-		$container->registerService('ProcessedFileManager', function (IContainer $c) use ($server) {
-			return new ProcessedFilesManager(
-				$server->getDatabaseConnection()
-			);
-		});
-		$container->registerService('ChangedFilesManager', function (IContainer $c) use ($server) {
-			return new ChangedFilesManager(
-				$server->getDatabaseConnection()
-			);
-		});
 
 		$container->registerService('FileHook', function (IContainer $c) use ($server) {
 			return new FileHook(
@@ -165,7 +154,25 @@ class Application extends App {
 	}
 
 	public function register() {
-		Util::connectHook('OC_Filesystem', 'read', $this, 'callFileHook');
+		try {
+			/** @var IRootFolder $root */
+			$root = $this->getContainer()->query(IRootFolder::class);
+			$root->listen('\OC\Files', 'postWrite', function (Node $node) {
+				$container = $this->getContainer();
+				$fileHookExecuted = false;
+				/** @var FileHook $fileHook */
+				$fileHook = $container->query("FileHook");
+				if ($fileHook instanceof FileHook) {
+					$fileHookExecuted = $fileHook->run($node);
+				}
+
+				if (!$fileHookExecuted) {
+					Logger::warn("file hook is not executed");
+				}
+			});
+		} catch (QueryException $exception) {
+			Logger::error($exception->getMessage());
+		}
 		$this->getContainer()->getServer()->getEventDispatcher()->addListener(TagService::class . '::addFavorite', function (GenericEvent $event) {
 			$userId = $event->getArgument('userId');
 			$fileId = $event->getArgument('fileId');
@@ -181,29 +188,6 @@ class Application extends App {
 			$hook = $this->getContainer()->query("FileHook");
 			$hook->runFavorite($userId, $fileId, "removeFavorite");
 		});
-	}
 
-	/**
-	 * the file hook that is executed when a file is changed.
-	 *
-	 * @param $params
-	 * @since 1.0.0
-	 */
-	public function callFileHook($params) {
-		$container = $this->getContainer();
-		$fileHookExecuted = false;
-		try {
-			/** @var FileHook $fileHook */
-			$fileHook = $container->query("FileHook");
-			if ($fileHook instanceof FileHook) {
-				$fileHookExecuted = $fileHook->run($params);
-			}
-
-			if (!$fileHookExecuted) {
-				Logger::warn("file hook is not executed");
-			}
-		} catch (QueryException $e) {
-			Logger::error($e->getMessage());
-		}
 	}
 }

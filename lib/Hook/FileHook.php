@@ -106,28 +106,18 @@ class FileHook {
 	 * runs the file hook for edited files. The method inserts the last
 	 * changed timestamp for a given file path.
 	 *
-	 * @param $parameters
+	 * @param Node $node
 	 * @return bool
 	 *
 	 * @since 1.0.0
 	 */
-	public function run($parameters): bool {
+	public function run(Node $node): bool {
 		Logger::debug("FileHook start");
-		$path = $parameters["path"];
 		/** @var IUser $user */
 		$user = $this->userSession->getUser();
 
 		/*
-		 * .part files are parts of a file. When transmitting,
-		 * large files are divided in multiple files.
-		 */
-		if (substr($path, -5) === '.part') {
-			Logger::info("ignoring file because it is a .part file");
-			return false;
-		}
-
-		/*
-		 * No session available. User is not logged in. Therefore, returning
+		 * No session available. User is not logged in. Therefore, return
 		 * false.
 		 */
 		if ($user === null) {
@@ -137,28 +127,13 @@ class FileHook {
 
 		/*
 		 * User has to make changes via the web UI. Otherwise, changes are
-		 * not recognized as "change".
+		 * not recognized as a "change".
 		 */
 		if ($this->request->isUserAgent([
 			IRequest::USER_AGENT_CLIENT_DESKTOP,
 			IRequest::USER_AGENT_CLIENT_ANDROID,
 			IRequest::USER_AGENT_CLIENT_IOS])) {
 			Logger::info("ignoring file because request is not from web UI");
-			return false;
-		}
-
-		/*
-		 * no path available, no file provided
-		 */
-		if ($path === '/' || $path === '' || $path === null) {
-			Logger::info("ignoring file because no path available, no file provided");
-			return false;
-		}
-		/** @var Node $node */
-		$node = $this->getNode($path);
-
-		if ($node == null) {
-			Logger::info("node returned null. Cannot process file");
 			return false;
 		}
 
@@ -172,6 +147,7 @@ class FileHook {
 			 * deleting the file in order to re-recommend it after a change
 			 */
 			$this->processedFileManager->deleteFile($node, "recommendation");
+			Logger::debug("FileHook end");
 			return true;
 		}
 
