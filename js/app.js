@@ -18,83 +18,133 @@
  *
  */
 
-
-
-
 (function () {
-	'use strict';
-	var source = '<div class="apps-header" style="margin-top: 25px;">' +
-		'<span class="extension" style="margin-left: 109px;">' + t('recommendation_assistant', 'Recommendations') + '</span>' +
-		'<div class="section group">' +
-		'{{#each this}}' +
-		'<div class="col span_1_of_3">' +
-		'	<a class="name" href="/nextcloud/remote.php/webdav/{{ fileNameAndExtension }}">' +
-		' 	<div class="thumbnail-wrapper" style="margin-left: 25px;">' +
-		'		<div class="thumbnail" style="background-image: url(\'{{ getPreviewUrl fileNameAndExtension }}\'); height: 64px; width: 64px; float: left">' +
-		'		</div>' +
-		'		<span class="nametext" style="margin-left: 20px;">' +
-		'			<span class="innernametext">{{ fileName }}</span>' +
-		'			<span class="extension">.{{ extension }}</span>' +
-		'		</span>' +
-		'		<div style="clear: right;"></div>' +
-		'		<span class="nametext" style="margin-left: 20px;">' +
-		'			<span class="extension">not implemented yet</span>' +
-		'		</span>' +
-		'	</div>' +
-		'	</a>' +
-		'</div>' +
-		'{{/each}}' +
-		'</div>';
+
+	if (!OCA.Recommendations) {
+		OCA.Recommendations = {};
+	}
+	/**
+	 * @namespace
+	 */
+	OCA.Recommendations.Util = {
+		/**
+		 * Initialize the recommendations plugin.
+		 *
+		 * @param {OCA.Files.FileList} fileList file list to be extended
+		 */
+
+		attach: function (fileList) {
+			var that = this;
+
+			/**
+			 * listen to the changeDirectory event
+			 */
+			fileList.$el.on('changeDirectory', function (data) {
+				var dir = data.dir.toString();
+				that.updateRecommendationsView(dir === "/");
+			});
+			// fileList.$el.on('fileActionsReady', function (data) {
+			// });
+
+		},
+
+		/**
+		 * updates the recommendation view.
+		 *
+		 * @param isRootDir
+		 */
+		updateRecommendationsView: function (isRootDir) {
+			// request new recommendations and update the rendered template
+			'use strict';
+			var source = '<div class="apps-header">' +
+				'<span class="extension">' + t('recommendation_assistant', 'Recommendations') + '</span>' +
+				'<div class="section group">' +
+				'{{#each this}}' +
+				'<div class="col span_1_of_3">' +
+				'	<a class="name" href="/nextcloud/remote.php/webdav/{{ fileNameAndExtension }}">' +
+				' 	<div class="thumbnail-wrapper">' +
+				'		<div class="thumbnail" style="background-image: url(\'{{ getPreviewUrl fileNameAndExtension }}\'); height: 64px; width: 64px; float: left">' +
+				'		</div>' +
+				'		<span class="nametext">' +
+				'			<span class="innernametext">{{ fileName }}</span>' +
+				'			<span class="extension">.{{ extension }}</span>' +
+				'		</span>' +
+				'		<div style="clear: right;"></div>' +
+				'		<span class="nametext">' +
+				'			<span class="extension">not implemented yet</span>' +
+				'		</span>' +
+				'	</div>' +
+				'	</a>' +
+				'</div>' +
+				'{{/each}}' +
+				'</div>';
 
 
-	var url = OC.generateUrl('apps/recommendation_assistant/recommendation_assistant_for_files');
-	$.ajax({
-		url: url,
-		type: 'GET',
-		contentType: 'application/json',
-	}).done(function (response) {
-		if (objectSize(response) > 0) {
-			var div = $('<div id="recommendations"><span class="icon-loading"></span></div>');
-			$('#controls').after(div);
-			var template = Handlebars.compile(source);
-			var html = template(response);
-			div.html(html);
+			//empty the view before it is reloaded / for hiding on sub dirs
+			$("#recommendations").html('');
+
+			var url = OC.generateUrl('apps/recommendation_assistant/recommendation_assistant_for_files');
+			$.ajax({
+				url: url,
+				type: 'GET',
+				contentType: 'application/json',
+			}).done(function (response) {
+				if (objectSize(response) > 0 && isRootDir) {
+					var div = $('<div id="recommendations"><span class="icon-loading"></span></div>');
+					$('#controls').after(div);
+					var template = Handlebars.compile(source);
+					var html = template(response);
+					div.html(html);
+				}
+			}).fail(function (response, code) {
+				//TODO what to do in case of error?
+			});
 		}
-	}).fail(function (response, code) {
-	});
+
+	};
 
 })();
 
-
+/**
+ * count the element size of an object
+ *
+ * @param obj
+ * @returns {number}
+ */
 function objectSize (obj) {
-	var L = 0;
-	$.each(obj, function (i, elem) {
-		L++;
+	var count = 0;
+	$.each(obj, function () {
+		count++;
 	});
-	return L;
+	return count;
 }
 
+/**
+ * returns an preview for a given urlSpec
+ *
+ * @param urlSpec
+ * @returns {string}
+ */
 function generatePreviewUrl (urlSpec) {
 	urlSpec.x = 64;
 	urlSpec.y = 64;
 	urlSpec.forceIcon = 0;
-	var url = OC.generateUrl('/core/preview.png?') + $.param(urlSpec);
-	return url;
+	return OC.generateUrl('/core/preview.png?') + $.param(urlSpec);
 }
 
+/**
+ * helper method to call getPreviewUrl / generatePreviewUrl methods
+ * in order to generate a file preview
+ */
 Handlebars.registerHelper("getPreviewUrl", function (fileName) {
 	var url = generatePreviewUrl({
 		file: '/' + fileName,
 	});
 	url = url.replace('(', '%28').replace(')', '%29');
 	return url;
-
 });
 
-// function getPreviewUrl (fileName) {
-// 	var url = generatePreviewUrl({
-// 		file: '/' + fileName,
-// 	});
-// 	url = url.replace('(', '%28').replace(')', '%29');
-// 	return url;
-// }
+/**
+ * Register the Util class to the files app
+ */
+OC.Plugins.register('OCA.Files.FileList', OCA.Recommendations.Util);

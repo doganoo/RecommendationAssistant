@@ -165,7 +165,7 @@ class RecommenderService {
 	 * Shortdescription: this class iterates over all seen users, processes all
 	 * files of the users and calculates a Content Based and Collaborative
 	 * similarity value in order to make recommendations. The results are stored
-	 * in ???
+	 * in a database.
 	 *
 	 * @since 1.0.0
 	 */
@@ -265,8 +265,7 @@ class RecommenderService {
 	 * or by the handleFile() method
 	 * @since 1.0.0
 	 */
-	private
-	function handleFolder(Folder $folder, IUser $currentUser): ItemList {
+	private function handleFolder(Folder $folder, IUser $currentUser): ItemList {
 		//TODO do not process files twice
 		$itemList = new ItemList();
 		try {
@@ -300,8 +299,7 @@ class RecommenderService {
 	 * are true:
 	 *
 	 * <ul>file is already processed</ul>
-	 * <ul>file is encrypted</ul>
-	 * <ul>file is not readable</ul>
+	 * <ul>file has not a supported mimetype</ul>
 	 *
 	 * @param File $file the actual file
 	 * @param IUser $currentUser the actual user
