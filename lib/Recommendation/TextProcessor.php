@@ -35,7 +35,7 @@ class TextProcessor {
 		$this->toArray();
 	}
 
-	private function toArray() {
+	public function toArray() {
 		$this->textArray = str_word_count($this->text, 1);
 		return $this->textArray;
 	}
@@ -65,12 +65,10 @@ class TextProcessor {
 
 	public function getKeywordList(): KeywordList {
 		$keywordList = new KeywordList();
-		$i = 0;
 		foreach ($this->textArray as $value) {
 			$keyword = new Keyword();
 			$keyword->setKeyword($value);
 			$keywordList->add($keyword);
-			$i++;
 		}
 		return $keywordList;
 	}
