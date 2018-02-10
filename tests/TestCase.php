@@ -20,7 +20,7 @@
  *
  */
 
-namespace OCA\Activity\Tests;
+namespace OCA\RecommendationAssistant\Tests;
 
 abstract class TestCase extends \Test\TestCase {
 }
