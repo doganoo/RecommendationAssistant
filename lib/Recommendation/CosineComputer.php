@@ -73,10 +73,10 @@ class CosineComputer implements IComputable {
 			$similarity = Util::createSimilarity(1.0, Similarity::SAME_COSINE_ITEMS, "the items are the same");
 			return $similarity;
 		}
-		$lowerA = 0;
-		$lowerB = 0;
-		$upper = 0;
-		$lower = 0;
+		$denominatorA = 0;
+		$denominatorB = 0;
+		$numerator = 0;
+		$denominator = 0;
 		/** @var Rater $rater */
 		foreach ($this->sourceItem->getRaters() as $rater) {
 			$yValid = $this->targetItem->getRater(
@@ -87,17 +87,17 @@ class CosineComputer implements IComputable {
 			}
 			$sourceRating = $rater->getRating();
 			$targetRating = $this->targetItem->getRater($rater->getUser()->getUID())->getRating();
-			$upper += $sourceRating * $targetRating;
+			$numerator += $sourceRating * $targetRating;
 			$powX = pow($sourceRating, 2);
 			$powY = pow($targetRating, 2);
-			$lowerA += $powX;
-			$lowerB += $powY;
+			$denominatorA += $powX;
+			$denominatorB += $powY;
 		}
-		$lower = sqrt($lowerA) * sqrt($lowerB);
-		if ($lower == 0) {
-			$similarity = Util::createSimilarity(0.0, Similarity::NO_COSINE_SQUARE_POSSIBLE, "multiplication of sqrt of both returned 0");
+		$denominator = sqrt($denominatorA) * sqrt($denominatorB);
+		if ($denominator == 0) {
+			$similarity = Util::createSimilarity(0.0, Similarity::NO_COSINE_SQUARE_POSSIBLE, "multiplication returned 0");
 		} else {
-			$similarity = Util::createSimilarity($upper / $lower, Similarity::VALID, "ok");
+			$similarity = Util::createSimilarity($numerator / $denominator, Similarity::VALID, "ok");
 		}
 		return $similarity;
 	}

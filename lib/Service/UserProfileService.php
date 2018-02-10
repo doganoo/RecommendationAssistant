@@ -147,16 +147,22 @@ class UserProfileService {
 			$keywordList = new KeywordList();
 			/** @var Item $item */
 			foreach ($itemList as $item) {
+				/*
+				 * The keywords are added to the keyword list only when
+				 * the user is part of the raters. A user may be a rater without
+				 * rating the item (in this case, his rating equals to 0). If
+				 * the user is not a rater, he has no access to the file.
+				 */
 				if (!$item->raterPresent($user->getUID())) {
 					continue;
 				}
 				$tfidf = new TFIDFComputer($item, $itemList);
 				$preparedList = $tfidf->compute();
-				$preparedList->removeStopwords();
 				$keywordList->merge($preparedList);
 				$file = NodeUtil::getFile($item->getId(), $user->getUID());
 				$this->processedFilesManager->insertFile($file, "userprofile");
 			}
+			$keywordList->removeStopwords();
 			$this->userProfileManager->insertKeywords($keywordList, $user);
 		}
 		set_time_limit($iniVals["max_execution_time"]);

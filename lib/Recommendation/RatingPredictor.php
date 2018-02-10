@@ -96,13 +96,13 @@ class RatingPredictor {
 	 */
 	public function predict(): Similarity {
 		$similarity = new Similarity();
-		$upper = 0;
-		$lower = 0;
+		$numerator = 0;
+		$denominator = 0;
 
 		$itemArray = $this->itemList;
 		if (!Application::DEBUG) {
 			/*
-			 * k-nearest neighbor approach: remove all items that have a similarity less than 0.5
+			 * k-nearest neighbor approach: remove all items that have a similarity less than a threshold
 			 */
 			$itemArray = array_filter($this->itemList->getItems(), function (Item $item, string $key) {
 				$sim = $this->matrix->get($this->item, $item);
@@ -117,13 +117,13 @@ class RatingPredictor {
 			}
 			$sim = $this->matrix->get($this->item, $item1);
 			$rating = $item1->getRater($this->user->getUID())->getRating();
-			$upper += $sim->getValue() * $rating;
-			$lower += $sim->getValue();
+			$numerator += $sim->getValue() * $rating;
+			$denominator += $sim->getValue();
 		}
-		if ($lower == 0) {
-			$similarity = Util::createSimilarity(0.0, Similarity::NO_SIMILARITY_AVAILABLE, "lower equals to 0");
+		if ($denominator == 0) {
+			$similarity = Util::createSimilarity(0.0, Similarity::NO_SIMILARITY_AVAILABLE, "denominator is 0");
 		} else {
-			$similarity = Util::createSimilarity($upper / $lower, Similarity::VALID, "ok");
+			$similarity = Util::createSimilarity($numerator / $denominator, Similarity::VALID, "ok");
 		}
 		return $similarity;
 	}

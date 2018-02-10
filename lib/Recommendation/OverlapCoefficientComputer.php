@@ -87,19 +87,19 @@ class OverlapCoefficientComputer implements IComputable {
 		$itemKeywords->removeStopwords();
 		$arr = array_intersect($itemKeywords->getKeywords(), $this->keywordList->getKeywords());
 		$arr = array_unique($arr);
-		$count = count($arr);
+		$numerator = count($arr);
 		//this source code part means: use the amount of item keywords if the
 		//item has less keywords than the user profile. Otherwise use the amount
 		//of the user profile
-		$lower = $itemKeywords->size() > $this->keywordList->size() ? $this->keywordList->size() : $itemKeywords->size();
+		$denominator = $itemKeywords->size() > $this->keywordList->size() ? $this->keywordList->size() : $itemKeywords->size();
 
-		if ($count == 0) {
+		if ($numerator == 0) {
 			$similarity = Util::createSimilarity(0.0, Similarity::NO_OVERLAPPING_KEYWORDS, "no overlapping keywords found");
 		}
-		if ($lower == 0) {
+		if ($denominator == 0) {
 			$similarity = Util::createSimilarity(0.0, Similarity::ITEM_OR_USER_PROFILE_EMPTY, "no keywords in item / user profile");
 		}
-		if ($count > 0 && $lower > 0) {
+		if ($numerator > 0 && $denominator > 0) {
 			/*
 			 * since overlap coefficient measures the similarity of two
 			 * items in range between 0 and 1 and the cosine computer can compute
@@ -109,7 +109,7 @@ class OverlapCoefficientComputer implements IComputable {
 			 * have to be multiplied by 5.
 			 */
 			$factor = Rater::RATING_UPPER_LIMIT;
-			$similarity = Util::createSimilarity(($count / $lower) * $factor, Similarity::VALID, "valid calculation");
+			$similarity = Util::createSimilarity(($numerator / $denominator) * $factor, Similarity::VALID, "valid calculation");
 		}
 		return $similarity;
 	}
