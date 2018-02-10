@@ -54,20 +54,22 @@ class UserProfileManager {
 	/**
 	 * inserts a keyword, its TFIDF value and the user id into the database
 	 *
-	 * @param Keyword $item the keyword and its TFIDF value
+	 * @param Keyword $keyword the keyword and its TFIDF value
 	 * @param IUser $user the user who is associated to the item
-	 * @return bool whether the insertation was successfull or not
+	 * @return bool whether the insertation was successful or not
 	 * @since 1.0.0
 	 */
-	private function insertKeyword(Keyword $item, IUser $user): bool {
-		//TODO check if keyword is already in UP
+	private function insertKeyword(Keyword $keyword, IUser $user): bool {
+		if ($this->isPresentable($keyword, $user)) {
+			return true;
+		}
 		$query = $this->dbConnection->getQueryBuilder();
 		$query->insert(DbConstants::TABLE_NAME_USER_PROFILE)->values(
 			[
 				DbConstants::TB_UP_USER_ID => $query->createNamedParameter($user->getUID()),
-				DbConstants::TB_UP_KEYWORD => $query->createNamedParameter(($item->getKeyword())),
+				DbConstants::TB_UP_KEYWORD => $query->createNamedParameter(($keyword->getKeyword())),
 				DbConstants::TB_UP_CREATION_TS => $query->createNamedParameter((time())),
-				DbConstants::TB_UP_TFIDF_VALUE => $query->createNamedParameter($item->getTfIdf())
+				DbConstants::TB_UP_TFIDF_VALUE => $query->createNamedParameter($keyword->getTfIdf())
 			]
 		);
 		try {
@@ -91,7 +93,6 @@ class UserProfileManager {
 	 * @since 1.0.0
 	 */
 	public function insertKeywords(KeywordList $keywordList, IUser $user) {
-		$this->deleteOldKeywords(Application::KEYWORD_REMOVAL_DAYS, $user);
 		foreach ($keywordList as $keywordItem) {
 			$this->insertKeyword($keywordItem, $user);
 		}
@@ -104,7 +105,7 @@ class UserProfileManager {
 	 * @param IUser $user the user whose keywords should be deleted
 	 * @since 1.0.0
 	 */
-	private function deleteOldKeywords(int $days, IUser $user) {
+	public function deleteOldKeywords(int $days, IUser $user) {
 		$dateTime = new \DateTime();
 		$dateTime->modify("-$days day");
 
@@ -139,5 +140,18 @@ class UserProfileManager {
 		}
 		$result->closeCursor();
 		return $keywordList;
+	}
+
+	private function isPresentable(Keyword $keyword, IUser $user) {
+		$query = $this->dbConnection->getQueryBuilder();
+		$query->select(DbConstants::TB_UP_ID)
+			->from(DbConstants::TABLE_NAME_USER_PROFILE)
+			->where($query->expr()->eq(DbConstants::TB_UP_KEYWORD, $query->createNamedParameter($keyword->getKeyword())))
+			->andWhere($query->expr()->eq(DbConstants::TB_UP_USER_ID, $query->createNamedParameter($user->getUID())));
+
+		$result = $query->execute();
+		$row = $result->fetch();
+		$result->closeCursor();
+		return $row !== false;
 	}
 }

@@ -24,8 +24,9 @@ namespace OCA\RecommendationAssistant\Db;
 use OCA\RecommendationAssistant\Log\ConsoleLogger;
 use OCA\RecommendationAssistant\Objects\HybridItem;
 use OCA\RecommendationAssistant\Objects\HybridList;
-use OCA\RecommendationAssistant\Objects\Recommendation;
+use OCA\RecommendationAssistant\Objects\Item;
 use OCP\IDBConnection;
+use OCP\IUser;
 
 /**
  * Class that servers as a interface to the datastorage for the recommendations.
@@ -57,6 +58,9 @@ class RecommendationManager {
 	 * @since 1.0.0
 	 */
 	private function insertHybrid(HybridItem $hybridItem): bool {
+		if ($this->isRecommendedToUser($hybridItem->getItem(), $hybridItem->getUser())) {
+			return true;
+		}
 		$query = $this->dbConnection->getQueryBuilder();
 		$query->insert(DbConstants::TABLE_NAME_RECOMMENDATIONS)->values(
 			[
@@ -97,47 +101,17 @@ class RecommendationManager {
 		return $i;
 	}
 
-	/**
-	 * deletes all keywords for a given user
-	 *
-	 * @since 1.0.0
-	 */
-	public function deleteAll() {
+	public function isRecommendedToUser(Item $item, IUser $user) {
 		$query = $this->dbConnection->getQueryBuilder();
-		$query->delete(DbConstants::TABLE_NAME_RECOMMENDATIONS)->execute();
-	}
-
-
-	/**
-	 * returns an array of instances of Recommendation containing all recommendations
-	 * in the database for a given owner.
-	 *
-	 * @param string $userId the owner id
-	 * @return array the array with the Recommendation istances
-	 * @since 1.0.0
-	 */
-	public function getKeywordListByUser($userId) {
-		$query = $this->dbConnection->getQueryBuilder();
-		$recommendations = [];
-		$query->select(
-			DbConstants::TB_RC_FILE_ID,
-			DbConstants::TB_RC_USER_ID,
-			DbConstants::TB_RC_OWNER_ID)
+		$query->select(DbConstants::TB_RC_ID)
 			->from(DbConstants::TABLE_NAME_RECOMMENDATIONS)
-			->where($query->expr()->eq(DbConstants::TB_RC_OWNER_ID, $query->createNamedParameter($userId)));
+			->where($query->expr()->eq(DbConstants::TB_RC_FILE_ID, $query->createNamedParameter($item->getId())))
+			->andWhere($query->expr()->eq(DbConstants::TB_RC_USER_ID, $query->createNamedParameter($user->getUID())));
 
 		$result = $query->execute();
-		while (false !== $row = $result->fetch()) {
-			$recommendation = new Recommendation();
-			$fileId = $row[DbConstants::TB_RC_FILE_ID];
-			$ownerId = $row[DbConstants::TB_RC_OWNER_ID];
-			$userId = $row[DbConstants::TB_RC_USER_ID];
-			$recommendation->setFileId($fileId);
-			$recommendation->setOwnerId($ownerId);
-			$recommendation->setUserId($userId);
-			$recommendations[] = $recommendation;
-		}
+		$row = $result->fetch();
 		$result->closeCursor();
-		return $recommendations;
+		return $row !== false;
 	}
+
 }

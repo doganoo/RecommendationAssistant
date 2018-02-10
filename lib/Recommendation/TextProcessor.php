@@ -35,7 +35,7 @@ class TextProcessor {
 		$this->toArray();
 	}
 
-	private function toArray() {
+	public function toArray() {
 		$this->textArray = str_word_count($this->text, 1);
 		return $this->textArray;
 	}

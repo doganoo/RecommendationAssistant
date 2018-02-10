@@ -27,7 +27,6 @@ use OCA\RecommendationAssistant\AppInfo\Application;
 use OCA\RecommendationAssistant\ContentReader\ContentReaderFactory;
 use OCA\RecommendationAssistant\Db\ChangedFilesManager;
 use OCA\RecommendationAssistant\Db\GroupWeightsManager;
-use OCA\RecommendationAssistant\Db\ProcessedFilesManager;
 use OCA\RecommendationAssistant\Db\RecommendationManager;
 use OCA\RecommendationAssistant\Db\UserProfileManager;
 use OCA\RecommendationAssistant\Exception\InvalidRatingException;
@@ -90,12 +89,6 @@ class RecommenderService {
 	private $userProfileManager = null;
 
 	/**
-	 * @var ProcessedFilesManager $processedFileManager data storage access instance
-	 * in order to get/set the processed files
-	 */
-	private $processedFileManager = null;
-
-	/**
 	 * @var IGroupManager $groupManager the GroupManager to determine the users groups
 	 */
 	private $groupManager = null;
@@ -127,7 +120,6 @@ class RecommenderService {
 	 * @param IGroupManager $groupManager the manager for requesting user groups
 	 * @param UserProfileManager $userProfileManager data storage access instance
 	 * in order to get/set the keywords associated to a user profile
-	 * @param ProcessedFilesManager $processedFilesManager
 	 * @param GroupWeightsManager $groupWeightsManager the manager for querying
 	 * group weights
 	 * @param RecommendationManager $recommendationManager database access to
@@ -141,7 +133,6 @@ class RecommenderService {
 		ITagManager $tagManager,
 		IGroupManager $groupManager,
 		UserProfileManager $userProfileManager,
-		ProcessedFilesManager $processedFilesManager,
 		GroupWeightsManager $groupWeightsManager,
 		RecommendationManager $recommendationManager,
 		ChangedFilesManager $changedFilesManager
@@ -151,7 +142,6 @@ class RecommenderService {
 		$this->tagManager = $tagManager;
 		$this->groupManager = $groupManager;
 		$this->userProfileManager = $userProfileManager;
-		$this->processedFileManager = $processedFilesManager;
 		$this->groupWeightsManager = $groupWeightsManager;
 		$this->recommendationManager = $recommendationManager;
 		$this->changedFilesManager = $changedFilesManager;
@@ -212,6 +202,9 @@ class RecommenderService {
 				if (!$item1Rater->isValid()) {
 					continue;
 				}
+				if ($this->recommendationManager->isRecommendedToUser($item, $user)) {
+					continue;
+				}
 				$hybrid = $hybridList->getHybridByUser($item, $user);
 				$hybrid->setUser($user);
 				$hybrid->setItem($item);
@@ -239,7 +232,6 @@ class RecommenderService {
 		if (!Application::DEBUG) {
 			$hybridList->removeNonRecommendable();
 		}
-		$this->recommendationManager->deleteAll();
 		$this->recommendationManager->insertHybridList($hybridList);
 
 		set_time_limit($iniVals["max_execution_time"]);
@@ -297,7 +289,6 @@ class RecommenderService {
 	 * The method will return an invalid instance of Item if the following conditions
 	 * are true:
 	 *
-	 * <ul>file is already processed</ul>
 	 * <ul>file has not a supported mimetype</ul>
 	 *
 	 * @param File $file the actual file
@@ -307,9 +298,6 @@ class RecommenderService {
 	 * @since 1.0.0
 	 */
 	private function handleFile(File $file, IUser $currentUser): Item {
-		if ($this->isProcessed($file)) {
-			return new Item();
-		}
 		$valid = Util::validMimetype($file->getMimeType());
 		if (!$valid) {
 			return new Item();
@@ -318,7 +306,6 @@ class RecommenderService {
 		$item = $this->createItem($file);
 		$item = $this->addRater($item, $file, $currentUser);
 		$item = $this->addKeywords($item, $file);
-		$this->processedFileManager->insertFile($file, "recommendation");
 		return $item;
 	}
 
@@ -423,6 +410,9 @@ class RecommenderService {
 		$contentReader = ContentReaderFactory::getContentReader($file->getMimeType());
 		$content = $contentReader->read($file);
 		$textProcessor = new TextProcessor($content);
+		$textProcessor->removeNumeric();
+		$textProcessor->removeDate();
+		$textProcessor->toLower();
 		$keywordList = $textProcessor->getKeywordList();
 		$item->setKeywordList($keywordList);
 		return $item;
@@ -450,23 +440,6 @@ class RecommenderService {
 			Logger::error($exception->getMessage());
 		}
 		return $rater;
-	}
-
-	/**
-	 * This method checks whether the file is already processed by
-	 * RecommenderService.
-	 *
-	 * @param File $file actual file
-	 * @return bool whether the file is already processed or not
-	 * @since 1.0.0
-	 */
-	private
-	function isProcessed(File $file): bool {
-		if (Application::DEBUG) {
-			return false;
-		}
-		$presentable = $this->processedFileManager->isPresentable($file, "recommendation");
-		return $presentable;
 	}
 
 	/**

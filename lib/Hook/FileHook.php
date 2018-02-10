@@ -144,9 +144,9 @@ class FileHook {
 			$this->changedFilesManager->deleteBeforeInsert($node, $user->getUID(), "edit");
 
 			/*
-			 * deleting the file in order to re-recommend it after a change
+			 * deleting the file in order to re-read its content after a change
 			 */
-			$this->processedFileManager->deleteFile($node, "recommendation");
+			$this->processedFileManager->deleteFile($node, "userprofile");
 			Logger::debug("FileHook end");
 			return true;
 		}
@@ -172,25 +172,5 @@ class FileHook {
 		} else if ($caller == "removeFavorite") {
 			$this->changedFilesManager->deleteFile($node, $userId, "favorite");
 		}
-	}
-
-	/**
-	 * returns the Node instance that correspondents to $path
-	 *
-	 * @param string $path the path
-	 * @return null|Node the node that is requested or null, if an error occures
-	 *
-	 * @since 1.0.0
-	 */
-	private function getNode($path) {
-		$node = null;
-		try {
-			$currentUserId = $this->userSession->getUser()->getUID();
-			$userFolder = $this->rootFolder->getUserFolder($currentUserId);
-			$node = $userFolder->get($path);
-		} catch (NotFoundException $e) {
-			Logger::error($e->getMessage());
-		}
-		return $node;
 	}
 }

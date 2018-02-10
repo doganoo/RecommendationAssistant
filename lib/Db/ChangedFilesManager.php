@@ -87,7 +87,7 @@ class ChangedFilesManager {
 	 * @return bool whether the insertation was successful or not
 	 * @since 1.0.0
 	 */
-	public function insertFile(File $file, string $userId, string $type): bool {
+	private function insertFile(File $file, string $userId, string $type): bool {
 		$query = $this->dbConnection->getQueryBuilder();
 		try {
 			$query->insert(DbConstants::TABLE_NAME_CHANGED_FILES_LOG)->values(
