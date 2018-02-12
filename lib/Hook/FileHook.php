@@ -147,6 +147,8 @@ class FileHook {
 			 * deleting the file in order to re-read its content after a change
 			 */
 			$this->processedFileManager->deleteFile($node, "userprofile");
+
+			//TODO delete from recommendations in order to decide about a re-recommendation?
 			Logger::debug("FileHook end");
 			return true;
 		}

@@ -22,6 +22,8 @@
 namespace OCA\RecommendationAssistant\AppInfo;
 
 use OCA\Files\Service\TagService;
+use OCA\RecommendationAssistant\Db\ChangedFilesManager;
+use OCA\RecommendationAssistant\Db\ProcessedFilesManager;
 use OCA\RecommendationAssistant\Hook\FileHook;
 use OCA\RecommendationAssistant\Log\Logger;
 use OCP\AppFramework\App;
@@ -52,21 +54,6 @@ class Application extends App {
 	const APP_NAME = "RecommendationAssistant";
 
 	/**
-	 * @const RECOMMENDER_JOB_NAME the service class that performs recommendations
-	 */
-	const RECOMMENDER_JOB_NAME = "OCA\RecommendationAssistant\Service\RecommenderService";
-
-	/**
-	 * @const USER_PROFILE_JOB_NAME the service class that assembles keywords for the users profile
-	 */
-	const USER_PROFILE_JOB_NAME = "OCA\RecommendationAssistant\Service\UserProfileService";
-
-	/**
-	 * @const SHARED_INSTANCE_STORAGE the fully qualified class name of a SharedStorage instance
-	 */
-	const SHARED_INSTANCE_STORAGE = "\OCA\Files_Sharing\SharedStorage";
-
-	/**
 	 * @const DEBUG RecommendationAssistant is in Debug mode or not
 	 *
 	 * actual behaviour:
@@ -75,12 +62,12 @@ class Application extends App {
 	 * <li>UserProfileService interval equals to 1</li>
 	 * <li>ConsoleLogger logs the messages to the console</li>
 	 */
-	const DEBUG = true;
+	const DEBUG = false;
 
 	/**
-	 * @const HOOK_FILE_HOOK_NAME the file hook name
+	 * @const SHARED_INSTANCE_STORAGE the fully qualified class name of a SharedStorage instance
 	 */
-	const HOOK_FILE_HOOK_NAME = "OCA\RecommendationAssistant\Hook\FileHook";
+	const SHARED_INSTANCE_STORAGE = "\OCA\Files_Sharing\SharedStorage";
 
 	/**
 	 * @const RECOMMENDATION_ENTITIY_NAME the entity name for recommendations for the view
@@ -123,6 +110,16 @@ class Application extends App {
 	const RATING_WEIGHT_LAST_FAVORITE = 0.25;
 
 	/**
+	 * @const COLLABORATIVE_FILTERING_WEIGHT weights for hybridization
+	 */
+	const COLLABORATIVE_FILTERING_WEIGHT = 0.75;
+
+	/**
+	 * @const CONTENT_BASED_RECOMMENDATION_WEIGHT weights for hybridization
+	 */
+	const CONTENT_BASED_RECOMMENDATION_WEIGHT = 0.25;
+
+	/**
 	 * Class constructor calls the parent constructor with APP_ID
 	 *
 	 * @since 1.0.0
@@ -132,13 +129,13 @@ class Application extends App {
 		$container = $this->getContainer();
 		$server = $container->getServer();
 
-		$container->registerService('FileHook', function (IContainer $c) use ($server) {
+		$container->registerService(FileHook::class, function (IContainer $c) use ($server) {
 			return new FileHook(
 				$server->getUserSession(),
 				$server->getRequest(),
 				$server->getRootFolder(),
-				$c->query("OCA\RecommendationAssistant\Db\ProcessedFilesManager"),
-				$c->query("OCA\RecommendationAssistant\Db\ChangedFilesManager")
+				$c->query(ProcessedFilesManager::class),
+				$c->query(ChangedFilesManager::class)
 			);
 		});
 	}
@@ -161,7 +158,7 @@ class Application extends App {
 				$container = $this->getContainer();
 				$fileHookExecuted = false;
 				/** @var FileHook $fileHook */
-				$fileHook = $container->query("FileHook");
+				$fileHook = $container->query(FileHook::class);
 				if ($fileHook instanceof FileHook) {
 					$fileHookExecuted = $fileHook->run($node);
 				}
@@ -173,11 +170,13 @@ class Application extends App {
 		} catch (QueryException $exception) {
 			Logger::error($exception->getTraceAsString());
 		}
+		//TODO listen to postDelete hook and remove file from recommendations and already processed files!
+
 		$this->getContainer()->getServer()->getEventDispatcher()->addListener(TagService::class . '::addFavorite', function (GenericEvent $event) {
 			$userId = $event->getArgument('userId');
 			$fileId = $event->getArgument('fileId');
 			/** @var FileHook $hook */
-			$hook = $this->getContainer()->query("FileHook");
+			$hook = $this->getContainer()->query(FileHook::class);
 			$hook->runFavorite($userId, $fileId, "addFavorite");
 		});
 
@@ -185,7 +184,7 @@ class Application extends App {
 			$userId = $event->getArgument('userId');
 			$fileId = $event->getArgument('fileId');
 			/** @var FileHook $hook */
-			$hook = $this->getContainer()->query("FileHook");
+			$hook = $this->getContainer()->query(FileHook::class);
 			$hook->runFavorite($userId, $fileId, "removeFavorite");
 		});
 

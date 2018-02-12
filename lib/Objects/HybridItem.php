@@ -209,26 +209,8 @@ class HybridItem {
 	 * @since 1.0.0
 	 */
 	public static function weightedAverage(HybridItem $hybrid): float {
-		$collaborative = 0.5;
-		$contentBased = 0.5;
-
-		if (!$hybrid->getCollaborative()->isValid() &&
-			!$hybrid->getContentBased()->isValid()) {
-			return 0.0;
-		}
-		if (!$hybrid->getContentBased()->isValid() &&
-			$hybrid->getCollaborative()->isValid()) {
-			$collaborative = 1;
-			$contentBased = 0;
-		}
-		if (!$hybrid->getCollaborative()->isValid() &&
-			$hybrid->getContentBased()->isValid()) {
-			$collaborative = 0;
-			$contentBased = 1;
-
-		}
-		$contentBasedResult = $contentBased * $hybrid->getContentBased()->getValue();
-		$collaborativeResult = $collaborative * $hybrid->getCollaborative()->getValue();
+		$contentBasedResult = Application::CONTENT_BASED_RECOMMENDATION_WEIGHT * $hybrid->getContentBased()->getValue();
+		$collaborativeResult = Application::COLLABORATIVE_FILTERING_WEIGHT * $hybrid->getCollaborative()->getValue();
 		$weightedAverage = $hybrid->getGroupWeight() * ($contentBasedResult + $collaborativeResult);
 		return $weightedAverage;
 	}
