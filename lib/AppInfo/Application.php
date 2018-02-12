@@ -75,7 +75,7 @@ class Application extends App {
 	 * <li>UserProfileService interval equals to 1</li>
 	 * <li>ConsoleLogger logs the messages to the console</li>
 	 */
-	const DEBUG = false;
+	const DEBUG = true;
 
 	/**
 	 * @const HOOK_FILE_HOOK_NAME the file hook name
@@ -137,8 +137,8 @@ class Application extends App {
 				$server->getUserSession(),
 				$server->getRequest(),
 				$server->getRootFolder(),
-				$c->query("ProcessedFileManager"),
-				$c->query("ChangedFilesManager")
+				$c->query("OCA\RecommendationAssistant\Db\ProcessedFilesManager"),
+				$c->query("OCA\RecommendationAssistant\Db\ChangedFilesManager")
 			);
 		});
 	}
@@ -171,7 +171,7 @@ class Application extends App {
 				}
 			});
 		} catch (QueryException $exception) {
-			Logger::error($exception->getMessage());
+			Logger::error($exception->getTraceAsString());
 		}
 		$this->getContainer()->getServer()->getEventDispatcher()->addListener(TagService::class . '::addFavorite', function (GenericEvent $event) {
 			$userId = $event->getArgument('userId');
