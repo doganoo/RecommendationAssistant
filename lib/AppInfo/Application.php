@@ -44,21 +44,6 @@ class Application extends App {
 	const APP_NAME = "RecommendationAssistant";
 
 	/**
-	 * @const RECOMMENDER_JOB_NAME the service class that performs recommendations
-	 */
-	const RECOMMENDER_JOB_NAME = "OCA\RecommendationAssistant\Service\RecommenderService";
-
-	/**
-	 * @const USER_PROFILE_JOB_NAME the service class that assembles keywords for the users profile
-	 */
-	const USER_PROFILE_JOB_NAME = "OCA\RecommendationAssistant\Service\UserProfileService";
-
-	/**
-	 * @const SHARED_INSTANCE_STORAGE the fully qualified class name of a SharedStorage instance
-	 */
-	const SHARED_INSTANCE_STORAGE = "\OCA\Files_Sharing\SharedStorage";
-
-	/**
 	 * @const DEBUG RecommendationAssistant is in Debug mode or not
 	 *
 	 * actual behaviour:
@@ -70,9 +55,9 @@ class Application extends App {
 	const DEBUG = true;
 
 	/**
-	 * @const HOOK_FILE_HOOK_NAME the file hook name
+	 * @const SHARED_INSTANCE_STORAGE the fully qualified class name of a SharedStorage instance
 	 */
-	const HOOK_FILE_HOOK_NAME = "OCA\RecommendationAssistant\Hook\FileHook";
+	const SHARED_INSTANCE_STORAGE = "\OCA\Files_Sharing\SharedStorage";
 
 	/**
 	 * @const RECOMMENDATION_ENTITIY_NAME the entity name for recommendations for the view
@@ -106,13 +91,23 @@ class Application extends App {
 	 * @const RATING_WEIGHT_LAST_CHANGE the weight for the rating used in
 	 * RecommenderService for the last modification timestamp rating
 	 */
-	const RATING_WEIGHT_LAST_CHANGE = 1;
+	const RATING_WEIGHT_LAST_CHANGE = 0.75;
 
 	/**
 	 * @const RATING_WEIGHT_LAST_FAVORITE the weight for the rating used in
 	 * RecommenderService for the last favorite tagging timestamp
 	 */
-	const RATING_WEIGHT_LAST_FAVORITE = 0;
+	const RATING_WEIGHT_LAST_FAVORITE = 0.25;
+
+	/**
+	 * @const COLLABORATIVE_FILTERING_WEIGHT weights for hybridization
+	 */
+	const COLLABORATIVE_FILTERING_WEIGHT = 0.75;
+
+	/**
+	 * @const CONTENT_BASED_RECOMMENDATION_WEIGHT weights for hybridization
+	 */
+	const CONTENT_BASED_RECOMMENDATION_WEIGHT = 0.25;
 
 	/**
 	 * Class constructor calls the parent constructor with APP_ID

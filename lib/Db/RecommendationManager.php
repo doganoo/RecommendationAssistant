@@ -53,6 +53,9 @@ class RecommendationManager {
 	/**
 	 * inserts a HybridItem that represents a recommendation
 	 *
+	 * TODO remove file_name field
+	 * TODO insert recommendation score in order to select the top k ones
+	 *
 	 * @param HybridItem $hybridItem the item containing a recommendation
 	 * @return bool whether the insert operation was successful or not
 	 * @since 1.0.0

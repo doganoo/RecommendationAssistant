@@ -188,6 +188,7 @@ class RecommenderService {
 			foreach ($itemList as $item1) {
 				//not need to check if both items the same because
 				//an entire similarity matrix is needed
+				//TODO find a way to execute CosineComputer after the continue statements of the loop below
 				$cosineComputer = new CosineComputer($item, $item1);
 				$cosineSimilarity = $cosineComputer->compute();
 				$itemItemMatrix->add($item, $item1, $cosineSimilarity);
@@ -195,14 +196,27 @@ class RecommenderService {
 
 			/** @var IUser $user */
 			foreach ($users as $user) {
+				//do not recommend a file to its owner
 				if (Util::sameUser($item->getOwner(), $user)) {
 					continue;
 				}
+				//do not recommend a file to a user that is not a valid rater
+				//notice that a 0-value is also a valid rating!
+				//invalid rater = user has not rated the file = has no access
 				$item1Rater = $item->getRater($user->getUID());
 				if (!$item1Rater->isValid()) {
 					continue;
 				}
+				//do not recommend a file to a user that has been recommended to him
+				//in the past
 				if ($this->recommendationManager->isRecommendedToUser($item, $user)) {
+					continue;
+				}
+				//this should not be necessary since there is already a "isValid()" check.
+				//However, because it is critical not to recommend files to a user who
+				//has no access to it, this check will remain for the moment
+				//TODO check if this is covered by isValid()
+				if (!$item->raterPresent($user->getUID())){
 					continue;
 				}
 				$hybrid = $hybridList->getHybridByUser($item, $user);
@@ -223,9 +237,7 @@ class RecommenderService {
 				$collaborativeSimilarity = $itemComputer->predict();
 				$hybrid->setContentBased($contentBasedSimilarity);
 				$hybrid->setCollaborative($collaborativeSimilarity);
-				if ($item->raterPresent($user->getUID())) {
-					$hybridList->add($hybrid, $user, $item);
-				}
+				$hybridList->add($hybrid, $user, $item);
 			}
 		}
 

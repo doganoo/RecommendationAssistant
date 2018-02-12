@@ -24,7 +24,6 @@ namespace OCA\RecommendationAssistant\Objects;
 
 use OCA\RecommendationAssistant\AppInfo\Application;
 use OCA\RecommendationAssistant\Exception\InvalidSimilarityValueException;
-use OCA\RecommendationAssistant\Log\ConsoleLogger;
 use OCP\IUser;
 
 /**
@@ -210,26 +209,8 @@ class HybridItem {
 	 * @since 1.0.0
 	 */
 	public function weightedAverage(): float {
-		$collaborative = self::$collaborativeWeight;
-		$contentBased = self::$contentBasedWeight;
-
-		if (!$this->getCollaborative()->isValid() &&
-			!$this->getContentBased()->isValid()) {
-			return 0.0;
-		}
-		if (!$this->getContentBased()->isValid() &&
-			$this->getCollaborative()->isValid()) {
-			$collaborative = 1;
-			$contentBased = 0;
-		}
-		if (!$this->getCollaborative()->isValid() &&
-			$this->getContentBased()->isValid()) {
-			$collaborative = 0;
-			$contentBased = 1;
-
-		}
-		$contentBasedResult = $contentBased * $this->getContentBased()->getValue();
-		$collaborativeResult = $collaborative * $this->getCollaborative()->getValue();
+		$contentBasedResult = Application::CONTENT_BASED_RECOMMENDATION_WEIGHT * $this->getContentBased()->getValue();
+		$collaborativeResult = Application::COLLABORATIVE_FILTERING_WEIGHT * $this->getCollaborative()->getValue();
 		$weightedAverage = $this->getGroupWeight() * ($contentBasedResult + $collaborativeResult);
 		return $weightedAverage;
 	}
