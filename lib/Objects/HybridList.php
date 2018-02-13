@@ -66,6 +66,7 @@ class HybridList implements \IteratorAggregate {
 	 * @since 1.0.0
 	 */
 	public function add(HybridItem $hybrid, IUser $user, Item $item) {
+		//TODO do we need to check if the item is available or not as in KeywordList?
 		$this->hybridList[$user->getUID()][$item->getId()] = $hybrid;
 	}
 

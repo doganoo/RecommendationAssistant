@@ -36,6 +36,10 @@
 		attach: function (fileList) {
 			var that = this;
 
+			if (fileList.getCurrentDirectory() === '/') {
+				that.updateRecommendationsView(true);
+			}
+
 			/**
 			 * listen to the changeDirectory event
 			 */
@@ -57,11 +61,21 @@
 			// request new recommendations and update the rendered template
 			'use strict';
 			var source = '<div class="apps-header">' +
-				'<span class="extension">' + t('recommendation_assistant', 'Recommendations') + '</span>' +
-				'<div class="section group">' +
+				'<span id="recommendation-headline" class="extension">' + t('recommendation_assistant', 'Recommendations') + '</span>' +
+				'<div id="recommendation-content" class="section group">' +
 				'{{#each this}}' +
 				'<div class="col span_1_of_3">' +
-				'	<a class="name" href="/nextcloud/remote.php/webdav/{{ fileNameAndExtension }}">' +
+				'	<a id="{{fileId}}" class="name" href="/nextcloud/remote.php/webdav/{{ fileNameAndExtension }}">' +
+				'' +
+				'' +
+				'' +
+				'<style>' +
+				'	#{{fileId}}:hover {' +
+				'		background: blue;' +
+				'	}' +
+				'</style>' +
+				'' +
+				'' +
 				' 	<div class="thumbnail-wrapper">' +
 				'		<div class="thumbnail" style="background-image: url(\'{{ getPreviewUrl fileNameAndExtension }}\'); height: 64px; width: 64px; float: left">' +
 				'		</div>' +
@@ -77,6 +91,7 @@
 				'	</a>' +
 				'</div>' +
 				'{{/each}}' +
+				'' +
 				'</div>';
 
 

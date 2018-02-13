@@ -54,19 +54,9 @@ class HybridItem {
 	private $user = null;
 
 	/**
-	 * @var int $groupWeight the group weights
+	 * @var float $groupWeight the group weights
 	 */
 	private $groupWeight = 1;
-
-	/**
-	 * @var float $collaborativeWeight the collaborative weight
-	 */
-	private static $collaborativeWeight = 0.5;
-
-	/**
-	 * @var float $contentBasedWeight the content based weight
-	 */
-	private static $contentBasedWeight = 1 - 0.5;
 
 	/**
 	 * sets the item for that the recommendation is made
@@ -194,9 +184,9 @@ class HybridItem {
 				[#itemName#][#{$this->item->getName()}#]
 				[#userId#][#{$this->user->getUID()}#]
 				[#collaborativeValue#][#{$this->collaborative->getValue()}#]
-				[#collaborativeWeight#][#" . self::$collaborativeWeight . "#]
+				[#collaborativeWeight#][#" . Application::COLLABORATIVE_FILTERING_WEIGHT. "#]
 				[#contentBasedValue#][#{$this->contentBased->getValue()}#]
-				[#contentBasedWeight#][#" . self::$contentBasedWeight . "#]
+				[#contentBasedWeight#][#" . Application::CONTENT_BASED_RECOMMENDATION_WEIGHT. "#]
 				[#groupWeight#][#{$this->groupWeight}#]
 				[#recommendation#][#$val#]";
 	}
