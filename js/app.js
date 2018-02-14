@@ -64,7 +64,7 @@
 				'<span id="recommendation-headline" class="extension">' + t('recommendation_assistant', 'Recommendations') + '</span>' +
 				'<div id="recommendation-content" class="section group">' +
 				'{{#each this}}' +
-				'<div class="col span_1_of_3">' +
+				'<div class="col recommendation-columns">' +
 				'	<a id="{{fileId}}" class="name" href="/nextcloud/remote.php/webdav/{{ fileNameAndExtension }}">' +
 				'' +
 				'' +
@@ -77,23 +77,22 @@
 				'' +
 				'' +
 				' 	<div class="thumbnail-wrapper">' +
-				'		<div class="thumbnail" style="background-image: url(\'{{ getPreviewUrl fileNameAndExtension }}\'); height: 64px; width: 64px; float: left">' +
+				'		<div class="thumbnail" style="background-image: url(\'{{ getPreviewUrl fileNameAndExtension}}\'); height: 64px; width: 64px; float: left">' +
 				'		</div>' +
-				'		<span class="nametext">' +
-				'			<span class="innernametext">{{ fileName }}</span>' +
-				'			<span class="extension">.{{ extension }}</span>' +
-				'		</span>' +
-				'		<div style="clear: right;"></div>' +
-				'		<span class="nametext">' +
-				'			<span class="extension">not implemented yet</span>' +
-				'		</span>' +
+				'			<span class="nametext">' +
+				'				<span id="recommendation-content-file-name" class="innernametext">{{fileName}}</span>' +
+				'				<span class="extension">.{{extension}}</span>' +
+				'			</span>' +
+				'			<div style="clear: right;"></div>' +
+				'				<span class="nametext">' +
+				'				<span class="extension">not implemented yet</span>' +
+				'			</span>' +
 				'	</div>' +
 				'	</a>' +
 				'</div>' +
 				'{{/each}}' +
 				'' +
 				'</div>';
-
 
 			//empty the view before it is reloaded / for hiding on sub dirs
 			$("#recommendations").html('');

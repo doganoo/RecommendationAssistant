@@ -1,76 +1,71 @@
-/*  GRID OF THREE  */
-.span_3_of_3 {
-	width: 100%;
-}
-
-.span_2_of_3 {
-	width: 66.13%;
-}
-
-.span_1_of_3 {
+.recommendation-columns {
 	width: 32.26%;
+}
+
+#recommendation-content.section {
+	clear: both;
+	margin-left: 16px;
+	margin-top: 16px;
+	display: flex;
+	flex-wrap: nowrap;
+	flex-flow: row wrap;
+	flex-grow: 1;
+	flex-shrink: 1;
+	min-width: 0;
+}
+
+#recommendation-headline.extension {
+	clear: both;
+	margin-left: 16px;
+}
+
+#recommendation-content .thumbnail {
+	margin-right: 10px;
+	width: 32px;
+	height: 32px;
+	background-size: contain;
+	flex-shrink: 0;
+}
+
+#recommendation-content .thumbnail-wrapper {
+	max-width: 280px;
+	white-space: nowrap;
+	overflow: hidden;
+	text-overflow: ellipsis;
+}
+
+.col {
+	display: block;
+	float: left;
+	flex-grow: 1;
+	flex-shrink: 1;
+	flex-basis: 20%;
+}
+
+.name {
+	display: flex;
+}
+
+/* show 2 per line for screen sizes smaller that 1200px */
+@media only screen and (max-width: 1200px) {
+	.col {
+		flex-basis: 50%;
+		max-width: calc(50% - 15px);
+	}
+
+	#recommendation-content .thumbnail-wrapper {
+		margin-bottom: 15px;
+	}
 }
 
 /*  GO FULL WIDTH BELOW 480 PIXELS */
 @media only screen and (max-width: 480px) {
 	.col {
-		margin: 1% 0 1% 0%;
+		flex-basis: 100%;
+		min-width: 100%;
 	}
 
-	.span_3_of_3, .span_2_of_3, .span_1_of_3 {
-		width: 100%;
+	#recommendation-content .thumbnail-wrapper {
+		margin-bottom: 15px;
 	}
 }
-
-/*  SECTIONS  */
-#recommendation-content.section {
-	clear: both;
-	padding: 0px;
-	margin-left: 16px;
-	margin-top: 16px;
-}
-
-#recommendation-headline.extension {
-	clear: both;
-	padding: 0px;
-	margin-left: 16px;
-}
-
-#recommendation-content .thumbnail {
- /*background: red;*/
- margin-right: 10px;
-}
-
-#recommendation-content .thumbnail-wrapper {
- max-width: 280px;
- white-space: nowrap;
- overflow: hidden;
- text-overflow: ellipsis
-}
-
-/*  COLUMN SETUP  */
-.col {
-	display: block;
-	float: left;
-	/*margin: 1% 0 1% 1.6%;*/
-}
-
-.col:first-child {
-	/*margin-left: 0;*/
-}
-
-/*  GROUPING  */
-.group:before,
-.group:after {
-	content: "";
-	display: table;
-}
-
-.group:after {
-	clear: both;
-}
-
-.group {
-	zoom: 1; /* For IE 6/7 */
-}
-No newline at end of file
