@@ -64,6 +64,21 @@ class Recommendation extends Entity implements \JsonSerializable {
 	public $fileNameAndExtension;
 
 	/**
+	 * @var string $etag
+	 */
+	public $etag;
+
+	/**
+	 * @var string $mimeType
+	 */
+	public $mimeType;
+
+	/**
+	 * @var string $path
+	 */
+	public $path;
+
+	/**
 	 * Specify data which should be serialized to JSON
 	 *
 	 * @link http://php.net/manual/en/jsonserializable.jsonserialize.php
@@ -78,7 +93,8 @@ class Recommendation extends Entity implements \JsonSerializable {
 			"mTime" => $this->mTime,
 			"fileSize" => $this->fileSize,
 			"extension" => $this->extension,
-			"fileNameAndExtension" => $this->fileNameAndExtension
+			"fileNameAndExtension" => $this->fileNameAndExtension,
+			"mimeType" => $this->mimeType,
 		];
 	}
 }

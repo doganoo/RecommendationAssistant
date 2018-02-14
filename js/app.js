@@ -77,7 +77,7 @@
 				'' +
 				'' +
 				' 	<div class="thumbnail-wrapper">' +
-				'		<div class="thumbnail" style="background-image: url(\'{{ getPreviewUrl fileNameAndExtension}}\'); height: 64px; width: 64px; float: left">' +
+				'		<div id="recommendation-file-thumbnail" class="thumbnail" style="background-image: url(\'{{ getPreviewUrl mimeType fileNameAndExtension }} \'); height: 64px; width: 64px; float: left">' +
 				'		</div>' +
 				'			<span class="nametext">' +
 				'				<span id="recommendation-content-file-name" class="innernametext">{{fileName}}</span>' +
@@ -150,13 +150,39 @@ function generatePreviewUrl (urlSpec) {
  * helper method to call getPreviewUrl / generatePreviewUrl methods
  * in order to generate a file preview
  */
-Handlebars.registerHelper("getPreviewUrl", function (fileName) {
-	var url = generatePreviewUrl({
-		file: '/' + fileName,
-	});
-	url = url.replace('(', '%28').replace(')', '%29');
-	return url;
+Handlebars.registerHelper("getPreviewUrl", function (mime, name) {
+	var iconURL = OC.MimeType.getIconUrl(mime);
+	var previewURL,
+		urlSpec = {};
+
+	urlSpec.file = "/" + name;
+
+	previewURL = generatePreviewUrl(urlSpec);
+	previewURL = previewURL.replace('(', '%28');
+	previewURL = previewURL.replace(')', '%29');
+	// var img = new Image();
+	// img.onload = function () {
+	// 	// if loading the preview image failed (no preview for the mimetype) then img.width will < 5
+	// 	if (img.width > 5) {
+	// 	} else {
+	// 	}
+	// };
+	// img.src = previewURL;
+
+	var imageExists = urlExists(previewURL);
+	if (imageExists) {
+		return previewURL;
+	} else {
+		return iconURL;
+	}
 });
+
+function urlExists (url) {
+	var http = new XMLHttpRequest();
+	http.open('HEAD', url, false);
+	http.send();
+	return http.status != 404;
+}
 
 /**
  * Register the Util class to the files app
