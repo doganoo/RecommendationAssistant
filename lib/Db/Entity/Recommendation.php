@@ -79,6 +79,11 @@ class Recommendation extends Entity implements \JsonSerializable {
 	public $path;
 
 	/**
+	 * @var int $transparencyCode
+	 */
+	public $transparencyCode;
+
+	/**
 	 * Specify data which should be serialized to JSON
 	 *
 	 * @link http://php.net/manual/en/jsonserializable.jsonserialize.php
@@ -95,6 +100,7 @@ class Recommendation extends Entity implements \JsonSerializable {
 			"extension" => $this->extension,
 			"fileNameAndExtension" => $this->fileNameAndExtension,
 			"mimeType" => $this->mimeType,
+			"transparancyCode" => $this->transparencyCode
 		];
 	}
 }

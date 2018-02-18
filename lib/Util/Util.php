@@ -25,6 +25,7 @@ use OCA\RecommendationAssistant\Exception\InvalidSimilarityValueException;
 use OCA\RecommendationAssistant\Interfaces\IContentReader;
 use OCA\RecommendationAssistant\Log\ConsoleLogger;
 use OCA\RecommendationAssistant\Log\Logger;
+use OCA\RecommendationAssistant\Objects\Rater;
 use OCA\RecommendationAssistant\Objects\Similarity;
 use OCP\IUser;
 

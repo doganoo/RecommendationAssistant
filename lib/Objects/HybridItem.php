@@ -24,6 +24,7 @@ namespace OCA\RecommendationAssistant\Objects;
 
 use OCA\RecommendationAssistant\AppInfo\Application;
 use OCA\RecommendationAssistant\Exception\InvalidSimilarityValueException;
+use OCA\RecommendationAssistant\Util\NumberUtil;
 use OCP\IUser;
 
 /**
@@ -57,6 +58,21 @@ class HybridItem {
 	 * @var float $groupWeight the group weights
 	 */
 	private $groupWeight = 1;
+
+	/**
+	 * @const TRANSPARENCY_BOTH transparency both
+	 */
+	const TRANSPARENCY_BOTH = 0;
+
+	/**
+	 * @const TRANSPARENCY_COLLABORATIVE transparency collaborative
+	 */
+	const TRANSPARENCY_COLLABORATIVE = 1;
+
+	/**
+	 * @const TRANSPARENCY_CONTENT_BASED transparency content based
+	 */
+	const TRANSPARENCY_CONTENT_BASED = 2;
 
 	/**
 	 * sets the item for that the recommendation is made
@@ -184,9 +200,9 @@ class HybridItem {
 				[#itemName#][#{$this->item->getName()}#]
 				[#userId#][#{$this->user->getUID()}#]
 				[#collaborativeValue#][#{$this->collaborative->getValue()}#]
-				[#collaborativeWeight#][#" . Application::COLLABORATIVE_FILTERING_WEIGHT. "#]
+				[#collaborativeWeight#][#" . Application::COLLABORATIVE_FILTERING_WEIGHT . "#]
 				[#contentBasedValue#][#{$this->contentBased->getValue()}#]
-				[#contentBasedWeight#][#" . Application::CONTENT_BASED_RECOMMENDATION_WEIGHT. "#]
+				[#contentBasedWeight#][#" . Application::CONTENT_BASED_RECOMMENDATION_WEIGHT . "#]
 				[#groupWeight#][#{$this->groupWeight}#]
 				[#recommendation#][#$val#]";
 	}
@@ -217,5 +233,34 @@ class HybridItem {
 			return true;
 		}
 		return false;
+	}
+
+	/**
+	 * This method returns the transparency code for the recommendation. 'Transparency'
+	 * is defined as the a hint for the user why he gets the item recommended.
+	 * There are actually three possible transparency codes:
+	 *
+	 *    TRANSPARENCY_COLLABORATIVE = user gets item recommended due to
+	 *        Collaborative Filtering
+	 *    TRANSPARENCY_CONTENT_BASED = user gets item recommended due to keyword
+	 *        overlap (content based recommendation)
+	 *    TRANSPARENCY_BOTH = user gets item recommended due to both reasons
+	 *
+	 * Default return value is TRANSPARENCY_BOTH
+	 *
+	 * @return int
+	 * @since 1.0.0
+	 */
+	public function getTransparencyCode(): int {
+		if (NumberUtil::compareFloat($this->collaborative->getValue(), $this->contentBased->getValue())) {
+			return self::TRANSPARENCY_BOTH;
+		}
+		if (NumberUtil::floatGreaterThan($this->collaborative->getValue(), $this->contentBased->getValue())) {
+			return self::TRANSPARENCY_COLLABORATIVE;
+		}
+		if (NumberUtil::floatGreaterThan($this->contentBased->getValue(), $this->collaborative->getValue())) {
+			return self::TRANSPARENCY_CONTENT_BASED;
+		}
+		return self::TRANSPARENCY_BOTH;
 	}
 }

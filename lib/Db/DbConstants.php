@@ -50,6 +50,8 @@ class DbConstants {
 	const TB_RC_OWNER_ID = "owner_id";
 	const TB_RC_FILE_ID = "file_id";
 	const TB_RC_FILE_NAME = "file_name";
+	const TB_RC_TRANSPARENCY_CODE = "transparency_code";
+	const TB_RC_RECOMMENDATION_SCORE = "recommendation_score";
 
 	/**
 	 * USER PROFILE TABLE

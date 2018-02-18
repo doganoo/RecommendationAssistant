@@ -85,7 +85,7 @@
 				'			</span>' +
 				'			<div style="clear: right;"></div>' +
 				'				<span class="nametext">' +
-				'				<span class="extension">not implemented yet</span>' +
+				'				<span class="extension">{{ getTransparencyDescription transparancyCode }}</span>' +
 				'			</span>' +
 				'	</div>' +
 				'	</a>' +
@@ -183,6 +183,24 @@ function urlExists (url) {
 	http.send();
 	return http.status != 404;
 }
+
+
+Handlebars.registerHelper("getTransparencyDescription", function (code) {
+		code = parseInt(code);
+		/*
+		 *please check OCA\RecommendationAssistant\Objects\HybridItem for
+		 * transparency codes
+		 */
+		if (code === 0) {
+			return "similarity with your documents and preferences";
+		} else if (code === 1) {
+			return "similarity with preferences";
+		} else if (code === 2) {
+			return "similarity with your documents";
+		}
+		return "";
+	}
+);
 
 /**
  * Register the Util class to the files app

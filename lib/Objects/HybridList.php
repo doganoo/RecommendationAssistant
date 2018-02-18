@@ -79,7 +79,7 @@ class HybridList implements \IteratorAggregate {
 	 * @since 1.0.0
 	 */
 	public function size(bool $recursive = false): int {
-		$countMode = $recursive == true ? COUNT_RECURSIVE : COUNT_NORMAL;
+		$countMode = $recursive === true ? COUNT_RECURSIVE : COUNT_NORMAL;
 		return count($this->hybridList, $countMode);
 	}
 

@@ -155,6 +155,7 @@ class Application extends App {
 			/** @var IRootFolder $root */
 			$root = $this->getContainer()->query(IRootFolder::class);
 			$root->listen('\OC\Files', 'postWrite', function (Node $node) {
+				Logger::debug("post write");
 				$container = $this->getContainer();
 				$fileHookExecuted = false;
 				/** @var FileHook $fileHook */
@@ -187,6 +188,5 @@ class Application extends App {
 			$hook = $this->getContainer()->query(FileHook::class);
 			$hook->runFavorite($userId, $fileId, "removeFavorite");
 		});
-
 	}
 }

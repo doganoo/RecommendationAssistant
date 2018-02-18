@@ -32,6 +32,7 @@ use OCA\RecommendationAssistant\Db\UserProfileManager;
 use OCA\RecommendationAssistant\Exception\InvalidRatingException;
 use OCA\RecommendationAssistant\Log\ConsoleLogger;
 use OCA\RecommendationAssistant\Log\Logger;
+use OCA\RecommendationAssistant\Objects\HybridItem;
 use OCA\RecommendationAssistant\Objects\HybridList;
 use OCA\RecommendationAssistant\Objects\Item;
 use OCA\RecommendationAssistant\Objects\ItemList;
@@ -209,16 +210,19 @@ class RecommenderService {
 				}
 				//do not recommend a file to a user that has been recommended to him
 				//in the past
-				if ($this->recommendationManager->isRecommendedToUser($item, $user)) {
+				$isRecommended = $this->recommendationManager->isRecommendedToUser($item, $user);
+				if ($isRecommended && !Application::DEBUG) {
 					continue;
 				}
 				//this should not be necessary since there is already a "isValid()" check.
 				//However, because it is critical not to recommend files to a user who
 				//has no access to it, this check will remain for the moment
 				//TODO check if this is covered by isValid()
-				if (!$item->raterPresent($user->getUID())){
+				if (!$item->raterPresent($user->getUID())) {
 					continue;
 				}
+
+				/** @var HybridItem $hybrid */
 				$hybrid = $hybridList->getHybridByUser($item, $user);
 				$hybrid->setUser($user);
 				$hybrid->setItem($item);
