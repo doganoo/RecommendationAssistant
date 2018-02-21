@@ -4,7 +4,7 @@
 
 #recommendation-content.section {
 	clear: both;
-	margin-left: 16px;
+	margin-left: 32px;
 	margin-top: 16px;
 	display: flex;
 	flex-wrap: nowrap;
@@ -12,11 +12,38 @@
 	flex-grow: 1;
 	flex-shrink: 1;
 	min-width: 0;
+	padding-top: 0px;
+}
+
+#recommendation-content-file-name {
+	white-space: nowrap;
+	text-overflow: ellipsis;
+	display: block;
+	max-width: 200px;
+	float: left;
+	overflow: hidden;
 }
 
 #recommendation-headline.extension {
 	clear: both;
-	margin-left: 16px;
+	margin-left: 103px;
+}
+
+#recommendation-content-extension.extension {
+	overflow: hidden;
+	float: right;
+	display: block;
+}
+
+#recommendation-transparency-extension {
+	white-space: nowrap;
+	text-overflow: ellipsis;
+	display: block;
+	overflow: hidden;
+}
+
+.apps-header {
+	margin-top: 13px;
 }
 
 #recommendation-content .thumbnail {
@@ -29,7 +56,7 @@
 
 #recommendation-content .thumbnail-wrapper {
 	max-width: 280px;
-	white-space: nowrap;
+	/*white-space: nowrap;*/
 	overflow: hidden;
 	text-overflow: ellipsis;
 }

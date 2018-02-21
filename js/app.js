@@ -77,15 +77,15 @@
 				'' +
 				'' +
 				' 	<div class="thumbnail-wrapper">' +
-				'		<div id="recommendation-file-thumbnail" class="thumbnail" style="background-image: url(\'{{ getPreviewUrl mimeType fileNameAndExtension }} \'); height: 64px; width: 64px; float: left">' +
+				'		<div id="recommendation-file-thumbnail-{{fileId}}" class="thumbnail" {{ getPreviewUrl mimeType fileNameAndExtension fileId }} style="height: 32px; width: 32px; float: left">' +
 				'		</div>' +
 				'			<span class="nametext">' +
-				'				<span id="recommendation-content-file-name" class="innernametext">{{fileName}}</span>' +
-				'				<span class="extension">.{{extension}}</span>' +
+				'				<span id="recommendation-content-file-name" class="innernametext">{{ cutFileName fileName }}</span>' +
+				'				<span id="recommendation-content-extension" class="extension">.{{extension}}</span>' +
 				'			</span>' +
 				'			<div style="clear: right;"></div>' +
 				'				<span class="nametext">' +
-				'				<span class="extension">{{ getTransparencyDescription transparancyCode }}</span>' +
+				'				<span id="recommendation-transparency-extension" class="extension">{{ getTransparencyDescription transparancyCode }}</span>' +
 				'			</span>' +
 				'	</div>' +
 				'	</a>' +
@@ -140,8 +140,8 @@ function objectSize (obj) {
  * @returns {string}
  */
 function generatePreviewUrl (urlSpec) {
-	urlSpec.x = 64;
-	urlSpec.y = 64;
+	urlSpec.x = 32;
+	urlSpec.y = 32;
 	urlSpec.forceIcon = 0;
 	return OC.generateUrl('/core/preview.png?') + $.param(urlSpec);
 }
@@ -150,7 +150,7 @@ function generatePreviewUrl (urlSpec) {
  * helper method to call getPreviewUrl / generatePreviewUrl methods
  * in order to generate a file preview
  */
-Handlebars.registerHelper("getPreviewUrl", function (mime, name) {
+Handlebars.registerHelper("getPreviewUrl", function (mime, name, fileId) {
 	var iconURL = OC.MimeType.getIconUrl(mime);
 	var previewURL,
 		urlSpec = {};
@@ -160,30 +160,18 @@ Handlebars.registerHelper("getPreviewUrl", function (mime, name) {
 	previewURL = generatePreviewUrl(urlSpec);
 	previewURL = previewURL.replace('(', '%28');
 	previewURL = previewURL.replace(')', '%29');
-	// var img = new Image();
-	// img.onload = function () {
-	// 	// if loading the preview image failed (no preview for the mimetype) then img.width will < 5
-	// 	if (img.width > 5) {
-	// 	} else {
-	// 	}
-	// };
-	// img.src = previewURL;
 
-	var imageExists = urlExists(previewURL);
-	if (imageExists) {
-		return previewURL;
-	} else {
-		return iconURL;
-	}
+	var img = new Image();
+	img.onload = function () {
+		var e = document.getElementById('recommendation-file-thumbnail-' + fileId);
+		e.style.backgroundImage = 'url("' + previewURL + '")';
+	};
+	img.onerror = function () {
+		var e = document.getElementById('recommendation-file-thumbnail-' + fileId);
+		e.style.backgroundImage = 'url("' + iconURL + '")';
+	};
+	img.src = previewURL;
 });
-
-function urlExists (url) {
-	var http = new XMLHttpRequest();
-	http.open('HEAD', url, false);
-	http.send();
-	return http.status != 404;
-}
-
 
 Handlebars.registerHelper("getTransparencyDescription", function (code) {
 		code = parseInt(code);
@@ -192,13 +180,24 @@ Handlebars.registerHelper("getTransparencyDescription", function (code) {
 		 * transparency codes
 		 */
 		if (code === 0) {
-			return "similarity with your documents and preferences";
+			return "similar to viewed documents";
 		} else if (code === 1) {
-			return "similarity with preferences";
+			return "similar to viewed documents";
 		} else if (code === 2) {
-			return "similarity with your documents";
+			return "similar to your documents";
 		}
 		return "";
+	}
+);
+
+Handlebars.registerHelper("cutFileName", function (name) {
+		return name;
+		var maxLength = 30;
+		if (name.length > maxLength) {
+			return name.substring(0, maxLength) + "...";
+		} else {
+			return name;
+		}
 	}
 );
 
