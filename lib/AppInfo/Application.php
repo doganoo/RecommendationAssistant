@@ -151,6 +151,7 @@ class Application extends App {
 	}
 
 	public function register() {
+		Logger::error("begin register");
 		try {
 			/** @var IRootFolder $root */
 			$root = $this->getContainer()->query(IRootFolder::class);

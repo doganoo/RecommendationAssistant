@@ -80,7 +80,7 @@
 				'		<div id="recommendation-file-thumbnail-{{fileId}}" class="thumbnail" {{ getPreviewUrl mimeType fileNameAndExtension fileId }} style="height: 32px; width: 32px; float: left">' +
 				'		</div>' +
 				'			<span class="nametext">' +
-				'				<span id="recommendation-content-file-name" class="innernametext">{{ cutFileName fileName }}</span>' +
+				'				<span id="recommendation-content-file-name" class="innernametext">{{ fileName }}</span>' +
 				'				<span id="recommendation-content-extension" class="extension">.{{extension}}</span>' +
 				'			</span>' +
 				'			<div style="clear: right;"></div>' +
@@ -180,27 +180,15 @@ Handlebars.registerHelper("getTransparencyDescription", function (code) {
 		 * transparency codes
 		 */
 		if (code === 0) {
-			return "similar to viewed documents";
+			return t('recommendation_assistant', 'similar to your files');
 		} else if (code === 1) {
-			return "similar to viewed documents";
+			return t('recommendation_assistant', 'similar to files you viewed');
 		} else if (code === 2) {
-			return "similar to your documents";
+			return t('recommendation_assistant', 'similar to your files');
 		}
-		return "";
+		return t('recommendation_assistant', 'similar to your files');
 	}
 );
-
-Handlebars.registerHelper("cutFileName", function (name) {
-		return name;
-		var maxLength = 30;
-		if (name.length > maxLength) {
-			return name.substring(0, maxLength) + "...";
-		} else {
-			return name;
-		}
-	}
-);
-
 /**
  * Register the Util class to the files app
  */
