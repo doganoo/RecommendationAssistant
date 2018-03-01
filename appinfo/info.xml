@@ -21,7 +21,7 @@
 		https://github.com/nextcloud-gmbh/recommendation_assistant.git
 	</repository>
 
-	<version>0.1.17</version>
+	<version>0.1.19</version>
 	<namespace>RecommendationAssistant</namespace>
 
 	<types>

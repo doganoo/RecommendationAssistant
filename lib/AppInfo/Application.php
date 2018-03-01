@@ -52,7 +52,7 @@ class Application extends App {
 	 * <li>UserProfileService interval equals to 1</li>
 	 * <li>ConsoleLogger logs the messages to the console</li>
 	 */
-	const DEBUG = true;
+	const DEBUG = false;
 
 	/**
 	 * @const SHARED_INSTANCE_STORAGE the fully qualified class name of a SharedStorage instance

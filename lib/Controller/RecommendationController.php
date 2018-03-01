@@ -104,6 +104,8 @@ class RecommendationController extends Controller {
 			} catch (NotFoundException $e) {
 				Logger::warn($e->getMessage());
 			}
+			$mime = $node->getMimeType();
+
 			$extension = pathinfo($name, PATHINFO_EXTENSION);
 			$fileNameAndExtension = $name;
 			$entity->fileName = pathinfo($name, PATHINFO_FILENAME);
@@ -111,6 +113,7 @@ class RecommendationController extends Controller {
 			$entity->fileSize = $size;
 			$entity->extension = $extension;
 			$entity->fileNameAndExtension = $fileNameAndExtension;
+			$entity->mimeType = $mime;
 		}
 		$jsonResponse = new JSONResponse($entities);
 		return $jsonResponse;

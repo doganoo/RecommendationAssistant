@@ -54,7 +54,7 @@ class RecommendationMapper extends Mapper {
 	 * @since 1.0.0
 	 */
 	public function findAll($userId) {
-		$sql = 'SELECT file_id AS fileId FROM *PREFIX*recommendations WHERE user_id = ? LIMIT 3;';
+		$sql = 'SELECT file_id AS fileId, transparency_code FROM *PREFIX*recommendations WHERE user_id = ? ORDER BY recommendation_score desc LIMIT 3;';
 		$entities = $this->findEntities($sql, [$userId]);
 		return $entities;
 	}

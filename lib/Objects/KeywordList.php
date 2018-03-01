@@ -119,8 +119,8 @@ class KeywordList implements \IteratorAggregate {
 				$floatVal = floatval($item->getTfIdf());
 				$zero = round(0, $precision, PHP_ROUND_HALF_EVEN);
 				$tfidf = round($floatVal, $precision, PHP_ROUND_HALF_EVEN);
-				$maxTfIdf = round($this->maxTfIdf * Application::STOPWORD_REMOVAL_PERCENTAGE, $precision, PHP_ROUND_HALF_EVEN);
-				return ($tfidf > $zero) || ($tfidf > $maxTfIdf);
+				$maxTfIdfThreshold = round($this->maxTfIdf * Application::STOPWORD_REMOVAL_PERCENTAGE, $precision, PHP_ROUND_HALF_EVEN);
+				return ($tfidf > $zero) || ($tfidf > $maxTfIdfThreshold);
 			}, ARRAY_FILTER_USE_BOTH);
 	}
 

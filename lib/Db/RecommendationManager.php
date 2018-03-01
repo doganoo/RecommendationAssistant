@@ -53,9 +53,6 @@ class RecommendationManager {
 	/**
 	 * inserts a HybridItem that represents a recommendation
 	 *
-	 * TODO remove file_name field
-	 * TODO insert recommendation score in order to select the top k ones
-	 *
 	 * @param HybridItem $hybridItem the item containing a recommendation
 	 * @return bool whether the insert operation was successful or not
 	 * @since 1.0.0
@@ -64,12 +61,15 @@ class RecommendationManager {
 		if ($this->isRecommendedToUser($hybridItem->getItem(), $hybridItem->getUser())) {
 			return true;
 		}
+		$value = HybridItem::weightedAverage($hybridItem);
 		$query = $this->dbConnection->getQueryBuilder();
 		$query->insert(DbConstants::TABLE_NAME_RECOMMENDATIONS)->values(
 			[
 				DbConstants::TB_RC_FILE_ID => $query->createNamedParameter($hybridItem->getItem()->getId()),
 				DbConstants::TB_RC_USER_ID => $query->createNamedParameter(($hybridItem->getUser()->getUID())),
 				DbConstants::TB_RC_OWNER_ID => $query->createNamedParameter($hybridItem->getItem()->getOwner()->getUID()),
+				DbConstants::TB_RC_TRANSPARENCY_CODE => $query->createNamedParameter($hybridItem->getTransparencyCode()),
+				DbConstants::TB_RC_RECOMMENDATION_SCORE => $query->createNamedParameter($value),
 				DbConstants::TB_RC_CREATION_TS => $query->createNamedParameter((new \DateTime())->getTimestamp())
 			]
 		);
@@ -104,6 +104,15 @@ class RecommendationManager {
 		return $i;
 	}
 
+	/**
+	 * This method checks if a given item is already recommended to an user
+	 * by querying the database.
+	 *
+	 * @param Item $item
+	 * @param IUser $user
+	 * @return bool
+	 * @since 1.0.0
+	 */
 	public function isRecommendedToUser(Item $item, IUser $user) {
 		$query = $this->dbConnection->getQueryBuilder();
 		$query->select(DbConstants::TB_RC_ID)

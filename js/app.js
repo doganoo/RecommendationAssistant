@@ -36,6 +36,10 @@
 		attach: function (fileList) {
 			var that = this;
 
+			if (fileList.getCurrentDirectory() === '/') {
+				that.updateRecommendationsView(true);
+			}
+
 			/**
 			 * listen to the changeDirectory event
 			 */
@@ -57,28 +61,38 @@
 			// request new recommendations and update the rendered template
 			'use strict';
 			var source = '<div class="apps-header">' +
-				'<span class="extension">' + t('recommendation_assistant', 'Recommendations') + '</span>' +
-				'<div class="section group">' +
+				'<span id="recommendation-headline" class="extension">' + t('recommendation_assistant', 'Recommendations') + '</span>' +
+				'<div id="recommendation-content" class="section group">' +
 				'{{#each this}}' +
-				'<div class="col span_1_of_3">' +
-				'	<a class="name" href="/nextcloud/remote.php/webdav/{{ fileNameAndExtension }}">' +
+				'<div class="col recommendation-columns">' +
+				'	<a id="{{fileId}}" class="name" href="/nextcloud/remote.php/webdav/{{ fileNameAndExtension }}">' +
+				'' +
+				'' +
+				'' +
+				'<style>' +
+				'	#{{fileId}}:hover {' +
+				'		background: blue;' +
+				'	}' +
+				'</style>' +
+				'' +
+				'' +
 				' 	<div class="thumbnail-wrapper">' +
-				'		<div class="thumbnail" style="background-image: url(\'{{ getPreviewUrl fileNameAndExtension }}\'); height: 64px; width: 64px; float: left">' +
+				'		<div id="recommendation-file-thumbnail-{{fileId}}" class="thumbnail" {{ getPreviewUrl mimeType fileNameAndExtension fileId }} style="height: 32px; width: 32px; float: left">' +
 				'		</div>' +
-				'		<span class="nametext">' +
-				'			<span class="innernametext">{{ fileName }}</span>' +
-				'			<span class="extension">.{{ extension }}</span>' +
-				'		</span>' +
-				'		<div style="clear: right;"></div>' +
-				'		<span class="nametext">' +
-				'			<span class="extension">not implemented yet</span>' +
-				'		</span>' +
+				'			<span class="nametext">' +
+				'				<span id="recommendation-content-file-name" class="innernametext">{{ fileName }}</span>' +
+				'				<span id="recommendation-content-extension" class="extension">.{{extension}}</span>' +
+				'			</span>' +
+				'			<div style="clear: right;"></div>' +
+				'				<span class="nametext">' +
+				'				<span id="recommendation-transparency-extension" class="extension">{{ getTransparencyDescription transparancyCode }}</span>' +
+				'			</span>' +
 				'	</div>' +
 				'	</a>' +
 				'</div>' +
 				'{{/each}}' +
+				'' +
 				'</div>';
-
 
 			//empty the view before it is reloaded / for hiding on sub dirs
 			$("#recommendations").html('');
@@ -126,8 +140,8 @@ function objectSize (obj) {
  * @returns {string}
  */
 function generatePreviewUrl (urlSpec) {
-	urlSpec.x = 64;
-	urlSpec.y = 64;
+	urlSpec.x = 32;
+	urlSpec.y = 32;
 	urlSpec.forceIcon = 0;
 	return OC.generateUrl('/core/preview.png?') + $.param(urlSpec);
 }
@@ -136,14 +150,45 @@ function generatePreviewUrl (urlSpec) {
  * helper method to call getPreviewUrl / generatePreviewUrl methods
  * in order to generate a file preview
  */
-Handlebars.registerHelper("getPreviewUrl", function (fileName) {
-	var url = generatePreviewUrl({
-		file: '/' + fileName,
-	});
-	url = url.replace('(', '%28').replace(')', '%29');
-	return url;
+Handlebars.registerHelper("getPreviewUrl", function (mime, name, fileId) {
+	var iconURL = OC.MimeType.getIconUrl(mime);
+	var previewURL,
+		urlSpec = {};
+
+	urlSpec.file = "/" + name;
+
+	previewURL = generatePreviewUrl(urlSpec);
+	previewURL = previewURL.replace('(', '%28');
+	previewURL = previewURL.replace(')', '%29');
+
+	var img = new Image();
+	img.onload = function () {
+		var e = document.getElementById('recommendation-file-thumbnail-' + fileId);
+		e.style.backgroundImage = 'url("' + previewURL + '")';
+	};
+	img.onerror = function () {
+		var e = document.getElementById('recommendation-file-thumbnail-' + fileId);
+		e.style.backgroundImage = 'url("' + iconURL + '")';
+	};
+	img.src = previewURL;
 });
 
+Handlebars.registerHelper("getTransparencyDescription", function (code) {
+		code = parseInt(code);
+		/*
+		 *please check OCA\RecommendationAssistant\Objects\HybridItem for
+		 * transparency codes
+		 */
+		if (code === 0) {
+			return t('recommendation_assistant', 'similar to your files');
+		} else if (code === 1) {
+			return t('recommendation_assistant', 'similar to files you viewed');
+		} else if (code === 2) {
+			return t('recommendation_assistant', 'similar to your files');
+		}
+		return t('recommendation_assistant', 'similar to your files');
+	}
+);
 /**
  * Register the Util class to the files app
  */

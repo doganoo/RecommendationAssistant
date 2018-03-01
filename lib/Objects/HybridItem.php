@@ -54,19 +54,24 @@ class HybridItem {
 	private $user = null;
 
 	/**
-	 * @var int $groupWeight the group weights
+	 * @var float $groupWeight the group weights
 	 */
 	private $groupWeight = 1;
 
 	/**
-	 * @var float $collaborativeWeight the collaborative weight
+	 * @const TRANSPARENCY_BOTH transparency both
 	 */
-	private static $collaborativeWeight = 0.5;
+	const TRANSPARENCY_BOTH = 0;
 
 	/**
-	 * @var float $contentBasedWeight the content based weight
+	 * @const TRANSPARENCY_COLLABORATIVE transparency collaborative
 	 */
-	private static $contentBasedWeight = 1 - 0.5;
+	const TRANSPARENCY_COLLABORATIVE = 1;
+
+	/**
+	 * @const TRANSPARENCY_CONTENT_BASED transparency content based
+	 */
+	const TRANSPARENCY_CONTENT_BASED = 2;
 
 	/**
 	 * sets the item for that the recommendation is made
@@ -188,15 +193,15 @@ class HybridItem {
 	 * @since 1.0.0
 	 */
 	public function __toString() {
-		$val = $this->weightedAverage();
+		$val = HybridItem::weightedAverage($this);
 		return "
 				[#itemId#][#{$this->item->getId()}#]
 				[#itemName#][#{$this->item->getName()}#]
 				[#userId#][#{$this->user->getUID()}#]
 				[#collaborativeValue#][#{$this->collaborative->getValue()}#]
-				[#collaborativeWeight#][#" . self::$collaborativeWeight . "#]
+				[#collaborativeWeight#][#" . Application::COLLABORATIVE_FILTERING_WEIGHT . "#]
 				[#contentBasedValue#][#{$this->contentBased->getValue()}#]
-				[#contentBasedWeight#][#" . self::$contentBasedWeight . "#]
+				[#contentBasedWeight#][#" . Application::CONTENT_BASED_RECOMMENDATION_WEIGHT . "#]
 				[#groupWeight#][#{$this->groupWeight}#]
 				[#recommendation#][#$val#]";
 	}
@@ -208,10 +213,10 @@ class HybridItem {
 	 * @return float
 	 * @since 1.0.0
 	 */
-	public function weightedAverage(): float {
-		$contentBasedResult = Application::CONTENT_BASED_RECOMMENDATION_WEIGHT * $this->getContentBased()->getValue();
-		$collaborativeResult = Application::COLLABORATIVE_FILTERING_WEIGHT * $this->getCollaborative()->getValue();
-		$weightedAverage = $this->getGroupWeight() * ($contentBasedResult + $collaborativeResult);
+	public static function weightedAverage(HybridItem $hybrid): float {
+		$contentBasedResult = Application::CONTENT_BASED_RECOMMENDATION_WEIGHT * $hybrid->getContentBased()->getValue();
+		$collaborativeResult = Application::COLLABORATIVE_FILTERING_WEIGHT * $hybrid->getCollaborative()->getValue();
+		$weightedAverage = $hybrid->getGroupWeight() * ($contentBasedResult + $collaborativeResult);
 		return $weightedAverage;
 	}
 
@@ -222,10 +227,39 @@ class HybridItem {
 	 * @since 1.0.0
 	 */
 	public function isRecommandable(): bool {
-		$val = $this->weightedAverage($this);
+		$val = HybridItem::weightedAverage($this);
 		if ($val > Application::RECOMMENDATION_THRESHOLD) {
 			return true;
 		}
 		return false;
+	}
+
+	/**
+	 * This method returns the transparency code for the recommendation. 'Transparency'
+	 * is defined as the a hint for the user why he gets the item recommended.
+	 * There are actually three possible transparency codes:
+	 *
+	 *    TRANSPARENCY_COLLABORATIVE = user gets item recommended due to
+	 *        Collaborative Filtering
+	 *    TRANSPARENCY_CONTENT_BASED = user gets item recommended due to keyword
+	 *        overlap (content based recommendation)
+	 *    TRANSPARENCY_BOTH = user gets item recommended due to both reasons
+	 *
+	 * Default return value is TRANSPARENCY_BOTH
+	 *
+	 * @return int
+	 * @since 1.0.0
+	 */
+	public function getTransparencyCode(): int {
+		if (NumberUtil::compareFloat($this->collaborative->getValue(), $this->contentBased->getValue())) {
+			return self::TRANSPARENCY_BOTH;
+		}
+		if (NumberUtil::floatGreaterThan($this->collaborative->getValue(), $this->contentBased->getValue())) {
+			return self::TRANSPARENCY_COLLABORATIVE;
+		}
+		if (NumberUtil::floatGreaterThan($this->contentBased->getValue(), $this->collaborative->getValue())) {
+			return self::TRANSPARENCY_CONTENT_BASED;
+		}
+		return self::TRANSPARENCY_BOTH;
 	}
 }
