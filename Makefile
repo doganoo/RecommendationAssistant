@@ -32,7 +32,7 @@ update-composer: composer.phar
 	rm -f composer.lock
 	php composer.phar install --prefer-dist
 
-appstore: clean install-deps optimize-js
+appstore: clean
 	mkdir -p $(sign_dir)
 	rsync -a \
 	--exclude=bower.json \

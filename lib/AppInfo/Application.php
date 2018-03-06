@@ -28,9 +28,8 @@ use OCA\RecommendationAssistant\Hook\FileHook;
 use OCA\RecommendationAssistant\Log\Logger;
 use OCP\AppFramework\App;
 use OCP\AppFramework\QueryException;
-use OCP\Files\IRootFolder;
-use OCP\Files\Node;
 use OCP\IContainer;
+use OCP\Util;
 use Symfony\Component\EventDispatcher\GenericEvent;
 
 /**
@@ -151,27 +150,7 @@ class Application extends App {
 	}
 
 	public function register() {
-		Logger::error("begin register");
-		try {
-			/** @var IRootFolder $root */
-			$root = $this->getContainer()->query(IRootFolder::class);
-			$root->listen('\OC\Files', 'postWrite', function (Node $node) {
-				Logger::debug("post write");
-				$container = $this->getContainer();
-				$fileHookExecuted = false;
-				/** @var FileHook $fileHook */
-				$fileHook = $container->query(FileHook::class);
-				if ($fileHook instanceof FileHook) {
-					$fileHookExecuted = $fileHook->run($node);
-				}
-
-				if (!$fileHookExecuted) {
-					Logger::warn("file hook is not executed");
-				}
-			});
-		} catch (QueryException $exception) {
-			Logger::error($exception->getTraceAsString());
-		}
+		Util::connectHook('OC_Filesystem', 'read', $this, 'callFileHook');
 		//TODO listen to postDelete hook and remove file from recommendations and already processed files!
 
 		$this->getContainer()->getServer()->getEventDispatcher()->addListener(TagService::class . '::addFavorite', function (GenericEvent $event) {
@@ -189,5 +168,29 @@ class Application extends App {
 			$hook = $this->getContainer()->query(FileHook::class);
 			$hook->runFavorite($userId, $fileId, "removeFavorite");
 		});
+	}
+
+	/**
+	 * the file hook that is executed when a file is changed.
+	 *
+	 * @param $params
+	 * @since 1.0.0
+	 */
+	public function callFileHook($params) {
+		$container = $this->getContainer();
+		$fileHookExecuted = false;
+		try {
+			/** @var FileHook $fileHook */
+			$fileHook = $container->query(FileHook::class);
+			if ($fileHook instanceof FileHook) {
+				$fileHookExecuted = $fileHook->run($params);
+			}
+
+			if (!$fileHookExecuted) {
+				Logger::warn("file hook is not executed");
+			}
+		} catch (QueryException $e) {
+			Logger::error($e->getMessage());
+		}
 	}
 }
