@@ -129,7 +129,7 @@ class Application extends App {
 	 * @since 1.0.0
 	 */
 	public function __construct() {
-		parent::__construct(Application::APP_ID);
+		parent::__construct(self::APP_ID);
 		$container = $this->getContainer();
 		$server = $container->getServer();
 
@@ -173,6 +173,14 @@ class Application extends App {
 			$hook = $this->getContainer()->query(FileHook::class);
 			$hook->runFavorite($userId, $fileId, "removeFavorite");
 		});
+
+		$this->getContainer()->getServer()->getEventDispatcher()->addListener(
+			'OCA\Files::loadAdditionalScripts',
+			function () {
+				Util::addScript(Application::APP_ID, 'app');
+				Util::addStyle(Application::APP_ID, 'style');
+			}
+		);
 	}
 
 	/**
