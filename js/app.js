@@ -65,7 +65,7 @@
 				'<div id="recommendation-content" class="section group">' +
 				'{{#each this}}' +
 				'<div class="col recommendation-columns">' +
-				'	<a id="{{fileId}}" class="name" href="/nextcloud/remote.php/webdav/{{ fileNameAndExtension }}">' +
+				'	<a id="{{fileId}}" class="name" href="/remote.php/webdav/{{ fileNameAndExtension }}">' +
 				'' +
 				'' +
 				'' +

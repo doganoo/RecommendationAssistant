@@ -22,6 +22,7 @@
 namespace OCA\RecommendationAssistant\Recommendation;
 
 
+use OCA\RecommendationAssistant\AppInfo\Application;
 use OCA\RecommendationAssistant\Interfaces\IComputable;
 use OCA\RecommendationAssistant\Objects\Item;
 use OCA\RecommendationAssistant\Objects\ItemList;
@@ -77,9 +78,17 @@ class OverlapCoefficientComputer implements IComputable {
 	 *
 	 * @since 1.0.0
 	 * @return Similarity the similarity object that represents the similarity
+	 * @throws \OCA\RecommendationAssistant\Exception\InvalidSimilarityValueException
 	 */
 	public function compute(): Similarity {
 		$similarity = new Similarity();
+
+		if (Application::DISABLE_CONTENT_BASED_RECOMMENDATION) {
+			$similarity->setValue(0.0);
+			$similarity->setDescription("content based recommendation is disabled");
+			$similarity->setStatus(Similarity::DISABLED_CONTENT_BASED_RECOMMENDATION);
+			return $similarity;
+		}
 		$tfIdf = new TFIDFComputer($this->item, $this->itemList);
 
 		/** @var KeywordList $itemKeywords */

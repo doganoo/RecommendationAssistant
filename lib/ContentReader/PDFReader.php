@@ -24,6 +24,9 @@ namespace OCA\RecommendationAssistant\ContentReader;
 use chv\pdftotext\PdfToText;
 use OCA\RecommendationAssistant\AppInfo\Application;
 use OCA\RecommendationAssistant\Interfaces\IContentReader;
+use OCA\RecommendationAssistant\Log\ConsoleLogger;
+use OCA\RecommendationAssistant\Log\Logger;
+use OCA\RecommendationAssistant\Util\Util;
 use OCP\Files\File;
 
 /**
@@ -47,9 +50,19 @@ class PDFReader implements IContentReader {
 	public function read(File $file): string {
 		$dataDir = Application::getDataDirectory();
 		$filePath = $dataDir . "/" . $file->getPath();
+		$text = "";
 
-		$pdf = new PdfToText($filePath);
-		$text = $pdf->Text;
+		if (!Util::isFile($filePath)) {
+			return "";
+		}
+
+		try {
+			$pdf = new PdfToText($filePath);
+			$text = $pdf->Text;
+		} catch (\Exception $exception) {
+			Logger::error($exception->getTraceAsString());
+			ConsoleLogger::error($exception->getTraceAsString());
+		}
 		/**
 		 * Strip non-ASCII characters from a String
 		 *

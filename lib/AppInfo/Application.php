@@ -119,6 +119,11 @@ class Application extends App {
 	const CONTENT_BASED_RECOMMENDATION_WEIGHT = 0.25;
 
 	/**
+	 * @const DISABLE_CONTENT_BASED_RECOMMENDATION disabling content based recommendation
+	 */
+	const DISABLE_CONTENT_BASED_RECOMMENDATION = false;
+
+	/**
 	 * Class constructor calls the parent constructor with APP_ID
 	 *
 	 * @since 1.0.0

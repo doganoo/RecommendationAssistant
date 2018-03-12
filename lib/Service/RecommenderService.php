@@ -170,7 +170,7 @@ class RecommenderService {
 		set_time_limit(0);
 		ini_set("memory_limit", -1);
 		ini_set("pcre.backtrack_limit", -1);
-
+		Util::setErrorHandler(false);
 
 		$users = [];
 		$itemList = new ItemList();
@@ -249,11 +249,10 @@ class RecommenderService {
 			$hybridList->removeNonRecommendable();
 		}
 		$this->recommendationManager->insertHybridList($hybridList);
-
 		set_time_limit($iniVals["max_execution_time"]);
 		ini_set("memory_limit", $iniVals["memory_limit"]);
 		ini_set("pcre.backtrack_limit", $iniVals["pcre.backtrack_limit"]);
-
+		Util::setErrorHandler(true);
 		Logger::debug("RecommenderService end");
 		ConsoleLogger::debug("RecommenderService end");
 	}
@@ -322,6 +321,30 @@ class RecommenderService {
 		$item = $this->createItem($file);
 		$item = $this->addRater($item, $file, $currentUser);
 		$item = $this->addKeywords($item, $file);
+		return $item;
+	}
+
+	/**
+	 * creates an instance of Item from a file. If the id is not readable
+	 * the method returns and empty Item which is not valid.
+	 *
+	 * @param File $file
+	 * @return Item
+	 * @since 1.0.0
+	 */
+	private function createItem(File $file) {
+		$item = new Item();
+		try {
+			$item->setId($file->getId());
+		} catch (InvalidPathException $exception) {
+			Logger::warn($exception->getMessage());
+			return $item;
+		} catch (NotFoundException $exception) {
+			Logger::warn($exception->getMessage());
+			return $item;
+		}
+		$item->setName($file->getName());
+		$item->setOwner($file->getOwner());
 		return $item;
 	}
 
@@ -401,40 +424,6 @@ class RecommenderService {
 	}
 
 	/**
-	 * this method reads the file content and assigns them as an array to the
-	 * passed item. If the file is an shared one, the keywords are not read
-	 * because they will be processed for the owner.
-	 *
-	 * @param Item $item
-	 * @param File $file
-	 * @return Item
-	 * @since 1.0.0
-	 */
-	public function addKeywords(Item $item, File $file) {
-		$isSharedStorage = false;
-		try {
-			$isSharedStorage = $file->getStorage()->instanceOfStorage(Application::SHARED_INSTANCE_STORAGE);
-		} catch (NotFoundException $exception) {
-			Logger::warn($exception->getMessage());
-		}
-		/* sharedStorage means that the file is shared to the user.
-		 * if this is the case we do not need to process the file twice.
-		 */
-		if ($isSharedStorage) {
-			return $item;
-		}
-		$contentReader = ContentReaderFactory::getContentReader($file->getMimeType());
-		$content = $contentReader->read($file);
-		$textProcessor = new TextProcessor($content);
-		$textProcessor->removeNumeric();
-		$textProcessor->removeDate();
-		$textProcessor->toLower();
-		$keywordList = $textProcessor->getKeywordList();
-		$item->setKeywordList($keywordList);
-		return $item;
-	}
-
-	/**
 	 * This simply creates a Rater object. $rating has to be a valid rating:
 	 * <ul>-1 for no rating</1>
 	 * <ul>0 for dislike</1>
@@ -459,26 +448,40 @@ class RecommenderService {
 	}
 
 	/**
-	 * creates an instance of Item from a file. If the id is not readable
-	 * the method returns and empty Item which is not valid.
+	 * this method reads the file content and assigns them as an array to the
+	 * passed item. If the file is an shared one, the keywords are not read
+	 * because they will be processed for the owner.
 	 *
+	 * @param Item $item
 	 * @param File $file
 	 * @return Item
 	 * @since 1.0.0
 	 */
-	private function createItem(File $file) {
-		$item = new Item();
-		try {
-			$item->setId($file->getId());
-		} catch (InvalidPathException $exception) {
-			Logger::warn($exception->getMessage());
-			return $item;
-		} catch (NotFoundException $exception) {
-			Logger::warn($exception->getMessage());
+	public function addKeywords(Item $item, File $file) {
+		if (Application::DISABLE_CONTENT_BASED_RECOMMENDATION) {
+			Logger::info("content based recommendation is disabled");
 			return $item;
 		}
-		$item->setName($file->getName());
-		$item->setOwner($file->getOwner());
+		$isSharedStorage = false;
+		try {
+			$isSharedStorage = $file->getStorage()->instanceOfStorage(Application::SHARED_INSTANCE_STORAGE);
+		} catch (NotFoundException $exception) {
+			Logger::warn($exception->getMessage());
+		}
+		/* sharedStorage means that the file is shared to the user.
+		 * if this is the case we do not need to process the file twice.
+		 */
+		if ($isSharedStorage) {
+			return $item;
+		}
+		$contentReader = ContentReaderFactory::getContentReader($file->getMimeType());
+		$content = $contentReader->read($file);
+		$textProcessor = new TextProcessor($content);
+		$textProcessor->removeNumeric();
+		$textProcessor->removeDate();
+		$textProcessor->toLower();
+		$keywordList = $textProcessor->getKeywordList();
+		$item->setKeywordList($keywordList);
 		return $item;
 	}
 }

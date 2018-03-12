@@ -25,7 +25,6 @@ use OCA\RecommendationAssistant\Exception\InvalidSimilarityValueException;
 use OCA\RecommendationAssistant\Interfaces\IContentReader;
 use OCA\RecommendationAssistant\Log\ConsoleLogger;
 use OCA\RecommendationAssistant\Log\Logger;
-use OCA\RecommendationAssistant\Objects\Rater;
 use OCA\RecommendationAssistant\Objects\Similarity;
 use OCP\IUser;
 
@@ -105,5 +104,33 @@ class Util {
 			Logger::error($exception->getMessage());
 			return false;
 		}
+	}
+
+	public static function setErrorHandler(bool $default = false) {
+		if ($default) {
+			\restore_error_handler();
+			return;
+		}
+		set_error_handler(function ($errno, $errstr, $errfile, $errline) {
+			$jsonString = \json_encode([$errno, $errstr, $errfile, $errline]);
+			switch ($errno) {
+				case \E_ERROR:
+					Logger::error($jsonString);
+					ConsoleLogger::error($jsonString);
+					break;
+				case \E_WARNING:
+					Logger::warn($jsonString);
+					ConsoleLogger::warn($jsonString);
+					break;
+				default:
+					Logger::debug($jsonString);
+					ConsoleLogger::debug($jsonString);
+					break;
+			}
+		});
+	}
+
+	public static function isFile($path): bool {
+		return \is_file($path) === true;
 	}
 }
