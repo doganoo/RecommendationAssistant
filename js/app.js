@@ -111,7 +111,7 @@
 				type: 'GET',
 				contentType: 'application/json',
 			}).done(function (response) {
-				if (!objectSize(response) > 0 && isRootDir) {
+				if (objectSize(response) > 0 && isRootDir) {
 					var div = $('<div id="recommendations"><span class="icon-loading"></span></div>');
 					$('#controls').after(div);
 					var template = Handlebars.compile(source);
