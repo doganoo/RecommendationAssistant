@@ -60,6 +60,14 @@
 		updateRecommendationsView: function (isRootDir) {
 			// request new recommendations and update the rendered template
 			'use strict';
+			var emptySource = '<div class="apps-header">' +
+				'<span id="recommendation-headline" class="extension">' + t('recommendation_assistant', 'Recommendations') + '</span>' +
+				'<div id="recommendation-content" class="section group">' +
+				'<div class="col empty_recommendation_content">' +
+				'no recommendations available'+
+				'</div>'+
+				'</div>';
+
 			var source = '<div class="apps-header">' +
 				'<span id="recommendation-headline" class="extension">' + t('recommendation_assistant', 'Recommendations') + '</span>' +
 				'<div id="recommendation-content" class="section group">' +
@@ -103,10 +111,16 @@
 				type: 'GET',
 				contentType: 'application/json',
 			}).done(function (response) {
-				if (objectSize(response) > 0 && isRootDir) {
+				if (!objectSize(response) > 0 && isRootDir) {
 					var div = $('<div id="recommendations"><span class="icon-loading"></span></div>');
 					$('#controls').after(div);
 					var template = Handlebars.compile(source);
+					var html = template(response);
+					div.html(html);
+				}else{
+					var div = $('<div id="recommendations"><span class="icon-loading"></span></div>');
+					$('#controls').after(div);
+					var template = Handlebars.compile(emptySource);
 					var html = template(response);
 					div.html(html);
 				}

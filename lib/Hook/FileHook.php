@@ -214,6 +214,10 @@ class FileHook {
 	 */
 	public function runFavorite(string $userId, string $fileId, string $caller) {
 		$node = NodeUtil::getFile($fileId, $userId);
+		if (null === $node) {
+			Logger::info("$fileId for $userId not available. Skipping");
+			return;
+		}
 		if ($caller == "addFavorite") {
 			$this->changedFilesManager->deleteBeforeInsert($node, $userId, "favorite");
 		} else if ($caller == "removeFavorite") {

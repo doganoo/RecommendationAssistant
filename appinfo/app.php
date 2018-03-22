@@ -27,7 +27,7 @@ use OCA\RecommendationAssistant\AppInfo\Application;
  * to work properly. The app should not begin to work if
  * the autoload.php composer file is missing.
  */
-require_once __DIR__ . '../vendor/autoload.php';
+require_once __DIR__ . '/../vendor/autoload.php';
 
 $app = new Application();
 $app->register();

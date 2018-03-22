@@ -2,6 +2,10 @@
 	width: 32.26%;
 }
 
+.empty_recommendation_content {
+	margin-left: 41px;
+}
+
 #recommendation-content.section {
 	clear: both;
 	margin-left: 32px;
