@@ -105,8 +105,10 @@ class KeywordList implements \IteratorAggregate {
 	 * list is removed.
 	 *
 	 * @since 1.0.0
+	 * @return int
 	 */
-	public function removeStopwords() {
+	public function removeStopwords(): int {
+		$previousNumber = $this->size();
 		/**
 		 * PHP core function array_filter removes all array elements defined by
 		 * a callback. The callback function removes all TFIDFItems that have
@@ -122,6 +124,9 @@ class KeywordList implements \IteratorAggregate {
 				$maxTfIdfThreshold = round($this->maxTfIdf * Application::STOPWORD_REMOVAL_PERCENTAGE, $precision, PHP_ROUND_HALF_EVEN);
 				return ($tfidf > $zero) || ($tfidf > $maxTfIdfThreshold);
 			}, ARRAY_FILTER_USE_BOTH);
+		$actualNumber = $this->size();
+		$filteredNumber = ($previousNumber - $actualNumber);
+		return \abs($filteredNumber);
 	}
 
 	/**

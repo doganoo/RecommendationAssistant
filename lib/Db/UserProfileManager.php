@@ -21,7 +21,6 @@
 
 namespace OCA\RecommendationAssistant\Db;
 
-use OCA\RecommendationAssistant\AppInfo\Application;
 use OCA\RecommendationAssistant\Log\ConsoleLogger;
 use OCA\RecommendationAssistant\Objects\Keyword;
 use OCA\RecommendationAssistant\Objects\KeywordList;
@@ -91,11 +90,14 @@ class UserProfileManager {
 	 * @param KeywordList $keywordList the list that is inserted
 	 * @param IUser $user the user who is associated to the item
 	 * @since 1.0.0
+	 * @return bool
 	 */
-	public function insertKeywords(KeywordList $keywordList, IUser $user) {
+	public function insertKeywords(KeywordList $keywordList, IUser $user): bool {
+		$inserted = true;
 		foreach ($keywordList as $keywordItem) {
-			$this->insertKeyword($keywordItem, $user);
+			$inserted |= $this->insertKeyword($keywordItem, $user);
 		}
+		return $inserted;
 	}
 
 	/**

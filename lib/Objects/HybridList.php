@@ -84,6 +84,7 @@ class HybridList implements \IteratorAggregate {
 	}
 
 	public function removeNonRecommendable() {
+		$previousSize = $this->size();
 		/**
 		 * @var string $userId
 		 * @var array $array
@@ -102,6 +103,8 @@ class HybridList implements \IteratorAggregate {
 				unset($this->hybridList[$userId]);
 			}
 		}
+		$actualSize = $this->size();
+		return \abs($previousSize - $actualSize);
 	}
 
 	/**

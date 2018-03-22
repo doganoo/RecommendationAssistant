@@ -245,9 +245,11 @@ class RecommenderService {
 			}
 		}
 
+		$removedItems = 0;
 		if (!Application::DEBUG) {
-			$hybridList->removeNonRecommendable();
+			$removedItems = $hybridList->removeNonRecommendable();
 		}
+		Logger::info("removed $removedItems from hybridlist. Remaining size: " . $hybridList->size());
 		$this->recommendationManager->insertHybridList($hybridList);
 		set_time_limit($iniVals["max_execution_time"]);
 		ini_set("memory_limit", $iniVals["memory_limit"]);

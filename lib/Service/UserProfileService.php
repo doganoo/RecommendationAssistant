@@ -167,8 +167,11 @@ class UserProfileService {
 				$file = NodeUtil::getFile($item->getId(), $user->getUID());
 				$this->processedFilesManager->insertFile($file, "userprofile");
 			}
-			$keywordList->removeStopwords();
-			$this->userProfileManager->insertKeywords($keywordList, $user);
+			$filteredNumber = $keywordList->removeStopwords();
+			Logger::info("$filteredNumber elements for user {$user->getUID()} are removed from the keyword list. Actual size: " . $keywordList->size());
+			$inserted = $this->userProfileManager->insertKeywords($keywordList, $user);
+			$message = false === $inserted ? "at least one element is not inserted for {$user->getUID()}" : $keywordList->size() . " elements inserted for " . $user->getUID();
+			Logger::info($message);
 		}
 		set_time_limit($iniVals["max_execution_time"]);
 		ini_set("memory_limit", $iniVals["memory_limit"]);
