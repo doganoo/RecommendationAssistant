@@ -125,6 +125,11 @@ class UserProfileService {
 		Logger::debug("UserProfileService start");
 		ConsoleLogger::debug("UserProfileService start");
 
+		if (Application::DISABLE_CONTENT_BASED_RECOMMENDATION) {
+			ConsoleLogger::debug("UserProfileService end");
+			return;
+		}
+
 		$iniVals = [];
 		$iniVals["max_execution_time"] = ini_get("max_execution_time");
 		$iniVals["memory_limit"] = ini_get("memory_limit");
@@ -132,7 +137,7 @@ class UserProfileService {
 		set_time_limit(0);
 		ini_set("memory_limit", -1);
 		ini_set("pcre.backtrack_limit", -1);
-
+		Util::setErrorHandler();
 		$itemList = new ItemList();
 		$users = [];
 		$this->userManager->callForSeenUsers(function (IUser $user) use (&$itemList, &$users) {
@@ -162,13 +167,16 @@ class UserProfileService {
 				$file = NodeUtil::getFile($item->getId(), $user->getUID());
 				$this->processedFilesManager->insertFile($file, "userprofile");
 			}
-			$keywordList->removeStopwords();
-			$this->userProfileManager->insertKeywords($keywordList, $user);
+			$filteredNumber = $keywordList->removeStopwords();
+			Logger::info("$filteredNumber elements for user {$user->getUID()} are removed from the keyword list. Actual size: " . $keywordList->size());
+			$inserted = $this->userProfileManager->insertKeywords($keywordList, $user);
+			$message = false === $inserted ? "at least one element is not inserted for {$user->getUID()}" : $keywordList->size() . " elements inserted for " . $user->getUID();
+			Logger::info($message);
 		}
 		set_time_limit($iniVals["max_execution_time"]);
 		ini_set("memory_limit", $iniVals["memory_limit"]);
 		ini_set("pcre.backtrack_limit", $iniVals["pcre.backtrack_limit"]);
-
+		Util::setErrorHandler(true);
 		Logger::debug("UserProfileService end");
 		ConsoleLogger::debug("UserProfileService end");
 	}

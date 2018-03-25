@@ -22,6 +22,7 @@
 namespace OCA\RecommendationAssistant\Db;
 
 use OCA\RecommendationAssistant\Log\ConsoleLogger;
+use OCA\RecommendationAssistant\Log\Logger;
 use OCA\RecommendationAssistant\Objects\HybridItem;
 use OCA\RecommendationAssistant\Objects\HybridList;
 use OCA\RecommendationAssistant\Objects\Item;
@@ -59,6 +60,7 @@ class RecommendationManager {
 	 */
 	private function insertHybrid(HybridItem $hybridItem): bool {
 		if ($this->isRecommendedToUser($hybridItem->getItem(), $hybridItem->getUser())) {
+			Logger::info("not inserting {$hybridItem->getItem()->getId()} for {$hybridItem->getUser()->getUID()} because it is already recommended");
 			return true;
 		}
 		$value = HybridItem::weightedAverage($hybridItem);
@@ -80,6 +82,7 @@ class RecommendationManager {
 			ConsoleLogger::debug($exception->getMessage());
 			return false;
 		}
+		Logger::info("inserted {$hybridItem->getItem()->getId()} for {$hybridItem->getUser()->getUID()}");
 		$lastInsertId = $query->getLastInsertId();
 		return is_int($lastInsertId);
 	}
@@ -91,8 +94,9 @@ class RecommendationManager {
 	 * @param HybridList $hybridList the list with all items
 	 * @return int $i number of items inserted
 	 * @since 1.0.0
+	 * @return int
 	 */
-	public function insertHybridList(HybridList $hybridList) {
+	public function insertHybridList(HybridList $hybridList):int {
 		$i = 0;
 		foreach ($hybridList as $userId => $array) {
 			/** @var HybridItem $hybrid */

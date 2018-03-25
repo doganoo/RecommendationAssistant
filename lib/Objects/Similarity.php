@@ -92,6 +92,12 @@ class Similarity {
 	const NOT_ENOUGH_ITEMS_IN_ITEM_BASE = 6;
 
 	/**
+	 *
+	 * @const int DISABLED_CONTENT_BASED_RECOMMENDATION content based recommendation is disabled
+	 */
+	const DISABLED_CONTENT_BASED_RECOMMENDATION = 7;
+
+	/**
 	 * returns the similarity value
 	 *
 	 * @return float the similarity value

@@ -170,7 +170,7 @@ class RecommenderService {
 		set_time_limit(0);
 		ini_set("memory_limit", -1);
 		ini_set("pcre.backtrack_limit", -1);
-
+		Util::setErrorHandler(false);
 
 		$users = [];
 		$itemList = new ItemList();
@@ -245,15 +245,16 @@ class RecommenderService {
 			}
 		}
 
+		$removedItems = 0;
 		if (!Application::DEBUG) {
-			$hybridList->removeNonRecommendable();
+			$removedItems = $hybridList->removeNonRecommendable();
 		}
+		Logger::info("removed $removedItems from hybridlist. Remaining size: " . $hybridList->size());
 		$this->recommendationManager->insertHybridList($hybridList);
-
 		set_time_limit($iniVals["max_execution_time"]);
 		ini_set("memory_limit", $iniVals["memory_limit"]);
 		ini_set("pcre.backtrack_limit", $iniVals["pcre.backtrack_limit"]);
-
+		Util::setErrorHandler(true);
 		Logger::debug("RecommenderService end");
 		ConsoleLogger::debug("RecommenderService end");
 	}
@@ -381,6 +382,10 @@ class RecommenderService {
 	 * @since 1.0.0
 	 */
 	public function addKeywords(Item $item, File $file) {
+		if (Application::DISABLE_CONTENT_BASED_RECOMMENDATION) {
+			Logger::info("content based recommendation is disabled");
+			return $item;
+		}
 		$isSharedStorage = false;
 		try {
 			$isSharedStorage = $file->getStorage()->instanceOfStorage(Application::SHARED_INSTANCE_STORAGE);

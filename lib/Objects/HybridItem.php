@@ -24,6 +24,7 @@ namespace OCA\RecommendationAssistant\Objects;
 
 use OCA\RecommendationAssistant\AppInfo\Application;
 use OCA\RecommendationAssistant\Exception\InvalidSimilarityValueException;
+use OCA\RecommendationAssistant\Util\NumberUtil;
 use OCP\IUser;
 
 /**
@@ -194,14 +195,15 @@ class HybridItem {
 	 */
 	public function __toString() {
 		$val = HybridItem::weightedAverage($this);
+		$arr = self::getWeights();
 		return "
 				[#itemId#][#{$this->item->getId()}#]
 				[#itemName#][#{$this->item->getName()}#]
 				[#userId#][#{$this->user->getUID()}#]
 				[#collaborativeValue#][#{$this->collaborative->getValue()}#]
-				[#collaborativeWeight#][#" . Application::COLLABORATIVE_FILTERING_WEIGHT . "#]
+				[#collaborativeWeight#][#" . $arr["cf"] . "#]
 				[#contentBasedValue#][#{$this->contentBased->getValue()}#]
-				[#contentBasedWeight#][#" . Application::CONTENT_BASED_RECOMMENDATION_WEIGHT . "#]
+				[#contentBasedWeight#][#" . $arr["cbr"] . "#]
 				[#groupWeight#][#{$this->groupWeight}#]
 				[#recommendation#][#$val#]";
 	}
@@ -214,8 +216,9 @@ class HybridItem {
 	 * @since 1.0.0
 	 */
 	public static function weightedAverage(HybridItem $hybrid): float {
-		$contentBasedResult = Application::CONTENT_BASED_RECOMMENDATION_WEIGHT * $hybrid->getContentBased()->getValue();
-		$collaborativeResult = Application::COLLABORATIVE_FILTERING_WEIGHT * $hybrid->getCollaborative()->getValue();
+		$arr = self::getWeights();
+		$contentBasedResult = $arr["cbr"] * $hybrid->getContentBased()->getValue();
+		$collaborativeResult = $arr["cf"] * $hybrid->getCollaborative()->getValue();
 		$weightedAverage = $hybrid->getGroupWeight() * ($contentBasedResult + $collaborativeResult);
 		return $weightedAverage;
 	}
@@ -261,5 +264,16 @@ class HybridItem {
 			return self::TRANSPARENCY_CONTENT_BASED;
 		}
 		return self::TRANSPARENCY_BOTH;
+	}
+
+	private static function getWeights() {
+		$arr = [];
+		$arr["cbr"] = Application::CONTENT_BASED_RECOMMENDATION_WEIGHT;
+		$arr["cf"] = Application::COLLABORATIVE_FILTERING_WEIGHT;
+		if (Application::DISABLE_CONTENT_BASED_RECOMMENDATION) {
+			$arr["cbr"] = 0.0;
+			$arr["cf"] = 1.0;
+		}
+		return $arr;
 	}
 }
