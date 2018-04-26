@@ -63,18 +63,6 @@ class Similarity {
 
 	/**
 	 *
-	 * @const int NO_OVERLAPPING_KEYWORDS no overlapping keywords
-	 */
-	const NO_OVERLAPPING_KEYWORDS = 2;
-
-	/**
-	 *
-	 * @const int ITEM_OR_USER_PROFILE_EMPTY item or user profile is empty
-	 */
-	const ITEM_OR_USER_PROFILE_EMPTY = 3;
-
-	/**
-	 *
 	 * @const int NO_COSINE_SQUARE_POSSIBLE root square not possible
 	 */
 	const NO_COSINE_SQUARE_POSSIBLE = 4;
@@ -90,12 +78,6 @@ class Similarity {
 	 * @const int NOT_ENOUGH_ITEMS_IN_ITEM_BASE not enough items in item base
 	 */
 	const NOT_ENOUGH_ITEMS_IN_ITEM_BASE = 6;
-
-	/**
-	 *
-	 * @const int DISABLED_CONTENT_BASED_RECOMMENDATION content based recommendation is disabled
-	 */
-	const DISABLED_CONTENT_BASED_RECOMMENDATION = 7;
 
 	/**
 	 * returns the similarity value

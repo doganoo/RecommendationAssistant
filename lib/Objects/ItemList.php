@@ -37,6 +37,19 @@ class ItemList implements \IteratorAggregate {
 	private $itemList = [];
 
 	/**
+	 * merges a different instance of ItemList to the actual one. The method
+	 * calls the add() method in a loop in order to add the items.
+	 *
+	 * @param ItemList $itemList the item list that should be merged
+	 * @since 1.0.0
+	 */
+	public function merge(ItemList $itemList) {
+		foreach ($itemList as $item) {
+			$this->add($item);
+		}
+	}
+
+	/**
 	 * adds an item to the list. The ratings of the new item will be transfered
 	 * to the actual one if the item is already present in the list.
 	 *
@@ -52,25 +65,11 @@ class ItemList implements \IteratorAggregate {
 			/** @var Item $item1 */
 			$item1 = $this->itemList[$item->getId()];
 			$item1->addRaters($item->getRaters());
-			$item1->mergeKeywords($item->getKeywordList());
 			$this->itemList[$item->getId()] = $item1;
 		} else {
 			$this->itemList[$item->getId()] = $item;
 		}
 		return true;
-	}
-
-	/**
-	 * merges a different instance of ItemList to the actual one. The method
-	 * calls the add() method in a loop in order to add the items.
-	 *
-	 * @param ItemList $itemList the item list that should be merged
-	 * @since 1.0.0
-	 */
-	public function merge(ItemList $itemList) {
-		foreach ($itemList as $item) {
-			$this->add($item);
-		}
 	}
 
 	/**
@@ -81,22 +80,6 @@ class ItemList implements \IteratorAggregate {
 	 */
 	public function size(): int {
 		return count($this->itemList);
-	}
-
-	/**
-	 * counts the occurence of a single keyword in the list
-	 *
-	 * @param string $needle the keyword that is searched for
-	 * @return int the number of occurences of the keyword in the list
-	 * @since 1.0.0
-	 */
-	public function countKeyword(string $needle) {
-		$count = 0;
-		/** @var Item $item */
-		foreach ($this->itemList as $item) {
-			$count += $item->countKeyword($needle);
-		}
-		return $count;
 	}
 
 	/**

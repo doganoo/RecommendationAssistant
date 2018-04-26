@@ -22,7 +22,6 @@
 namespace OCA\RecommendationAssistant\Recommendation;
 
 
-use OCA\RecommendationAssistant\Interfaces\IComputable;
 use OCA\RecommendationAssistant\Objects\Item;
 use OCA\RecommendationAssistant\Objects\Rater;
 use OCA\RecommendationAssistant\Objects\Similarity;
@@ -36,7 +35,7 @@ use OCA\RecommendationAssistant\Util\Util;
  * @package OCA\RecommendationAssistant\Recommendation
  * @since 1.0.0
  */
-class CosineComputer implements IComputable {
+class CosineComputer {
 	/**
 	 * @var Item $sourceItem the first item
 	 */

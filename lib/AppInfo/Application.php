@@ -58,10 +58,9 @@ class Application extends App {
 	 * actual behaviour:
 	 * <li>files are processed even if they are processed in the past</li>
 	 * <li>RecommenderService interval equals to 1</li>
-	 * <li>UserProfileService interval equals to 1</li>
 	 * <li>ConsoleLogger logs the messages to the console</li>
 	 */
-	const DEBUG = false;
+	const DEBUG = true;
 
 	/**
 	 * @const SHARED_INSTANCE_STORAGE the fully qualified class name of a SharedStorage instance
@@ -80,21 +79,10 @@ class Application extends App {
 	const RECOMMENDATION_THRESHOLD = 2;
 
 	/**
-	 * @const KEYWORD_REMOVAL_DAYS number of days after that keywords of an user
-	 * profile is deleted
-	 */
-	const KEYWORD_REMOVAL_DAYS = 180;
-
-	/**
 	 * @const K_NEAREST_NEIGHBOR_SIMILARITY_THRESHOLD the minimum similarity of
 	 * two items that are necessary for rating prediction
 	 */
 	const K_NEAREST_NEIGHBOR_SIMILARITY_THRESHOLD = 0.5;
-
-	/**
-	 * @const STOPWORD_REMOVAL_PERCENTAGE the percentage of removing stopwords
-	 */
-	const STOPWORD_REMOVAL_PERCENTAGE = 0.33;
 
 	/**
 	 * @const RATING_WEIGHT_LAST_CHANGE the weight for the rating used in
@@ -112,16 +100,6 @@ class Application extends App {
 	 * @const COLLABORATIVE_FILTERING_WEIGHT weights for hybridization
 	 */
 	const COLLABORATIVE_FILTERING_WEIGHT = 0.75;
-
-	/**
-	 * @const CONTENT_BASED_RECOMMENDATION_WEIGHT weights for hybridization
-	 */
-	const CONTENT_BASED_RECOMMENDATION_WEIGHT = 0.25;
-
-	/**
-	 * @const DISABLE_CONTENT_BASED_RECOMMENDATION disabling content based recommendation
-	 */
-	const DISABLE_CONTENT_BASED_RECOMMENDATION = false;
 
 	/**
 	 * Class constructor calls the parent constructor with APP_ID

@@ -13,15 +13,15 @@
 
 	<category>tools</category>
 
-	<website>https://github.com/nextcloud-gmbh/recommendation_assistant
+	<website>https://dogan-ucar.de/recommendationassistant/
 	</website>
-	<bugs>https://github.com/nextcloud-gmbh/recommendation_assistant/issues
+	<bugs>https://github.com/doganoo/RecommendationAssistant/issues
 	</bugs>
 	<repository type="git">
-		https://github.com/nextcloud-gmbh/recommendation_assistant.git
+		https://github.com/doganoo/RecommendationAssistant.git
 	</repository>
 
-	<version>0.1.19</version>
+	<version>0.2.0</version>
 	<namespace>RecommendationAssistant</namespace>
 
 	<types>
@@ -34,6 +34,5 @@
 
 	<background-jobs>
 		<job>OCA\RecommendationAssistant\BackgroundJob\RecommenderJob</job>
-		<job>OCA\RecommendationAssistant\BackgroundJob\UserProfileJob</job>
 	</background-jobs>
 </info>

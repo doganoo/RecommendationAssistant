@@ -24,11 +24,8 @@ namespace OCA\RecommendationAssistant\Service;
 
 use OC\Files\Filesystem;
 use OCA\RecommendationAssistant\AppInfo\Application;
-use OCA\RecommendationAssistant\ContentReader\ContentReaderFactory;
 use OCA\RecommendationAssistant\Db\ChangedFilesManager;
-use OCA\RecommendationAssistant\Db\GroupWeightsManager;
 use OCA\RecommendationAssistant\Db\RecommendationManager;
-use OCA\RecommendationAssistant\Db\UserProfileManager;
 use OCA\RecommendationAssistant\Exception\InvalidRatingException;
 use OCA\RecommendationAssistant\Log\ConsoleLogger;
 use OCA\RecommendationAssistant\Log\Logger;
@@ -39,10 +36,7 @@ use OCA\RecommendationAssistant\Objects\ItemList;
 use OCA\RecommendationAssistant\Objects\ItemToItemMatrix;
 use OCA\RecommendationAssistant\Objects\Rater;
 use OCA\RecommendationAssistant\Recommendation\CosineComputer;
-use OCA\RecommendationAssistant\Recommendation\GroupWeightComputer;
-use OCA\RecommendationAssistant\Recommendation\OverlapCoefficientComputer;
 use OCA\RecommendationAssistant\Recommendation\RatingPredictor;
-use OCA\RecommendationAssistant\Recommendation\TextProcessor;
 use OCA\RecommendationAssistant\Util\NodeUtil;
 use OCA\RecommendationAssistant\Util\Util;
 use OCP\Files\File;
@@ -84,20 +78,9 @@ class RecommenderService {
 	private $tagManager = null;
 
 	/**
-	 * @var UserProfileManager $userProfileManager data storage access instance
-	 * in order to get/set the keywords associated to a user profile
-	 */
-	private $userProfileManager = null;
-
-	/**
 	 * @var IGroupManager $groupManager the GroupManager to determine the users groups
 	 */
 	private $groupManager = null;
-
-	/**
-	 * @var GroupWeightsManager $groupWeightsManager the manager for querying group weights
-	 */
-	private $groupWeightsManager = null;
 
 	/**
 	 * @var RecommendationManager $recommendationManager the manager for querying
@@ -119,10 +102,6 @@ class RecommenderService {
 	 * @param ITagManager $tagManager the tag manager instance to access the tags.
 	 * In this case: the favorites
 	 * @param IGroupManager $groupManager the manager for requesting user groups
-	 * @param UserProfileManager $userProfileManager data storage access instance
-	 * in order to get/set the keywords associated to a user profile
-	 * @param GroupWeightsManager $groupWeightsManager the manager for querying
-	 * group weights
 	 * @param RecommendationManager $recommendationManager database access to
 	 * recommendations
 	 * @param ChangedFilesManager $changedFilesManager database access to changed files
@@ -133,8 +112,6 @@ class RecommenderService {
 		IUserManager $userManager,
 		ITagManager $tagManager,
 		IGroupManager $groupManager,
-		UserProfileManager $userProfileManager,
-		GroupWeightsManager $groupWeightsManager,
 		RecommendationManager $recommendationManager,
 		ChangedFilesManager $changedFilesManager
 	) {
@@ -142,8 +119,6 @@ class RecommenderService {
 		$this->userManager = $userManager;
 		$this->tagManager = $tagManager;
 		$this->groupManager = $groupManager;
-		$this->userProfileManager = $userProfileManager;
-		$this->groupWeightsManager = $groupWeightsManager;
 		$this->recommendationManager = $recommendationManager;
 		$this->changedFilesManager = $changedFilesManager;
 	}
@@ -226,20 +201,9 @@ class RecommenderService {
 				$hybrid = $hybridList->getHybridByUser($item, $user);
 				$hybrid->setUser($user);
 				$hybrid->setItem($item);
-				$keywordList = $this->userProfileManager->getKeywordListByUser($user);
-
-				$overlap = new OverlapCoefficientComputer($item, $itemList, $keywordList);
-				$contentBasedSimilarity = $overlap->compute();
-				$groupWeightComputer = new GroupWeightComputer(
-					$this->groupManager->getUserGroups($item->getOwner()),
-					$this->groupManager->getUserGroups($item1->getOwner()),
-					$this->groupWeightsManager);
-				$userGroupWeights = $groupWeightComputer->calculateWeight();
-				$hybrid->setGroupWeight($userGroupWeights);
 
 				$itemComputer = new RatingPredictor($item, $user, $itemList, $itemItemMatrix);
 				$collaborativeSimilarity = $itemComputer->predict();
-				$hybrid->setContentBased($contentBasedSimilarity);
 				$hybrid->setCollaborative($collaborativeSimilarity);
 				$hybridList->add($hybrid, $user, $item);
 			}
@@ -249,6 +213,7 @@ class RecommenderService {
 		if (!Application::DEBUG) {
 			$removedItems = $hybridList->removeNonRecommendable();
 		}
+
 		Logger::info("removed $removedItems from hybridlist. Remaining size: " . $hybridList->size());
 		$this->recommendationManager->insertHybridList($hybridList);
 		set_time_limit($iniVals["max_execution_time"]);
@@ -315,14 +280,8 @@ class RecommenderService {
 	 * @since 1.0.0
 	 */
 	private function handleFile(File $file, IUser $currentUser): Item {
-		$valid = Util::validMimetype($file->getMimeType());
-		if (!$valid) {
-			return new Item();
-		}
-
 		$item = $this->createItem($file);
 		$item = $this->addRater($item, $file, $currentUser);
-		$item = $this->addKeywords($item, $file);
 		return $item;
 	}
 
@@ -447,43 +406,5 @@ class RecommenderService {
 			Logger::error($exception->getMessage());
 		}
 		return $rater;
-	}
-
-	/**
-	 * this method reads the file content and assigns them as an array to the
-	 * passed item. If the file is an shared one, the keywords are not read
-	 * because they will be processed for the owner.
-	 *
-	 * @param Item $item
-	 * @param File $file
-	 * @return Item
-	 * @since 1.0.0
-	 */
-	public function addKeywords(Item $item, File $file) {
-		if (Application::DISABLE_CONTENT_BASED_RECOMMENDATION) {
-			Logger::info("content based recommendation is disabled");
-			return $item;
-		}
-		$isSharedStorage = false;
-		try {
-			$isSharedStorage = $file->getStorage()->instanceOfStorage(Application::SHARED_INSTANCE_STORAGE);
-		} catch (NotFoundException $exception) {
-			Logger::warn($exception->getMessage());
-		}
-		/* sharedStorage means that the file is shared to the user.
-		 * if this is the case we do not need to process the file twice.
-		 */
-		if ($isSharedStorage) {
-			return $item;
-		}
-		$contentReader = ContentReaderFactory::getContentReader($file->getMimeType());
-		$content = $contentReader->read($file);
-		$textProcessor = new TextProcessor($content);
-		$textProcessor->removeNumeric();
-		$textProcessor->removeDate();
-		$textProcessor->toLower();
-		$keywordList = $textProcessor->getKeywordList();
-		$item->setKeywordList($keywordList);
-		return $item;
 	}
 }

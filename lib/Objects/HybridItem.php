@@ -23,8 +23,6 @@ namespace OCA\RecommendationAssistant\Objects;
 
 
 use OCA\RecommendationAssistant\AppInfo\Application;
-use OCA\RecommendationAssistant\Exception\InvalidSimilarityValueException;
-use OCA\RecommendationAssistant\Util\NumberUtil;
 use OCP\IUser;
 
 /**
@@ -40,11 +38,6 @@ class HybridItem {
 	private $collaborative = null;
 
 	/**
-	 * @var Similarity $contentBased the content based similarity
-	 */
-	private $contentBased = null;
-
-	/**
 	 * @var Item $item the item
 	 */
 	private $item = null;
@@ -53,36 +46,6 @@ class HybridItem {
 	 * @var IUser $user the user
 	 */
 	private $user = null;
-
-	/**
-	 * @var float $groupWeight the group weights
-	 */
-	private $groupWeight = 1;
-
-	/**
-	 * @const TRANSPARENCY_BOTH transparency both
-	 */
-	const TRANSPARENCY_BOTH = 0;
-
-	/**
-	 * @const TRANSPARENCY_COLLABORATIVE transparency collaborative
-	 */
-	const TRANSPARENCY_COLLABORATIVE = 1;
-
-	/**
-	 * @const TRANSPARENCY_CONTENT_BASED transparency content based
-	 */
-	const TRANSPARENCY_CONTENT_BASED = 2;
-
-	/**
-	 * sets the item for that the recommendation is made
-	 *
-	 * @param Item $item the item
-	 * @since 1.0.0
-	 */
-	public function setItem(Item $item) {
-		$this->item = $item;
-	}
 
 	/**
 	 * returns the recommendation item
@@ -95,13 +58,13 @@ class HybridItem {
 	}
 
 	/**
-	 * sets the user for whom the recommendation is made
+	 * sets the item for that the recommendation is made
 	 *
-	 * @param IUser $user the user
+	 * @param Item $item the item
 	 * @since 1.0.0
 	 */
-	public function setUser(IUser $user) {
-		$this->user = $user;
+	public function setItem(Item $item) {
+		$this->item = $item;
 	}
 
 	/**
@@ -115,34 +78,40 @@ class HybridItem {
 	}
 
 	/**
-	 * sets the group weight that is associated to the item and calculated
-	 * from the user groups that is associated to the owner(s)
+	 * sets the user for whom the recommendation is made
 	 *
-	 * @param float $groupWeight the weight
-	 * @throws InvalidSimilarityValueException
+	 * @param IUser $user the user
 	 * @since 1.0.0
 	 */
-	public function setGroupWeight(float $groupWeight) {
-		$precision = 10;
-		$compare = round($groupWeight, $precision, PHP_ROUND_HALF_EVEN);
-		$one = round(1, $precision, PHP_ROUND_HALF_EVEN);
-		$zero = round(0, $precision, PHP_ROUND_HALF_EVEN);
-		if ($compare < $zero || $compare > $one) {
-			throw new InvalidSimilarityValueException("the similarity value has to be between 0 and 1, $groupWeight given");
-		}
-		$this->groupWeight = $groupWeight;
+	public function setUser(IUser $user) {
+		$this->user = $user;
 	}
 
 	/**
-	 * sets the collaborative filtering similarity value for $item.
-	 * the value has to be between 0 and 1, otherwise an exception
-	 * of type InvalidSimilarityValueException is thrown.
+	 * returns a string representation of an instance of this class
 	 *
-	 * @param Similarity $collaborative
+	 * @return string
 	 * @since 1.0.0
 	 */
-	public function setCollaborative(Similarity $collaborative) {
-		$this->collaborative = $collaborative;
+	public function __toString() {
+		$val = HybridItem::weightedAverage($this);
+		return "
+				[#itemId#][#{$this->item->getId()}#]
+				[#itemName#][#{$this->item->getName()}#]
+				[#userId#][#{$this->user->getUID()}#]
+				[#collaborativeValue#][#{$this->collaborative->getValue()}#]
+				[#recommendation#][#$val#]";
+	}
+
+	/**
+	 * calculates the weighted average of an HybridItem
+	 *
+	 * @param HybridItem $hybrid
+	 * @return float
+	 * @since 1.0.0
+	 */
+	public static function weightedAverage(HybridItem $hybrid): float {
+		return $hybrid->getCollaborative()->getValue();
 	}
 
 	/**
@@ -156,71 +125,15 @@ class HybridItem {
 	}
 
 	/**
-	 * returns the group weight
-	 *
-	 * @return float
-	 * @since 1.0.0
-	 */
-	public function getGroupWeight(): float {
-		return $this->groupWeight;
-	}
-
-	/**
-	 * sets the content based similarity value for $item.
+	 * sets the collaborative filtering similarity value for $item.
 	 * the value has to be between 0 and 1, otherwise an exception
 	 * of type InvalidSimilarityValueException is thrown.
 	 *
-	 * @param Similarity $contentBased
+	 * @param Similarity $collaborative
 	 * @since 1.0.0
 	 */
-	public function setContentBased(Similarity $contentBased) {
-		$this->contentBased = $contentBased;
-	}
-
-	/**
-	 * Returns the content based similarity value
-	 *
-	 * @return Similarity
-	 * @since 1.0.0
-	 */
-	public function getContentBased(): Similarity {
-		return $this->contentBased;
-	}
-
-	/**
-	 * returns a string representation of an instance of this class
-	 *
-	 * @return string
-	 * @since 1.0.0
-	 */
-	public function __toString() {
-		$val = HybridItem::weightedAverage($this);
-		$arr = self::getWeights();
-		return "
-				[#itemId#][#{$this->item->getId()}#]
-				[#itemName#][#{$this->item->getName()}#]
-				[#userId#][#{$this->user->getUID()}#]
-				[#collaborativeValue#][#{$this->collaborative->getValue()}#]
-				[#collaborativeWeight#][#" . $arr["cf"] . "#]
-				[#contentBasedValue#][#{$this->contentBased->getValue()}#]
-				[#contentBasedWeight#][#" . $arr["cbr"] . "#]
-				[#groupWeight#][#{$this->groupWeight}#]
-				[#recommendation#][#$val#]";
-	}
-
-	/**
-	 * calculates the weighted average of an HybridItem
-	 *
-	 * @param HybridItem $hybrid
-	 * @return float
-	 * @since 1.0.0
-	 */
-	public static function weightedAverage(HybridItem $hybrid): float {
-		$arr = self::getWeights();
-		$contentBasedResult = $arr["cbr"] * $hybrid->getContentBased()->getValue();
-		$collaborativeResult = $arr["cf"] * $hybrid->getCollaborative()->getValue();
-		$weightedAverage = $hybrid->getGroupWeight() * ($contentBasedResult + $collaborativeResult);
-		return $weightedAverage;
+	public function setCollaborative(Similarity $collaborative) {
+		$this->collaborative = $collaborative;
 	}
 
 	/**
@@ -254,26 +167,6 @@ class HybridItem {
 	 * @since 1.0.0
 	 */
 	public function getTransparencyCode(): int {
-		if (NumberUtil::compareFloat($this->collaborative->getValue(), $this->contentBased->getValue())) {
-			return self::TRANSPARENCY_BOTH;
-		}
-		if (NumberUtil::floatGreaterThan($this->collaborative->getValue(), $this->contentBased->getValue())) {
-			return self::TRANSPARENCY_COLLABORATIVE;
-		}
-		if (NumberUtil::floatGreaterThan($this->contentBased->getValue(), $this->collaborative->getValue())) {
-			return self::TRANSPARENCY_CONTENT_BASED;
-		}
-		return self::TRANSPARENCY_BOTH;
-	}
-
-	private static function getWeights() {
-		$arr = [];
-		$arr["cbr"] = Application::CONTENT_BASED_RECOMMENDATION_WEIGHT;
-		$arr["cf"] = Application::COLLABORATIVE_FILTERING_WEIGHT;
-		if (Application::DISABLE_CONTENT_BASED_RECOMMENDATION) {
-			$arr["cbr"] = 0.0;
-			$arr["cf"] = 1.0;
-		}
-		return $arr;
+		return 1;
 	}
 }

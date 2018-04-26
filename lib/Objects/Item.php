@@ -39,10 +39,6 @@ class Item {
 	 */
 	private $name;
 	/**
-	 * @var KeywordList $keywordList
-	 */
-	private $keywordList;
-	/**
 	 * @var array $raters
 	 */
 	private $raters;
@@ -51,26 +47,6 @@ class Item {
 	 * @var IUser $owner
 	 */
 	private $owner;
-
-	/**
-	 * Returns the id of the item
-	 *
-	 * @return int the id
-	 * @since 1.0.0
-	 */
-	public function getId(): int {
-		return $this->id;
-	}
-
-	/**
-	 * sets the id of the item
-	 *
-	 * @param int $id the id associated to the item
-	 * @since 1.0.0
-	 */
-	public function setId(int $id) {
-		$this->id = $id;
-	}
 
 	/**
 	 * Returns the name of the item
@@ -113,48 +89,6 @@ class Item {
 	}
 
 	/**
-	 * Returns the keywords that describe the item
-	 *
-	 * @return KeywordList the keywords
-	 * @since 1.0.0
-	 */
-	public function getKeywordList(): KeywordList {
-		if ($this->keywordList == null) {
-			return new KeywordList();
-		}
-		return $this->keywordList;
-	}
-
-	/**
-	 * sets the keywords that describe the item
-	 *
-	 * @param KeywordList $keywordList the items name
-	 * @since 1.0.0
-	 */
-	public function setKeywordList(KeywordList $keywordList) {
-		if ($this->keywordList == null) {
-			$this->keywordList = $keywordList;
-		} else {
-			$this->keywordList->merge($keywordList);
-		}
-	}
-
-	/**
-	 * merges given keywords to the existing ones. The keyword will be ignored
-	 * if it is already in the list.
-	 *
-	 * @param KeywordList $keywords
-	 * @since 1.0.0
-	 */
-	public function mergeKeywords(KeywordList $keywords) {
-		if ($this->keywordList == null) {
-			$this->setKeywordList($keywords);
-		} else {
-			$this->keywordList->merge($keywords);
-		}
-	}
-
-	/**
 	 * Returns a single rater that has rated the item
 	 *
 	 * @param string $index
@@ -182,17 +116,6 @@ class Item {
 	}
 
 	/**
-	 * adds a rater to the raters list. Old rating will be overwritten if
-	 * the rater is already present in the list
-	 *
-	 * @param Rater $rater the rater that should be added to the ist
-	 * @since 1.0.0
-	 */
-	public function addRater(Rater $rater) {
-		$this->raters[$rater->getUser()->getUID()] = $rater;
-	}
-
-	/**
 	 * checks whether a user is present in the raters list
 	 *
 	 * @param string $uid the user id that should be checked
@@ -217,29 +140,23 @@ class Item {
 	}
 
 	/**
-	 * counts the occurence of a single keyword in the list
+	 * Returns the id of the item
 	 *
-	 * @param string $needle the keyword that is searched for
-	 * @return int the number of occurences of the keyword in the list
+	 * @return int the id
 	 * @since 1.0.0
 	 */
-	public function countKeyword(string $needle) {
-		/** @var Keyword $keyword */
-		$keyword = $this->getKeywordList()->getKeyword($needle);
-		if ($keyword == null) {
-			return 0;
-		}
-		return $keyword->getCount();
+	public function getId(): int {
+		return $this->id;
 	}
 
 	/**
-	 * counts the total number of keywords in the list
+	 * sets the id of the item
 	 *
-	 * @return int the number of keywords in the list
+	 * @param int $id the id associated to the item
 	 * @since 1.0.0
 	 */
-	public function keywordSize(): int {
-		return $this->keywordList->size();
+	public function setId(int $id) {
+		$this->id = $id;
 	}
 
 	/**
@@ -267,5 +184,16 @@ class Item {
 				$this->addRater($rater);
 			}
 		}
+	}
+
+	/**
+	 * adds a rater to the raters list. Old rating will be overwritten if
+	 * the rater is already present in the list
+	 *
+	 * @param Rater $rater the rater that should be added to the ist
+	 * @since 1.0.0
+	 */
+	public function addRater(Rater $rater) {
+		$this->raters[$rater->getUser()->getUID()] = $rater;
 	}
 }
