@@ -178,7 +178,7 @@ class Similarity {
 	 * @since 1.0.0
 	 */
 	public function isValid(): bool {
-		return $this->getStatus() == Similarity::VALID || $this->getStatus() == Similarity::SAME_COSINE_ITEMS;
+		return $this->getStatus() === Similarity::VALID || $this->getStatus() === Similarity::SAME_COSINE_ITEMS;
 	}
 
 

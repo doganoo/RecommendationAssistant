@@ -134,6 +134,7 @@ class ProcessedFilesManager {
 	 * <ul>userprofile</ul>
 	 *
 	 * @since 1.0.0
+	 * @return bool
 	 */
 	public function deleteFile(File $file, string $type) {
 		try {
@@ -150,8 +151,5 @@ class ProcessedFilesManager {
 			Logger::error($exception->getMessage());
 			return false;
 		}
-		return false;
-
 	}
-
 }

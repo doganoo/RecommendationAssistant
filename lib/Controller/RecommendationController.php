@@ -89,7 +89,7 @@ class RecommendationController extends Controller {
 			$id = $entity->fileId;
 			/** @var File $node */
 			$node = NodeUtil::getFile($id, $this->userId);
-			if ($node == null) {
+			if (null === $node) {
 				unset($entities[$key]);
 				continue;
 			}

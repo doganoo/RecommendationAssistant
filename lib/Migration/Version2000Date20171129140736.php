@@ -44,17 +44,17 @@ class Version2000Date20171129140736 extends SimpleMigrationStep {
 			$table->addColumn(DbConstants::TB_RC_CREATION_TS, Type::INTEGER, [
 				DbConstants::NOTNULL => true,
 				DbConstants::LENGTH => 4,
-				DbConstants::DEFAULT => 0,
+				DbConstants::COLUMN_DEFAULT => 0,
 			]);
 			$table->addColumn(DbConstants::TB_RC_USER_ID, Type::STRING, [
 				DbConstants::NOTNULL => true,
 				DbConstants::LENGTH => 64,
-				DbConstants::DEFAULT => "",
+				DbConstants::COLUMN_DEFAULT => "",
 			]);
 			$table->addColumn(DbConstants::TB_RC_FILE_ID, Type::STRING, [
 				DbConstants::NOTNULL => true,
 				DbConstants::LENGTH => 255,
-				DbConstants::DEFAULT => ""
+				DbConstants::COLUMN_DEFAULT => ""
 			]);
 			$table->setPrimaryKey([DbConstants::TB_RC_ID]);
 		}
@@ -69,12 +69,12 @@ class Version2000Date20171129140736 extends SimpleMigrationStep {
 			$table->addColumn(DbConstants::TB_UP_USER_ID, Type::STRING, [
 				DbConstants::NOTNULL => true,
 				DbConstants::LENGTH => 64,
-				DbConstants::DEFAULT => "",
+				DbConstants::COLUMN_DEFAULT => "",
 			]);
 			$table->addColumn(DbConstants::TB_UP_KEYWORD, Type::STRING, [
 				DbConstants::NOTNULL => true,
 				DbConstants::LENGTH => 250,
-				DbConstants::DEFAULT => "",
+				DbConstants::COLUMN_DEFAULT => "",
 			]);
 			$table->setPrimaryKey([DbConstants::TB_UP_ID]);
 		}

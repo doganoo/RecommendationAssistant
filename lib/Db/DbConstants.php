@@ -35,10 +35,10 @@ class DbConstants {
 	/**
 	 * General database related attributes
 	 */
-	const AUTOINCREMENT = 'autoincrement';
-	const NOTNULL = 'notnull';
-	const LENGTH = 'length';
-	const DEFAULT = 'default';
+	const AUTOINCREMENT = "autoincrement";
+	const NOTNULL = "notnull";
+	const LENGTH = "length";
+	const COLUMN_DEFAULT = "default";
 
 	/**
 	 * RECOMMENDATIONS TABLE

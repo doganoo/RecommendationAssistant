@@ -39,7 +39,7 @@ class Version2000Date20171129154705 extends SimpleMigrationStep {
 			if (!$table->hasColumn(DbConstants::TB_UP_TFIDF_VALUE)) {
 				$table->addColumn(DbConstants::TB_UP_TFIDF_VALUE, Type::FLOAT, [
 					DbConstants::NOTNULL => true,
-					DbConstants::DEFAULT => 0,
+					DbConstants::COLUMN_DEFAULT => 0,
 				]);
 			}
 		}

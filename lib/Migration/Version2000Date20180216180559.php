@@ -37,12 +37,12 @@ class Version2000Date20180216180559 extends SimpleMigrationStep {
 			$table = $schema->getTable(DbConstants::TABLE_NAME_RECOMMENDATIONS);
 			$table->addColumn(DbConstants::TB_RC_RECOMMENDATION_SCORE, Type::FLOAT, [
 				DbConstants::NOTNULL => true,
-				DbConstants::DEFAULT => 0,
+				DbConstants::COLUMN_DEFAULT => 0,
 			]);
 			$table->addColumn(DbConstants::TB_RC_TRANSPARENCY_CODE, Type::INTEGER, [
 				DbConstants::NOTNULL => true,
 				DbConstants::LENGTH => 4,
-				DbConstants::DEFAULT => 0,
+				DbConstants::COLUMN_DEFAULT => 0,
 			]);
 		}
 		return $schema;

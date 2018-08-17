@@ -120,7 +120,7 @@ class RatingPredictor {
 			$numerator += $sim->getValue() * $rating;
 			$denominator += $sim->getValue();
 		}
-		if ($denominator == 0) {
+		if ($denominator === 0) {
 			$similarity = Util::createSimilarity(0.0, Similarity::NO_SIMILARITY_AVAILABLE, "denominator is 0");
 		} else {
 			$similarity = Util::createSimilarity($numerator / $denominator, Similarity::VALID, "ok");

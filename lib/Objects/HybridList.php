@@ -99,7 +99,7 @@ class HybridList implements \IteratorAggregate {
 					unset($this->hybridList[$userId][$itemId]);
 				}
 			}
-			if (count($this->hybridList[$userId]) == 0) {
+			if (count($this->hybridList[$userId]) === 0) {
 				unset($this->hybridList[$userId]);
 			}
 		}

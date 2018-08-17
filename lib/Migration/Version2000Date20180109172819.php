@@ -43,17 +43,17 @@ class Version2000Date20180109172819 extends SimpleMigrationStep {
 			$table->addColumn(DbConstants::TB_CFL_CHANGE_TS, Type::INTEGER, [
 				DbConstants::NOTNULL => true,
 				DbConstants::LENGTH => 4,
-				DbConstants::DEFAULT => 0,
+				DbConstants::COLUMN_DEFAULT => 0,
 			]);
 			$table->addColumn(DbConstants::TB_CFL_CREATION_TS, Type::INTEGER, [
 				DbConstants::NOTNULL => true,
 				DbConstants::LENGTH => 4,
-				DbConstants::DEFAULT => 0,
+				DbConstants::COLUMN_DEFAULT => 0,
 			]);
 			$table->addColumn(DbConstants::TB_CFL_FILE_ID, Type::STRING, [
 				DbConstants::NOTNULL => true,
 				DbConstants::LENGTH => 255,
-				DbConstants::DEFAULT => ""
+				DbConstants::COLUMN_DEFAULT => ""
 			]);
 			$table->setPrimaryKey([DbConstants::TB_CFL_ID]);
 		}

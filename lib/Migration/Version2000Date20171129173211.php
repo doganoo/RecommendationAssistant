@@ -45,12 +45,12 @@ class Version2000Date20171129173211 extends SimpleMigrationStep {
 			$table->addColumn(DbConstants::TB_FP_CREATION_TS, Type::INTEGER, [
 				DbConstants::NOTNULL => true,
 				DbConstants::LENGTH => 4,
-				DbConstants::DEFAULT => 0,
+				DbConstants::COLUMN_DEFAULT => 0,
 			]);
 			$table->addColumn(DbConstants::TB_FP_FILE_ID, Type::INTEGER, [
 				DbConstants::NOTNULL => true,
 				DbConstants::LENGTH => 4,
-				DbConstants::DEFAULT => 0
+				DbConstants::COLUMN_DEFAULT => 0
 			]);
 			$table->setPrimaryKey([DbConstants::TB_FP_ID]);
 		}

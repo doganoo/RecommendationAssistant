@@ -16,7 +16,7 @@
 	flex-grow: 1;
 	flex-shrink: 1;
 	min-width: 0;
-	padding-top: 0px;
+	padding-top: 0;
 }
 
 #recommendation-content-file-name {

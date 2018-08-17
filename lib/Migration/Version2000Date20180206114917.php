@@ -38,7 +38,7 @@ class Version2000Date20180206114917 extends SimpleMigrationStep {
 			$table->addColumn(DbConstants::TB_CFL_CREATION_TS, Type::INTEGER, [
 				DbConstants::NOTNULL => true,
 				DbConstants::LENGTH => 4,
-				DbConstants::DEFAULT => 0,
+				DbConstants::COLUMN_DEFAULT => 0,
 			]);
 		}
 		return $schema;

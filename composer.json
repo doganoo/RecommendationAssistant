@@ -1,20 +1,2 @@
 {
-  "require": {
-    "henck/rtf-to-html": "dev-master",
-    "chv/pdftotext": "dev-master",
-    "phpoffice/phpspreadsheet": "1.1.0",
-    "phpoffice/phpword": "0.14.0",
-    "phpoffice/phppresentation": "0.9.0"
-  },
-  "autoload": {
-    "psr-4": {
-      "Henck\\RTFTOHTML\\": "vendor/henck"
-    }
-  },
-  "repositories": [
-    {
-      "type": "vcs",
-      "url": "https://github.com/doganoo/PdfToText.git"
-    }
-  ]
 }

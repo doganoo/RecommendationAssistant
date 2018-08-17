@@ -44,21 +44,21 @@ class Version2000Date20171229093925 extends SimpleMigrationStep {
 			$table->addColumn(DbConstants::TB_GW_SOURCE_GROUP_ID, Type::STRING, [
 				DbConstants::NOTNULL => true,
 				DbConstants::LENGTH => 64,
-				DbConstants::DEFAULT => 0,
+				DbConstants::COLUMN_DEFAULT => 0,
 			]);
 			$table->addColumn(DbConstants::TB_GW_TARGET_GROUP_ID, Type::STRING, [
 				DbConstants::NOTNULL => true,
 				DbConstants::LENGTH => 64,
-				DbConstants::DEFAULT => 0,
+				DbConstants::COLUMN_DEFAULT => 0,
 			]);
 			$table->addColumn(DbConstants::TB_GW_CREATION_TS, Type::INTEGER, [
 				DbConstants::NOTNULL => true,
 				DbConstants::LENGTH => 4,
-				DbConstants::DEFAULT => 0,
+				DbConstants::COLUMN_DEFAULT => 0,
 			]);
 			$table->addColumn(DbConstants::TB_GW_VALUE, Type::FLOAT, [
 				DbConstants::NOTNULL => true,
-				DbConstants::DEFAULT => 0,
+				DbConstants::COLUMN_DEFAULT => 0,
 			]);
 			$table->setPrimaryKey([DbConstants::TB_FP_ID]);
 		}

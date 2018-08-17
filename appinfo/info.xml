@@ -1,32 +1,34 @@
 <?xml version="1.0"?>
-<info>
+<info xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	  xsi:noNamespaceSchemaLocation="https://apps.nextcloud.com/schema/apps/info.xsd">
 	<id>recommendation_assistant</id>
 	<name>RecommendationAssistant</name>
 	<summary>Design and Implementation of a Recommendation System Using Hybrid
-		Collaborative Filtering Techniques for the Nextcloud Platform
+		Collaborative Filtering Techniques for Nextcloud
 	</summary>
 	<description>
-		<![CDATA[Design and Implementation of a Recommendation System Using Hybrid Collaborative Filtering Techniques for the Nextcloud Platform]]></description>
-
-	<licence>AGPL</licence>
-	<author>Dogan Ucar</author>
-
-	<category>tools</category>
-
-	<website>https://dogan-ucar.de/recommendationassistant/
-	</website>
-	<bugs>https://github.com/doganoo/RecommendationAssistant/issues
-	</bugs>
-	<repository type="git">
-		https://github.com/doganoo/RecommendationAssistant.git
-	</repository>
-
+		Design and Implementation of a Recommendation System Using Hybrid
+		Collaborative Filtering Techniques for the Nextcloud Platform
+	</description>
 	<version>0.2.0</version>
-	<namespace>RecommendationAssistant</namespace>
+
+	<licence>agpl</licence>
+	<author>Dogan Ucar</author>
 
 	<types>
 		<filesystem/>
 	</types>
+
+	<documentation>
+		<admin>https://www.dogan-ucar.de/recommendationassistant/</admin>
+	</documentation>
+
+	<category>tools</category>
+
+	<website>https://dogan-ucar.de/recommendationassistant/</website>
+	<bugs>https://github.com/doganoo/RecommendationAssistant/issues</bugs>
+	<repository>https://github.com/doganoo/RecommendationAssistant.git
+	</repository>
 
 	<dependencies>
 		<nextcloud min-version="13" max-version="14"/>
@@ -35,4 +37,7 @@
 	<background-jobs>
 		<job>OCA\RecommendationAssistant\BackgroundJob\RecommenderJob</job>
 	</background-jobs>
+
+	<namespace>RecommendationAssistant</namespace>
+
 </info>

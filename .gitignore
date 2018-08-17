@@ -101,3 +101,4 @@ js/public
 css/public
 
 /build/
+appinfo/signature.json

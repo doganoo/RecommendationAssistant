@@ -157,7 +157,7 @@ class FileHook {
 		/** @var Node $node */
 		$node = $this->getNode($path);
 
-		if ($node == null) {
+		if (null === $node) {
 			Logger::info("node returned null. Cannot process file");
 			return false;
 		}
@@ -218,9 +218,9 @@ class FileHook {
 			Logger::info("$fileId for $userId not available. Skipping");
 			return;
 		}
-		if ($caller == "addFavorite") {
+		if ("addFavorite" === $caller) {
 			$this->changedFilesManager->deleteBeforeInsert($node, $userId, "favorite");
-		} else if ($caller == "removeFavorite") {
+		} else if ("removeFavorite" === $caller) {
 			$this->changedFilesManager->deleteFile($node, $userId, "favorite");
 		}
 	}

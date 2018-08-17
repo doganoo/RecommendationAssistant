@@ -41,7 +41,7 @@ class Version2000Date20180104125733 extends SimpleMigrationStep {
 				$table->addColumn(DbConstants::TB_UP_KEYWORD, Type::TEXT, [
 					DbConstants::NOTNULL => true,
 					DbConstants::LENGTH => 250,
-					DbConstants::DEFAULT => "",
+					DbConstants::COLUMN_DEFAULT => "",
 				]);
 			}
 		}
