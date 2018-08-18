@@ -60,7 +60,7 @@ class Application extends App {
 	 * <li>RecommenderService interval equals to 1</li>
 	 * <li>ConsoleLogger logs the messages to the console</li>
 	 */
-	const DEBUG = true;
+	const DEBUG = false;
 
 	/**
 	 * @const SHARED_INSTANCE_STORAGE the fully qualified class name of a SharedStorage instance
@@ -76,13 +76,13 @@ class Application extends App {
 	 * @const RECOMMENDATION_THRESHOLD defines the threshold that has to be exceeded in
 	 * order to get recommended.
 	 */
-	const RECOMMENDATION_THRESHOLD = 2;
+	const RECOMMENDATION_THRESHOLD = 1;
 
 	/**
 	 * @const K_NEAREST_NEIGHBOR_SIMILARITY_THRESHOLD the minimum similarity of
 	 * two items that are necessary for rating prediction
 	 */
-	const K_NEAREST_NEIGHBOR_SIMILARITY_THRESHOLD = 0.5;
+	const K_NEAREST_NEIGHBOR_SIMILARITY_THRESHOLD = 0.2;
 
 	/**
 	 * @const RATING_WEIGHT_LAST_CHANGE the weight for the rating used in

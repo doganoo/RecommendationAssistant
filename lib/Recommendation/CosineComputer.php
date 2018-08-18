@@ -93,10 +93,11 @@ class CosineComputer {
 			$denominatorB += $powY;
 		}
 		$denominator = sqrt($denominatorA) * sqrt($denominatorB);
-		if ($denominator === 0) {
+		if ($denominator === 0 || \is_nan($denominator)) {
 			$similarity = Util::createSimilarity(0.0, Similarity::NO_COSINE_SQUARE_POSSIBLE, "multiplication returned 0");
 		} else {
 			$similarity = Util::createSimilarity($numerator / $denominator, Similarity::VALID, "ok");
+
 		}
 		return $similarity;
 	}
