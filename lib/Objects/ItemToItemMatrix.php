@@ -52,6 +52,22 @@ class ItemToItemMatrix {
 		$this->matrix[$index] = $array;
 	}
 
+	public function isPresentable(Item $that, Item $other): bool {
+		if (isset($this->matrix[$that->getId()])) {
+			$arr = $this->matrix[$that->getId()];
+			if (isset($arr[$other->getId()])) {
+				return true;
+			}
+		}
+		if (isset($this->matrix[$other->getId()])) {
+			$arr = $this->matrix[$other->getId()];
+			if (isset($arr[$that->getId()])) {
+				return true;
+			}
+		}
+		return false;
+	}
+
 	/**
 	 * returns the similarity value for $item and $item1
 	 *

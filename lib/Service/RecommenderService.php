@@ -162,6 +162,10 @@ class RecommenderService {
 		foreach ($itemList as $item) {
 			/** @var Item $item1 */
 			foreach ($itemList as $item1) {
+				//TODO is presentable in itemItemMatrix
+				if ($itemItemMatrix->isPresentable($item, $item1)) {
+					continue;
+				}
 				//not need to check if both items the same because
 				//an entire similarity matrix is needed
 				//TODO find a way to execute CosineComputer after the continue statements of the loop below
