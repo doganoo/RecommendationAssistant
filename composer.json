@@ -1,2 +1,7 @@
 {
+  "require": {
+    "doganoo/php-algorithms": "0.0.15",
+    "doganoo/php-util": "0.0.12",
+    "phpunit/phpunit": "6.5"
+  }
 }

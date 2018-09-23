@@ -44,6 +44,27 @@ class ConsoleLogger {
 	}
 
 	/**
+	 * logs the message and level to the shell console only if DEBUG = true
+	 * in Application.php and the log level of the NC config is set to the
+	 * corresponding level.
+	 *
+	 * @param int $level
+	 * @param string $message
+	 */
+	private static function log(int $level, string $message) {
+		$config = \OC::$server->getSystemConfig();
+		$minLevel = min($config->getValue('loglevel', Util::WARN), Util::FATAL);
+		if (Application::DEBUG && $level >= $minLevel) {
+			$date = new \DateTime();
+			echo $date->format("Y-m-d H:i:s");
+			echo ": ";
+			echo $message;
+			echo "\n";
+			\ob_flush();
+		}
+	}
+
+	/**
 	 * Logs a message to the console with log level info and the
 	 * appname that is defined in the Application class.
 	 *
@@ -74,25 +95,5 @@ class ConsoleLogger {
 	 */
 	public static function error($message) {
 		ConsoleLogger::log(Util::ERROR, $message);
-	}
-
-	/**
-	 * logs the message and level to the shell console only if DEBUG = true
-	 * in Application.php and the log level of the NC config is set to the
-	 * corresponding level.
-	 *
-	 * @param int $level
-	 * @param string $message
-	 */
-	private static function log(int $level, string $message) {
-		$config = \OC::$server->getSystemConfig();
-		$minLevel = min($config->getValue('loglevel', Util::WARN), Util::FATAL);
-		if (Application::DEBUG && $level >= $minLevel) {
-			$date = new \DateTime();
-			echo $date->format("Y-m-d H:i:s");
-			echo ": ";
-			echo $message;
-			echo "\n";
-		}
 	}
 }

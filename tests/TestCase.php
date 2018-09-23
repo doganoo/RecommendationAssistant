@@ -22,5 +22,6 @@
 
 namespace OCA\RecommendationAssistant\Tests;
 
-abstract class TestCase extends \Test\TestCase {
+abstract class TestCase extends \PHPUnit\Framework\TestCase
+{
 }

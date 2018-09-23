@@ -24,13 +24,4 @@ if (!defined('PHPUNIT_RUN')) {
 }
 
 require_once __DIR__ . '/../../../lib/base.php';
-
-// Fix for "Autoload path not allowed: .../tests/lib/testcase.php"
-\OC::$loader->addValidRoot(OC::$SERVERROOT . '/tests');
-
-if (!class_exists('\PHPUnit_Framework_TestCase') && class_exists('\PHPUnit\Framework\TestCase'))
-	class_alias('\PHPUnit\Framework\TestCase', '\PHPUnit_Framework_TestCase');
-require_once 'TestCase.php';
-require_once '../lib/Objects/KeywordList.php';
-require_once '../lib/Objects/Keyword.php';
-require_once '../lib/Recommendation/TextProcessor.php';
+require_once __DIR__ . '/../vendor/autoload.php';
