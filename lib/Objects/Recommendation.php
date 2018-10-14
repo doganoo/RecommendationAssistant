@@ -24,7 +24,7 @@ use doganoo\PHPAlgorithms\Datastructure\Stackqueue\Stack;
  * @package OCA\RecommendationAssistant\Objects
  * @since   1.0.0
  */
-class Recommendation{
+class Recommendation implements \JsonSerializable {
 	/**
 	 * @var string the user id
 	 */
@@ -34,7 +34,7 @@ class Recommendation{
 	 */
 	private $items;
 
-	public function __construct(){
+	public function __construct() {
 		$this->items = new Stack();
 	}
 
@@ -44,7 +44,7 @@ class Recommendation{
 	 * @return string
 	 * @since 1.0.0
 	 */
-	public function getUserId(): string{
+	public function getUserId(): string {
 		return $this->userId;
 	}
 
@@ -55,7 +55,7 @@ class Recommendation{
 	 *
 	 * @since 1.0.0
 	 */
-	public function setUserId(string $userId){
+	public function setUserId(string $userId) {
 		$this->userId = $userId;
 	}
 
@@ -64,15 +64,30 @@ class Recommendation{
 	 *
 	 * @return bool
 	 */
-	public function addRecommendation(Item $item){
+	public function addRecommendation(Item $item) {
 		return $this->items->push($item);
 	}
 
-	public function size(): int{
+	public function size(): int {
 		return $this->items->size();
 	}
 
-	public function getRecommendations(){
+	public function getRecommendations() {
 		return $this->items;
+	}
+
+	/**
+	 * Specify data which should be serialized to JSON
+	 *
+	 * @link http://php.net/manual/en/jsonserializable.jsonserialize.php
+	 * @return mixed data which can be serialized by <b>json_encode</b>,
+	 * which is a value of any type other than a resource.
+	 * @since 5.4.0
+	 */
+	public function jsonSerialize() {
+		return [
+			"user_id" => $this->userId,
+			"items" => $this->items
+		];
 	}
 }

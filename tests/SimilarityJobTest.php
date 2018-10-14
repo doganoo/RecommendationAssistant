@@ -17,6 +17,7 @@ class SimilarityJobTest extends TestCase{
 	 * @throws \doganoo\PHPAlgorithms\Common\Exception\IndexOutOfBoundsException
 	 * @throws \doganoo\PHPAlgorithms\Common\Exception\InvalidKeyTypeException
 	 * @throws \doganoo\PHPAlgorithms\Common\Exception\UnsupportedKeyTypeException
+	 * @throws \doganoo\PHPAlgorithms\Common\Exception\InvalidSearchComparisionException
 	 */
 	public function testRead(){
 		$users = new HashSet();
@@ -24,6 +25,9 @@ class SimilarityJobTest extends TestCase{
 		$items = $this->getMovies();
 		$items = $this->addRatings($items, $users);
 		$items = $recommendationService->computeCosine($items);
+		foreach($users->toArray() as $user){
+			$recommendationService->predictForUser($items, $user);
+		}
 		$this->assertTrue($items->length() === $items->length());
 		ConsoleLogger::debug(\serialize($items));
 	}

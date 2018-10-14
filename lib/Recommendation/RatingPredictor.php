@@ -17,10 +17,10 @@
 namespace OCA\RecommendationAssistant\Recommendation;
 
 use doganoo\PHPAlgorithms\Datastructure\Lists\ArrayLists\ArrayList;
+use doganoo\PHPUtil\Util\NumberUtil;
 use OCA\RecommendationAssistant\AppInfo\Application;
 use OCA\RecommendationAssistant\Objects\Item;
 use OCA\RecommendationAssistant\Objects\Recommendation;
-use OCA\RecommendationAssistant\Util\NumberUtil;
 
 /**
  * RatingPredictor class that computes the weighted average of the results
@@ -29,38 +29,39 @@ use OCA\RecommendationAssistant\Util\NumberUtil;
  * @package OCA\RecommendationAssistant\Recommendation
  * @since   1.0.0
  */
-class RatingPredictor{
+class RatingPredictor {
 	/**
 	 * @param ArrayList $itemList
-	 * @param string    $uid
+	 * @param string $uid
 	 *
 	 * @return Recommendation
 	 * @throws \doganoo\PHPAlgorithms\Common\Exception\IndexOutOfBoundsException
 	 * @throws \doganoo\PHPAlgorithms\Common\Exception\InvalidSearchComparisionException
 	 * @throws \OCA\RecommendationAssistant\Exception\InvalidRatingException
 	 */
-	public function predict(ArrayList $itemList, string $uid): Recommendation{
+	public function predict(ArrayList $itemList, string $uid): Recommendation {
 		$size = $itemList->size();
 		$recommendation = new Recommendation();
 		$recommendation->setUserId($uid);
-		for($i = 0; $i < $size; $i ++){
+		for ($i = 0; $i < $size; $i++) {
 			$numerator = 0;
 			$denominator = 0;
 			/** @var Item $item */
 			$item = $itemList->get($i);
-			for($j = $i + 1; $j < $size; $j ++){
+			for ($j = $i + 1; $j < $size; $j++) {
 				/** @var Item $item1 */
 				$item1 = $itemList->get($j);
 				$sim = $item->similartyById($item1->getId());
-				if(null === $sim) continue;
+				if (null === $sim) continue;
 				$rater1 = $item1->getRaterById($uid);
-				if(null === $rater1) continue;
+				if (null === $rater1) continue;
 				$numerator += $sim * $rater1->getRating();
 				$denominator += $sim;
 			}
-			if(NumberUtil::compareFloat(0, $denominator)) continue;
+
+			if (NumberUtil::compareFloat(0, $denominator)) continue;
 			$val = $numerator / $denominator;
-			if(NumberUtil::floatGreaterThan(Application::RECOMMENDATION_THRESHOLD, $val))
+			if (NumberUtil::floatGreaterThan(Application::RECOMMENDATION_THRESHOLD, $val))
 				$recommendation->addRecommendation($item);
 		}
 		return $recommendation;

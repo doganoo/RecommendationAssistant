@@ -22,6 +22,7 @@ use OCA\RecommendationAssistant\AppInfo\Application;
 use OCA\RecommendationAssistant\Db\RecommendationManager;
 use OCA\RecommendationAssistant\Log\ConsoleLogger;
 use OCA\RecommendationAssistant\Service\RecommendationService;
+use OCA\RecommendationAssistant\Service\UserService;
 use OCP\IUser;
 use OCP\IUserManager;
 
@@ -32,7 +33,7 @@ use OCP\IUserManager;
  * @package OCA\RecommendationAssistant\BackgroundJob
  * @since   1.0.0
  */
-class RecommenderJob extends TimedJob{
+class RecommenderJob extends TimedJob {
 	/**
 	 * @const INTERVAL the interval in which the job should run.
 	 * Actually every 5 hours.
@@ -48,17 +49,17 @@ class RecommenderJob extends TimedJob{
 	 * @since 1.0.0
 	 *
 	 * @param \OCA\RecommendationAssistant\Service\RecommendationService $recommendationService
-	 * @param \OCP\IUserManager                                          $userManager
-	 * @param RecommendationManager                                      $recommendationManager
+	 * @param \OCP\IUserManager $userManager
+	 * @param RecommendationManager $recommendationManager
 	 */
 	public function __construct(
 		RecommendationService $recommendationService
 		, IUserManager $userManager
 		, RecommendationManager $recommendationManager
-	){
-		if(Application::DEBUG){
+	) {
+		if (Application::DEBUG) {
 			$this->setInterval(1);
-		} else{
+		} else {
 			$this->setInterval(RecommenderJob::INTERVAL);
 		}
 		$this->recommendationService = $recommendationService;
@@ -73,13 +74,13 @@ class RecommenderJob extends TimedJob{
 	 *
 	 * @since 1.0.0
 	 */
-	protected function run($argument){
+	protected function run($argument) {
 		ConsoleLogger::debug("RecommenderJob start");
 		$serialized = \file_get_contents(Application::SERIALIZATION_FILE_NAME);
-		if(!Application::DEBUG) \unlink(Application::SERIALIZATION_FILE_NAME);
+		if (!Application::DEBUG) \unlink(Application::SERIALIZATION_FILE_NAME);
 		/** @var ArrayList $list */
 		$list = \unserialize($serialized);
-		$this->userManager->callForSeenUsers(function (IUser $user) use (&$recommendations, $list){
+		$this->userManager->callForSeenUsers(function (IUser $user) use (&$recommendations, $list) {
 			$recommendation = $this->recommendationService->predictForUser($list, $user->getUID());
 			$this->recommendationManager->add($recommendation);
 		});
