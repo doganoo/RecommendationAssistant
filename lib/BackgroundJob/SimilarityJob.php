@@ -34,6 +34,7 @@ class SimilarityJob extends TimedJob{
 	 * @throws \doganoo\PHPAlgorithms\Common\Exception\IndexOutOfBoundsException
 	 * @throws \doganoo\PHPAlgorithms\Common\Exception\InvalidKeyTypeException
 	 * @throws \doganoo\PHPAlgorithms\Common\Exception\UnsupportedKeyTypeException
+	 * @throws \OCA\RecommendationAssistant\Exception\InvalidRatingException
 	 */
 	protected function run($argument){
 		ConsoleLogger::debug("SimilarityJob start");

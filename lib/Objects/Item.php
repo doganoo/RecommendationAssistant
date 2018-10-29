@@ -19,7 +19,7 @@ namespace OCA\RecommendationAssistant\Objects;
 use doganoo\PHPAlgorithms\Common\Interfaces\IComparable;
 use doganoo\PHPAlgorithms\Datastructure\Graph\Tree\BinarySearchTree;
 use doganoo\PHPAlgorithms\Datastructure\Maps\HashMap;
-use OCA\RecommendationAssistant\Util\NumberUtil;
+use doganoo\PHPUtil\Util\NumberUtil;
 use OCA\RecommendationAssistant\Util\Util;
 
 /**
@@ -28,11 +28,11 @@ use OCA\RecommendationAssistant\Util\Util;
  * @package OCA\RecommendationAssistant\Objects
  * @since   1.0.0
  */
-class Item implements IComparable, \JsonSerializable{
+class Item implements IComparable, \JsonSerializable {
 	/**
 	 * @var int $id
 	 */
-	private $id = - 1;
+	private $id = -1;
 	/**
 	 * @var string $name
 	 */
@@ -47,7 +47,7 @@ class Item implements IComparable, \JsonSerializable{
 	private $oid;
 	private $similarityMap;
 
-	public function __construct(){
+	public function __construct() {
 		$this->raters = new BinarySearchTree();
 		$this->similarityMap = new HashMap();
 	}
@@ -58,7 +58,7 @@ class Item implements IComparable, \JsonSerializable{
 	 * @return string the name
 	 * @since 1.0.0
 	 */
-	public function getName(): string{
+	public function getName(): string {
 		return $this->name;
 	}
 
@@ -69,7 +69,7 @@ class Item implements IComparable, \JsonSerializable{
 	 *
 	 * @since 1.0.0
 	 */
-	public function setName(string $name){
+	public function setName(string $name) {
 		$this->name = $name;
 	}
 
@@ -79,7 +79,7 @@ class Item implements IComparable, \JsonSerializable{
 	 * @return string the user that is the owner
 	 * @since 1.0.0
 	 */
-	public function getOwnerId(): string{
+	public function getOwnerId(): string {
 		return $this->oid;
 	}
 
@@ -90,7 +90,7 @@ class Item implements IComparable, \JsonSerializable{
 	 *
 	 * @since 1.0.0
 	 */
-	public function setOwnerId(string $oid){
+	public function setOwnerId(string $oid) {
 		$this->oid = $oid;
 	}
 
@@ -104,12 +104,12 @@ class Item implements IComparable, \JsonSerializable{
 	 * @since 1.0.0
 	 * @throws \OCA\RecommendationAssistant\Exception\InvalidRatingException
 	 */
-	public function getRaterById(string $uid): ?Rater{
+	public function getRaterById(string $uid): ?Rater {
 		$r = Util::toRater($uid, 0.0);
-		if(!$this->raterPresent($r)) return null;
+		if (!$this->raterPresent($r)) return null;
 		$node = $this->raters->search($r);
 		$value = $node->getValue();
-		if($value instanceof Rater) return $value;
+		if ($value instanceof Rater) return $value;
 		return null;
 	}
 
@@ -123,11 +123,11 @@ class Item implements IComparable, \JsonSerializable{
 	 * @throws \doganoo\PHPAlgorithms\Common\Exception\InvalidSearchComparisionException
 	 * @throws \OCA\RecommendationAssistant\Exception\InvalidRatingException
 	 */
-	public function raterPresent(string $uid): bool{
+	public function raterPresent(string $uid): bool {
 		$r = Util::toRater($uid, 0.0);
-		if(null === $this->raters) return false;
+		if (null === $this->raters) return false;
 		$node = $this->raters->search($r);
-		if(null === $node) return false;
+		if (null === $node) return false;
 		/** @var Rater $rater */
 		$rater = $node->getValue();
 		return $rater->getUserId() === $r->getUserId();
@@ -143,7 +143,7 @@ class Item implements IComparable, \JsonSerializable{
 	 * @return bool whether the instance is the same or not
 	 * @since 1.0.0
 	 */
-	public function equals(Item $item){
+	public function equals(Item $item) {
 		return $this->getId() === $item->getId();
 	}
 
@@ -153,7 +153,7 @@ class Item implements IComparable, \JsonSerializable{
 	 * @return int the id
 	 * @since 1.0.0
 	 */
-	public function getId(): int{
+	public function getId(): int {
 		return $this->id;
 	}
 
@@ -164,7 +164,7 @@ class Item implements IComparable, \JsonSerializable{
 	 *
 	 * @since 1.0.0
 	 */
-	public function setId(int $id){
+	public function setId(int $id) {
 		$this->id = $id;
 	}
 
@@ -175,9 +175,9 @@ class Item implements IComparable, \JsonSerializable{
 	 *
 	 * @return bool
 	 */
-	public function isValid(): bool{
+	public function isValid(): bool {
 		$hasOwner = $this->oid !== null && $this->oid !== "";
-		$hasId = $this->id !== - 1;
+		$hasId = $this->id !== -1;
 		return $hasOwner && $hasId;
 	}
 
@@ -190,44 +190,44 @@ class Item implements IComparable, \JsonSerializable{
 	 * @since 1.0.0
 	 * @return bool
 	 */
-	public function addRater(Rater $rater): bool{
+	public function addRater(Rater $rater): bool {
 		return $this->raters->insertValue($rater);
 	}
 
 	/**
-	 * @param Item  $item
+	 * @param Item $item
 	 * @param float $value
 	 *
 	 * @return bool
 	 * @throws \doganoo\PHPAlgorithms\Common\Exception\InvalidKeyTypeException
 	 * @throws \doganoo\PHPAlgorithms\Common\Exception\UnsupportedKeyTypeException
 	 */
-	public function addSimiliarity(Item $item, float $value): bool{
-		if(NumberUtil::compareFloat(0, $value)) return false;
+	public function addSimiliarity(Item $item, float $value): bool {
+		if (NumberUtil::compareFloat(0, $value)) return false;
 		return $this->similarityMap->add($item->getId(), $value);
 	}
 
 	/**
 	 * @return BinarySearchTree
 	 */
-	public function getRaters(): BinarySearchTree{
+	public function getRaters(): BinarySearchTree {
 		return $this->raters;
 	}
 
-	public function similarItems(): array{
+	public function similarItems(): array {
 		return $this->similarityMap->keySet();
 	}
 
-	public function similars(){
+	public function similars() {
 		return $this->similarityMap;
 	}
 
-	public function similartyById($id){
+	public function similartyById($id) {
 		$node = $this->similarityMap->get($id);
 		return $node;
 	}
 
-	public function __toString(){
+	public function __toString() {
 		return "" . $this->id;
 	}
 
@@ -236,13 +236,13 @@ class Item implements IComparable, \JsonSerializable{
 	 *
 	 * @return int
 	 */
-	public function compareTo($object): int{
-		if($object instanceof Item){
-			if($this->getId() === $object->getId()) return 0;
-			if($this->getId() > $object->getId()) return 1;
-			if($this->getId() < $object->getId()) return - 1;
+	public function compareTo($object): int {
+		if ($object instanceof Item) {
+			if ($this->getId() === $object->getId()) return 0;
+			if ($this->getId() > $object->getId()) return 1;
+			if ($this->getId() < $object->getId()) return -1;
 		}
-		return - 1;
+		return -1;
 	}
 
 	/**
@@ -253,15 +253,15 @@ class Item implements IComparable, \JsonSerializable{
 	 * which is a value of any type other than a resource.
 	 * @since 5.4.0
 	 */
-	public function jsonSerialize(){
+	public function jsonSerialize() {
 		return [
-			"id"         => $this->id
+			"id" => $this->id
 			,
-			"name"       => $this->name
+			"name" => $this->name
 			,
-			"oid"        => $this->oid
+			"oid" => $this->oid
 			,
-			"raters"     => \json_encode($this->raters)
+			"raters" => \json_encode($this->raters)
 			,
 			"similarity" => \json_encode($this->similarityMap),
 		];

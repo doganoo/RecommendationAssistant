@@ -16,7 +16,7 @@
 
 namespace OCA\RecommendationAssistant\AppInfo;
 
-use OCA\Files\Service\TagService;
+use doganoo\PHPUtil\Util\ClassUtil;
 use OCA\RecommendationAssistant\Db\ChangedFilesManager;
 use OCA\RecommendationAssistant\Hook\FileHook;
 use OCA\RecommendationAssistant\Log\Logger;
@@ -24,7 +24,6 @@ use OCP\AppFramework\App;
 use OCP\AppFramework\QueryException;
 use OCP\IContainer;
 use OCP\Util;
-use Symfony\Component\EventDispatcher\GenericEvent;
 
 /**
  * All controller instances that are registered by IContainer::registerService
@@ -35,7 +34,7 @@ use Symfony\Component\EventDispatcher\GenericEvent;
  * @package OCA\RecommendationAssistant\AppInfo
  * @since   1.0.0
  */
-class Application extends App{
+class Application extends App {
 	/**
 	 * @const APP_ID the unique application id
 	 */
@@ -69,11 +68,11 @@ class Application extends App{
 	 *
 	 * @since 1.0.0
 	 */
-	public function __construct(){
+	public function __construct() {
 		parent::__construct(self::APP_ID);
 		$container = $this->getContainer();
 		$server = $container->getServer();
-		$container->registerService(FileHook::class, function (IContainer $c) use ($server){
+		$container->registerService(FileHook::class, function (IContainer $c) use ($server) {
 			return new FileHook(
 				$server->getUserSession(),
 				$server->getRequest(),
@@ -83,26 +82,11 @@ class Application extends App{
 		});
 	}
 
-	public function register(){
+	public function register() {
 		Util::connectHook('OC_Filesystem', 'read', $this, 'callFileHook');
-		//TODO listen to postDelete hook and remove file from recommendations and already processed files!
-		$this->getContainer()->getServer()->getEventDispatcher()->addListener(TagService::class . '::addFavorite', function (GenericEvent $event){
-			$userId = $event->getArgument('userId');
-			$fileId = $event->getArgument('fileId');
-			/** @var FileHook $hook */
-			$hook = $this->getContainer()->query(FileHook::class);
-			$hook->runFavorite($userId, $fileId, "addFavorite");
-		});
-		$this->getContainer()->getServer()->getEventDispatcher()->addListener(TagService::class . '::removeFavorite', function (GenericEvent $event){
-			$userId = $event->getArgument('userId');
-			$fileId = $event->getArgument('fileId');
-			/** @var FileHook $hook */
-			$hook = $this->getContainer()->query(FileHook::class);
-			$hook->runFavorite($userId, $fileId, "removeFavorite");
-		});
 		$this->getContainer()->getServer()->getEventDispatcher()->addListener(
 			'OCA\Files::loadAdditionalScripts',
-			function (){
+			function () {
 				Util::addScript(Application::APP_ID, 'app');
 				Util::addStyle(Application::APP_ID, 'style');
 			}
@@ -116,20 +100,27 @@ class Application extends App{
 	 *
 	 * @since 1.0.0
 	 */
-	public function callFileHook($params){
+	public function callFileHook($params) {
+		Logger::debug("callFileHook start");
 		$container = $this->getContainer();
 		$fileHookExecuted = false;
-		try{
+		try {
 			/** @var FileHook $fileHook */
 			$fileHook = $container->query(FileHook::class);
-			if($fileHook instanceof FileHook){
+			if ($fileHook instanceof FileHook) {
 				$fileHookExecuted = $fileHook->run($params);
+			} else {
+				$className = (ClassUtil::getClassName($fileHook));
+				Logger::debug("file hook instance is not correct: $className");
 			}
-			if(!$fileHookExecuted){
+			if (!$fileHookExecuted) {
 				Logger::warn("file hook is not executed");
 			}
-		} catch(QueryException $e){
+		} catch (QueryException $e) {
+			Logger::error($e->getMessage());
+		} catch (\ReflectionException $e) {
 			Logger::error($e->getMessage());
 		}
+		Logger::debug("callFileHook end");
 	}
 }

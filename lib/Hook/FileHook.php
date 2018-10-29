@@ -18,7 +18,6 @@ namespace OCA\RecommendationAssistant\Hook;
 
 use OCA\RecommendationAssistant\Db\ChangedFilesManager;
 use OCA\RecommendationAssistant\Log\Logger;
-use OCA\RecommendationAssistant\Util\NodeUtil;
 use OCP\Files\File;
 use OCP\Files\IRootFolder;
 use OCP\Files\Node;
@@ -39,7 +38,7 @@ use OCP\IUserSession;
  * @package OCA\RecommendationAssistant\Service
  * @since   1.0.0
  */
-class FileHook{
+class FileHook {
 	/**
 	 * @var IUserSession $userSession the current user session
 	 */
@@ -61,11 +60,11 @@ class FileHook{
 	/**
 	 * Class constructor gets multiple instances injected
 	 *
-	 * @param IUserSession        $userSession             the current user session
-	 * @param IRequest            $request                 the current request
-	 * @param IRootFolder         $rootFolder              the users root folder
+	 * @param IUserSession $userSession the current user session
+	 * @param IRequest $request the current request
+	 * @param IRootFolder $rootFolder the users root folder
 	 *                                                     to query already processed files
-	 * @param ChangedFilesManager $changedFilesManager     database manager class
+	 * @param ChangedFilesManager $changedFilesManager database manager class
 	 *                                                     to query changed files
 	 *
 	 * @package OCA\RecommendationAssistant\AppInfo
@@ -76,7 +75,7 @@ class FileHook{
 		IRequest $request,
 		IRootFolder $rootFolder,
 		ChangedFilesManager $changedFilesManager
-	){
+	) {
 		$this->userSession = $userSession;
 		$this->request = $request;
 		$this->rootFolder = $rootFolder;
@@ -92,7 +91,7 @@ class FileHook{
 	 * @return bool
 	 * @since 1.0.0
 	 */
-	public function run($parameters): bool{
+	public function run($parameters): bool {
 		Logger::debug("FileHook start");
 		$path = $parameters["path"];
 		/** @var IUser $user */
@@ -101,7 +100,7 @@ class FileHook{
 		 * .part files are parts of a file. When transmitting,
 		 * large files are divided in multiple files.
 		 */
-		if(substr($path, - 5) === '.part'){
+		if (substr($path, -5) === '.part') {
 			Logger::info("ignoring file because it is a .part file");
 			return false;
 		}
@@ -109,7 +108,7 @@ class FileHook{
 		 * No session available. User is not logged in. Therefore, returning
 		 * false.
 		 */
-		if($user === null){
+		if ($user === null) {
 			Logger::info("ignoring file because user is not logged in");
 			return false;
 		}
@@ -117,36 +116,36 @@ class FileHook{
 		 * User has to make changes via the web UI. Otherwise, changes are
 		 * not recognized as a "change".
 		 */
-		if($this->request->isUserAgent([
+		if ($this->request->isUserAgent([
 			IRequest::USER_AGENT_CLIENT_DESKTOP,
 			IRequest::USER_AGENT_CLIENT_ANDROID,
 			IRequest::USER_AGENT_CLIENT_IOS,
-		])){
+		])) {
 			Logger::info("ignoring file because request is not from web UI");
 			return false;
 		}
 		/*
  		 * no path available, no file provided
  		 */
-		if($path === '/' || $path === '' || $path === null){
+		if ($path === '/' || $path === '' || $path === null) {
 			Logger::info("ignoring file because no path available, no file provided");
 			return false;
 		}
 		/** @var Node $node */
 		$node = $this->getNode($path);
-		if(null === $node){
+		if (null === $node) {
 			Logger::info("node returned null. Cannot process file");
 			return false;
 		}
-		if($node instanceof File){
+		if ($node instanceof File) {
 			/*
 			 * inserting the file to the changed files
 			 */
-			$this->changedFilesManager->deleteBeforeInsert($node, $user->getUID(), "edit");
-			//TODO delete from recommendations in order to decide about a re-recommendation?
-			//TODO delete outdated files?!
+			$this->changedFilesManager->insertFile($node, $user);
 			Logger::debug("FileHook end");
 			return true;
+		} else {
+			Logger::debug("node is not a file. cannot process");
 		}
 		Logger::debug("FileHook end");
 		return false;
@@ -160,38 +159,15 @@ class FileHook{
 	 * @return null|Node the node that is requested or null, if an error occures
 	 * @since 1.0.0
 	 */
-	private function getNode($path){
+	private function getNode($path) {
 		$node = null;
-		try{
+		try {
 			$currentUserId = $this->userSession->getUser()->getUID();
 			$userFolder = $this->rootFolder->getUserFolder($currentUserId);
 			$node = $userFolder->get($path);
-		} catch(NotFoundException $e){
+		} catch (NotFoundException $e) {
 			Logger::error($e->getMessage());
 		}
 		return $node;
-	}
-
-	/**
-	 * runs the file hook for tagged files. The method inserts the last
-	 * changed timestamp for a given file id.
-	 *
-	 * @param string $userId
-	 * @param string $fileId
-	 * @param string $caller
-	 *
-	 * @since 1.0.0
-	 */
-	public function runFavorite(string $userId, string $fileId, string $caller){
-		$node = NodeUtil::getFile($fileId, $userId);
-		if(null === $node){
-			Logger::info("$fileId for $userId not available. Skipping");
-			return;
-		}
-		if("addFavorite" === $caller){
-			$this->changedFilesManager->deleteBeforeInsert($node, $userId, "favorite");
-		} else if("removeFavorite" === $caller){
-			$this->changedFilesManager->deleteFile($node, $userId, "favorite");
-		}
 	}
 }

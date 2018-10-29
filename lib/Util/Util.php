@@ -25,25 +25,40 @@ use OCA\RecommendationAssistant\Objects\Rater;
  * @package OCA\RecommendationAssistant\Util
  * @since   1.0.0
  */
-class Util{
+class Util {
 	/**
 	 * class constructor is private because all methods are public static.
 	 *
 	 * @since 1.0.0
 	 */
-	private function __construct(){
+	private function __construct() {
 	}
 
 	/**
 	 * @param string $uid
-	 * @param float  $rating
+	 * @param float $rating
 	 *
 	 * @return Rater
 	 * @throws \OCA\RecommendationAssistant\Exception\InvalidRatingException
 	 */
-	public static function toRater(string $uid, float $rating): Rater{
+	public static function toRater(string $uid, float $rating): Rater {
 		$rater = new Rater($uid);
 		$rater->setRating($rating);
 		return $rater;
+	}
+
+	public static function toRating(int $unixTimestamp): int {
+		$then = new \DateTime();
+		$then->setTimestamp($unixTimestamp);
+
+		$now = new \DateTime();
+
+		$diff = $then->diff($now)->days;
+		if ($diff <= 15) return 5;
+		if ($diff > 15 && $diff <= 30) return 4;
+		if ($diff > 30 && $diff <= 45) return 3;
+		if ($diff > 45 && $diff <= 60) return 2;
+		if ($diff > 60 && $diff <= 75) return 1;
+		if ($diff > 60) return 0;
 	}
 }
