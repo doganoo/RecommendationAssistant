@@ -59,6 +59,6 @@ class Util {
 		if ($diff > 30 && $diff <= 45) return 3;
 		if ($diff > 45 && $diff <= 60) return 2;
 		if ($diff > 60 && $diff <= 75) return 1;
-		if ($diff > 60) return 0;
+		if ($diff > 75) return 0;
 	}
 }
