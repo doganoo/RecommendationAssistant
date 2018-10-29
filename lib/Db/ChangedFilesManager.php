@@ -52,7 +52,7 @@ class ChangedFilesManager {
 	}
 
 	public function deleteOutdated() {
-		$limit = 180 * 60 * 60 * 24;
+		$limit = 90 * 60 * 60 * 24;
 		$now = \time() - $limit;
 		$query = $this->dbConnection->getQueryBuilder();
 		$query->delete()->from(DbConstants::TABLE_NAME_CHANGED_FILES_LOG)

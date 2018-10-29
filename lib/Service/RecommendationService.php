@@ -3,6 +3,7 @@
 namespace OCA\RecommendationAssistant\Service;
 
 use doganoo\PHPAlgorithms\Datastructure\Lists\ArrayLists\ArrayList;
+use OCA\RecommendationAssistant\Log\ConsoleLogger;
 use OCA\RecommendationAssistant\Objects\Item;
 use OCA\RecommendationAssistant\Objects\Recommendation;
 use OCA\RecommendationAssistant\Recommendation\CosineComputer;
@@ -44,6 +45,7 @@ class RecommendationService{
 	 * @throws \OCA\RecommendationAssistant\Exception\InvalidRatingException
 	 */
 	public function predictForUser(ArrayList $itemList, string $uid): Recommendation{
+		ConsoleLogger::debug("cache results!");
 		$ratingPredictor = new RatingPredictor();
 		$recommendation = $ratingPredictor->predict($itemList, $uid);
 		return $recommendation;

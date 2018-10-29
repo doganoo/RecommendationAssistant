@@ -22,7 +22,6 @@ use OCA\RecommendationAssistant\AppInfo\Application;
 use OCA\RecommendationAssistant\Db\RecommendationManager;
 use OCA\RecommendationAssistant\Log\ConsoleLogger;
 use OCA\RecommendationAssistant\Service\RecommendationService;
-use OCA\RecommendationAssistant\Service\UserService;
 use OCP\IUser;
 use OCP\IUserManager;
 
@@ -82,6 +81,7 @@ class RecommenderJob extends TimedJob {
 		$list = \unserialize($serialized);
 		$this->userManager->callForSeenUsers(function (IUser $user) use (&$recommendations, $list) {
 			$recommendation = $this->recommendationService->predictForUser($list, $user->getUID());
+			ConsoleLogger::debug("add only if user has access to it!");
 			$this->recommendationManager->add($recommendation);
 		});
 		ConsoleLogger::debug("RecommenderJob end");
