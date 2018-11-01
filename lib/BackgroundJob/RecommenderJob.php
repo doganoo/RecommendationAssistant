@@ -76,16 +76,18 @@ class RecommenderJob extends TimedJob {
 	protected function run($argument) {
 		ConsoleLogger::debug("RecommenderJob start");
 		$serialized = \file_get_contents(Application::SERIALIZATION_FILE_NAME);
+		ConsoleLogger::debug("serialized string $serialized");
 		if (!Application::DEBUG) \unlink(Application::SERIALIZATION_FILE_NAME);
 		/** @var ArrayList $list */
 		$list = \unserialize($serialized);
-		$this->userManager->callForSeenUsers(function (IUser $user) use (&$recommendations, $list) {
+		$this->userManager->callForAllUsers(function (IUser $user) use (&$recommendations, $list) {
 			$recommendation = $this->recommendationService->predictForUser($list, $user->getUID());
 			ConsoleLogger::debug("add only if user has access to it!");
 			$this->recommendationManager->add($recommendation);
 		});
 		ConsoleLogger::debug("RecommenderJob end");
 	}
+
 }
 
 

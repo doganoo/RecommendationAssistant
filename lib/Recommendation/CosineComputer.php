@@ -17,9 +17,9 @@
 namespace OCA\RecommendationAssistant\Recommendation;
 
 use doganoo\PHPAlgorithms\Algorithm\Traversal\PreOrder;
+use doganoo\PHPUtil\Util\NumberUtil;
 use OCA\RecommendationAssistant\Objects\Item;
 use OCA\RecommendationAssistant\Objects\Rater;
-use OCA\RecommendationAssistant\Util\NumberUtil;
 
 /**
  * CosineComputer class that computes the similarity between two items.

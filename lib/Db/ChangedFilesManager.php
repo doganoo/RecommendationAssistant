@@ -55,9 +55,10 @@ class ChangedFilesManager {
 		$limit = 90 * 60 * 60 * 24;
 		$now = \time() - $limit;
 		$query = $this->dbConnection->getQueryBuilder();
-		$query->delete()->from(DbConstants::TABLE_NAME_CHANGED_FILES_LOG)
+		$query->delete(DbConstants::TABLE_NAME_CHANGED_FILES_LOG)
 			->where($query->expr()->lt(DbConstants::TB_CFL_CREATION_TS, $query->createNamedParameter($now - $limit)));
-		$query->execute();
+		$rowCount = $query->execute();
+		ConsoleLogger::debug("deleted rows: $rowCount");
 	}
 
 	/**
@@ -92,6 +93,7 @@ class ChangedFilesManager {
 			$item->addRater(Util::toRater($userId, Util::toRating($createTs)));
 		}
 		$result->closeCursor();
+		ConsoleLogger::debug("selected rows: {$result->rowCount()}");
 		return $list;
 	}
 

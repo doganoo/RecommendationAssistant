@@ -19,6 +19,7 @@ namespace OCA\RecommendationAssistant\Recommendation;
 use doganoo\PHPAlgorithms\Datastructure\Lists\ArrayLists\ArrayList;
 use doganoo\PHPUtil\Util\NumberUtil;
 use OCA\RecommendationAssistant\AppInfo\Application;
+use OCA\RecommendationAssistant\Log\ConsoleLogger;
 use OCA\RecommendationAssistant\Objects\Item;
 use OCA\RecommendationAssistant\Objects\Recommendation;
 
@@ -52,8 +53,10 @@ class RatingPredictor {
 				/** @var Item $item1 */
 				$item1 = $itemList->get($j);
 				$sim = $item->similartyById($item1->getId());
+				ConsoleLogger::debug("similarity is null: " . (null === $sim));
 				if (null === $sim) continue;
 				$rater1 = $item1->getRaterById($uid);
+				ConsoleLogger::debug("rater is null: " . (null === $rater1));
 				if (null === $rater1) continue;
 				$numerator += $sim * $rater1->getRating();
 				$denominator += $sim;
@@ -61,8 +64,13 @@ class RatingPredictor {
 
 			if (NumberUtil::compareFloat(0, $denominator)) continue;
 			$val = $numerator / $denominator;
-			if (NumberUtil::floatGreaterThan(Application::RECOMMENDATION_THRESHOLD, $val))
+			ConsoleLogger::debug("rating: $val");
+			if (NumberUtil::floatGreaterThan(Application::RECOMMENDATION_THRESHOLD, $val)) {
 				$recommendation->addRecommendation($item);
+			} else {
+				ConsoleLogger::debug("not adding because no rating predicted");
+			}
+
 		}
 		return $recommendation;
 	}

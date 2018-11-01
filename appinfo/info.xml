@@ -35,8 +35,8 @@
     </dependencies>
 
     <background-jobs>
-        <job>OCA\RecommendationAssistant\BackgroundJob\RecommenderJob</job>
         <job>OCA\RecommendationAssistant\BackgroundJob\SimilarityJob</job>
+        <job>OCA\RecommendationAssistant\BackgroundJob\RecommenderJob</job>
     </background-jobs>
 
     <namespace>RecommendationAssistant</namespace>
