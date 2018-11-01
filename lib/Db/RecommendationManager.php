@@ -70,6 +70,7 @@ class RecommendationManager {
 					DbConstants::TB_RC_CREATION_TS => $query->createNamedParameter((new \DateTime())->getTimestamp()),
 				]
 			);
+			$query->execute();
 		}
 		ConsoleLogger::warn("set transparency code");
 		ConsoleLogger::warn("set recommendation score");
