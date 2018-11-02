@@ -22,7 +22,6 @@
 namespace OCA\RecommendationAssistant\Log;
 
 
-use OCA\RecommendationAssistant\AppInfo\Application;
 use OCP\Util;
 
 /**
@@ -54,7 +53,8 @@ class ConsoleLogger {
 	private static function log(int $level, string $message) {
 		$config = \OC::$server->getSystemConfig();
 		$minLevel = min($config->getValue('loglevel', Util::WARN), Util::FATAL);
-		if (Application::DEBUG && $level >= $minLevel) {
+		$debug = $config->getValue("debug", false);
+		if ($debug && $level >= $minLevel) {
 			$date = new \DateTime();
 			echo $date->format("Y-m-d H:i:s");
 			echo ": ";

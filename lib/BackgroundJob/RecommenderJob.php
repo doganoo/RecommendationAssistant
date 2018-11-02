@@ -19,6 +19,7 @@ namespace OCA\RecommendationAssistant\BackgroundJob;
 use doganoo\PHPAlgorithms\Datastructure\Lists\ArrayLists\ArrayList;
 use OC\BackgroundJob\TimedJob;
 use OCA\RecommendationAssistant\AppInfo\Application;
+use OCA\RecommendationAssistant\Db\ChangedFilesManager;
 use OCA\RecommendationAssistant\Db\RecommendationManager;
 use OCA\RecommendationAssistant\Log\ConsoleLogger;
 use OCA\RecommendationAssistant\Service\RecommendationService;
@@ -41,6 +42,7 @@ class RecommenderJob extends TimedJob {
 	private $recommendationService = null;
 	private $userManager = null;
 	private $recommendationManager = null;
+	private $changedFilesManager = null;
 
 	/**
 	 * Class constructor defines the interval in which the background job runs
@@ -50,13 +52,17 @@ class RecommenderJob extends TimedJob {
 	 * @param \OCA\RecommendationAssistant\Service\RecommendationService $recommendationService
 	 * @param \OCP\IUserManager $userManager
 	 * @param RecommendationManager $recommendationManager
+	 * @param ChangedFilesManager $changedFilesManager
 	 */
 	public function __construct(
 		RecommendationService $recommendationService
 		, IUserManager $userManager
 		, RecommendationManager $recommendationManager
+		, ChangedFilesManager $changedFilesManager
 	) {
-		if (Application::DEBUG) {
+		$systemConfig = \OC::$server->getSystemConfig();
+		$debug = $systemConfig->getValue("debug", false);
+		if ($debug) {
 			$this->setInterval(1);
 		} else {
 			$this->setInterval(RecommenderJob::INTERVAL);
@@ -64,6 +70,7 @@ class RecommenderJob extends TimedJob {
 		$this->recommendationService = $recommendationService;
 		$this->userManager = $userManager;
 		$this->recommendationManager = $recommendationManager;
+		$this->changedFilesManager = $changedFilesManager;
 	}
 
 	/**
@@ -75,15 +82,16 @@ class RecommenderJob extends TimedJob {
 	 */
 	protected function run($argument) {
 		ConsoleLogger::debug("RecommenderJob start");
+		$systemConfig = \OC::$server->getSystemConfig();
+		$debug = $systemConfig->getValue("debug", false);
 		$serialized = \file_get_contents(Application::SERIALIZATION_FILE_NAME);
-		ConsoleLogger::debug("serialized string $serialized");
-		if (!Application::DEBUG) \unlink(Application::SERIALIZATION_FILE_NAME);
+		if (!$debug) \unlink(Application::SERIALIZATION_FILE_NAME);
 		/** @var ArrayList $list */
 		$list = \unserialize($serialized);
-		$this->userManager->callForAllUsers(function (IUser $user) use (&$recommendations, $list) {
+		$this->userManager->callForSeenUsers(function (IUser $user) use (&$recommendations, $list) {
 			$recommendation = $this->recommendationService->predictForUser($list, $user->getUID());
-			ConsoleLogger::debug("add only if user has access to it!");
-			$this->recommendationManager->add($recommendation);
+			$recommendedList = $this->recommendationManager->add($recommendation);
+			$this->changedFilesManager->deleteList($recommendedList);
 		});
 		ConsoleLogger::debug("RecommenderJob end");
 	}

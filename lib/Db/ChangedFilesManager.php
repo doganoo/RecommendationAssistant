@@ -66,6 +66,7 @@ class ChangedFilesManager {
 	 * @throws InvalidPathException
 	 * @throws NotFoundException
 	 * @throws \OCA\RecommendationAssistant\Exception\InvalidRatingException
+	 *
 	 */
 	public function allFiles(): ArrayList {
 		$list = new ArrayList();
@@ -74,8 +75,9 @@ class ChangedFilesManager {
 			DbConstants::TB_CFL_FILE_ID
 			, DbConstants::TB_CFL_USER_ID
 			, DbConstants::TB_CFL_CREATION_TS
-		)
-			->from(DbConstants::TABLE_NAME_CHANGED_FILES_LOG);
+		)->from(DbConstants::TABLE_NAME_CHANGED_FILES_LOG)
+			->orderBy(DbConstants::TB_CFL_CREATION_TS, "DESC")
+			->setMaxResults(500);
 		$result = $query->execute();
 		while (false !== $row = $result->fetch()) {
 			$fileId = $row[DbConstants::TB_CFL_FILE_ID];
@@ -91,89 +93,11 @@ class ChangedFilesManager {
 			$item->setOwnerId($file->getOwner()->getUID());
 			$item->setName($file->getName());
 			$item->addRater(Util::toRater($userId, Util::toRating($createTs)));
+			$list->add($item);
 		}
 		$result->closeCursor();
 		ConsoleLogger::debug("selected rows: {$result->rowCount()}");
 		return $list;
-	}
-
-	/**
-	 * This method deletes first a file from the database if it is already inserted.
-	 * Then, the method calls a method to insert the file to the database.
-	 *
-	 * @param File $file
-	 * @param string $userId
-	 * @param string $type
-	 *
-	 * @since 1.0.0
-	 */
-	public function deleteBeforeInsert(File $file, string $userId, string $type) {
-		$presentable = $this->isPresentable($file, $userId, $type);
-		if ($presentable) {
-			$this->deleteFile($file, $userId, $type);
-		}
-		$this->insertFile($file, $userId, $type);
-	}
-
-	/**
-	 * checks whether a file is already inserted or not
-	 *
-	 * @param File $file file that should be checked
-	 * @param string $userId the user id that has changed/tagged the file
-	 * @param string $type the files type
-	 *
-	 * @return bool whether the file inserted or not
-	 * @since 1.0.0
-	 */
-	public function isPresentable(File $file, string $userId, string $type) {
-		$query = $this->dbConnection->getQueryBuilder();
-		try {
-			$query->select(DbConstants::TB_CFL_FILE_ID)
-				->from(DbConstants::TABLE_NAME_CHANGED_FILES_LOG)
-				->where($query->expr()->eq(DbConstants::TB_CFL_FILE_ID, $query->createNamedParameter($file->getId())))
-				->andWhere($query->expr()->eq(DbConstants::TB_CFL_TYPE, $query->createNamedParameter($type)))
-				->andWhere($query->expr()->eq(DbConstants::TB_CFL_USER_ID, $query->createNamedParameter($userId)));
-		} catch (InvalidPathException $e) {
-			ConsoleLogger::debug($e->getMessage());
-			Logger::error($e->getMessage());
-			return false;
-		} catch (NotFoundException $e) {
-			ConsoleLogger::debug($e->getMessage());
-			Logger::error($e->getMessage());
-			return false;
-		}
-		$result = $query->execute();
-		$row = $result->fetch();
-		$result->closeCursor();
-		return $row !== false;
-	}
-
-	/**
-	 * deletes a single file from the database
-	 *
-	 * @param File $file the file that should be deleted
-	 * @param string $userId the user that made the change/tag
-	 * @param string $type the type of changed files
-	 *
-	 * @return bool delete operation was successful or not
-	 * @since 1.0.0
-	 */
-	public function deleteFile(File $file, string $userId, string $type) {
-		$query = $this->dbConnection->getQueryBuilder();
-		try {
-			$query->delete(DbConstants::TABLE_NAME_CHANGED_FILES_LOG)
-				->where($query->expr()->eq(DbConstants::TB_CFL_FILE_ID, $query->createNamedParameter($file->getId())))
-				->andWhere($query->expr()->eq(DbConstants::TB_CFL_TYPE, $query->createNamedParameter($type)))
-				->andWhere($query->expr()->eq(DbConstants::TB_CFL_USER_ID, $query->createNamedParameter($userId)))
-				->execute();
-			return true;
-		} catch (InvalidPathException $e) {
-			Logger::error($e->getMessage());
-			return false;
-		} catch (NotFoundException $e) {
-			Logger::error($e->getMessage());
-			return false;
-		}
 	}
 
 	/**
@@ -211,37 +135,24 @@ class ChangedFilesManager {
 		return is_int($lastInsertId);
 	}
 
-	/**
-	 * returns the last changed timestamp for a given file/type.
-	 *
-	 * @param File $file the file for that the query should be executed
-	 * @param string $userId the user that has made the change/tag
-	 * @param string $type the type of the query
-	 *
-	 * @return int
-	 * @since 1.0.0
-	 */
-	public function queryChangeTs(File $file, string $userId, string $type): int {
-		$query = $this->dbConnection->getQueryBuilder();
-		$changeTs = 0;
-		try {
-			$query->select(DbConstants::TB_CFL_CHANGE_TS)
-				->from(DbConstants::TABLE_NAME_CHANGED_FILES_LOG)
-				->where($query->expr()->eq(DbConstants::TB_CFL_FILE_ID, $query->createNamedParameter($file->getId())))
-				->andWhere($query->expr()->eq(DbConstants::TB_CFL_TYPE, $query->createNamedParameter($type)))
-				->andWhere($query->expr()->eq(DbConstants::TB_CFL_USER_ID, $query->createNamedParameter($userId)));
-		} catch (InvalidPathException $e) {
-			Logger::error($e->getMessage());
-			return -1;
-		} catch (NotFoundException $e) {
-			Logger::error($e->getMessage());
-			return -1;
+	public function deleteList(ArrayList $list): bool {
+		$deleted = true;
+		foreach ($list as $id) {
+			$deleted &= $this->deleteById($id);
 		}
-		$result = $query->execute();
-		while (false !== $row = $result->fetch()) {
-			$changeTs = $row[DbConstants::TB_CFL_CHANGE_TS];
-		}
-		$result->closeCursor();
-		return intval($changeTs);
+		return $deleted;
 	}
+
+	/**
+	 * @param int $id
+	 * @return bool
+	 */
+	public function deleteById(int $id): bool {
+		$query = $this->dbConnection->getQueryBuilder();
+		$query->delete(DbConstants::TABLE_NAME_CHANGED_FILES_LOG)
+			->where($query->expr()->lt(DbConstants::TB_CFL_ID, $query->createNamedParameter($id)));
+		$rowCount = $query->execute();
+		return 0 !== $rowCount;
+	}
+
 }

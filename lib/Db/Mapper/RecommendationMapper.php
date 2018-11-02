@@ -17,7 +17,6 @@
 namespace OCA\RecommendationAssistant\Db\Mapper;
 
 use OCA\RecommendationAssistant\AppInfo\Application;
-use OCA\RecommendationAssistant\Log\ConsoleLogger;
 use OCP\AppFramework\Db\Mapper;
 use OCP\IDbConnection;
 
@@ -28,7 +27,7 @@ use OCP\IDbConnection;
  * @package OCA\RecommendationAssistant\Db\Mapper
  * @since   1.0.0
  */
-class RecommendationMapper extends Mapper{
+class RecommendationMapper extends Mapper {
 	/**
 	 * Class constructor gets IDBConnection instance injected
 	 *
@@ -36,7 +35,7 @@ class RecommendationMapper extends Mapper{
 	 *
 	 * @since 1.0.0
 	 */
-	public function __construct(IDbConnection $db){
+	public function __construct(IDbConnection $db) {
 		parent::__construct($db, Application::APP_ID, Application::RECOMMENDATION_ENTITIY_NAME);
 	}
 
@@ -47,10 +46,10 @@ class RecommendationMapper extends Mapper{
 	 * @return array a list of entities
 	 * @since 1.0.0
 	 */
-	public function findAll($userId){
-		ConsoleLogger::warn("order by recommendation score and insert date");
+	public function findAll($userId) {
 		//TODO order by recommendation score and insert date
-		$sql = 'SELECT file_id AS fileId, transparency_code FROM *PREFIX*recommendations WHERE user_id = ? ORDER BY recommendation_score desc LIMIT 3;';
+		$sql = 'SELECT file_id AS fileId, transparency_code FROM *PREFIX*recommendations WHERE user_id = ? ORDER BY creation_ts desc LIMIT 3;';
+//		$sql = 'SELECT file_id AS fileId, transparency_code FROM *PREFIX*recommendations WHERE user_id = ? ORDER BY recommendation_score desc LIMIT 3;';
 		$entities = $this->findEntities($sql, [$userId]);
 		return $entities;
 	}

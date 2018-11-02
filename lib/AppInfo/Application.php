@@ -44,14 +44,6 @@ class Application extends App {
 	 */
 	const APP_NAME = "RecommendationAssistant";
 	/**
-	 * @const DEBUG RecommendationAssistant is in Debug mode or not
-	 * actual behaviour:
-	 * <li>files are processed even if they are processed in the past</li>
-	 * <li>RecommenderService interval equals to 1</li>
-	 * <li>ConsoleLogger logs the messages to the console</li>
-	 */
-	const DEBUG = true;
-	/**
 	 * @const RECOMMENDATION_ENTITIY_NAME the entity name for recommendations for the view
 	 */
 	const RECOMMENDATION_ENTITIY_NAME = "\OCA\RecommendationAssistant\Db\Entity\Recommendation";
@@ -59,7 +51,7 @@ class Application extends App {
 	 * @const RECOMMENDATION_THRESHOLD defines the threshold that has to be exceeded in
 	 * order to get recommended.
 	 */
-	const RECOMMENDATION_THRESHOLD = 0;
+	const RECOMMENDATION_THRESHOLD = 1;
 
 	const SERIALIZATION_FILE_NAME = "serialize.txt";
 
@@ -82,6 +74,9 @@ class Application extends App {
 		});
 	}
 
+	/**
+	 * registers hooks
+	 */
 	public function register() {
 		Util::connectHook('OC_Filesystem', 'read', $this, 'callFileHook');
 		$this->getContainer()->getServer()->getEventDispatcher()->addListener(

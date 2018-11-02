@@ -16,7 +16,7 @@
 
 namespace OCA\RecommendationAssistant\Db;
 
-use OCA\RecommendationAssistant\Log\ConsoleLogger;
+use doganoo\PHPAlgorithms\Datastructure\Lists\ArrayLists\ArrayList;
 use OCA\RecommendationAssistant\Objects\Item;
 use OCA\RecommendationAssistant\Objects\Recommendation;
 use OCA\RecommendationAssistant\Service\UserService;
@@ -51,7 +51,12 @@ class RecommendationManager {
 	}
 
 
-	public function add(Recommendation $recommendation) {
+	/**
+	 * @param Recommendation $recommendation
+	 * @return ArrayList
+	 */
+	public function add(Recommendation $recommendation): ArrayList {
+		$list = new ArrayList();
 		$query = $this->dbConnection->getQueryBuilder();
 		$userId = $recommendation->getUserId();
 		$stack = $recommendation->getRecommendations();
@@ -65,16 +70,19 @@ class RecommendationManager {
 					DbConstants::TB_RC_FILE_ID => $query->createNamedParameter($item->getId()),
 					DbConstants::TB_RC_USER_ID => $query->createNamedParameter($userId),
 					DbConstants::TB_RC_OWNER_ID => $query->createNamedParameter($item->getOwnerId()),
+					// TODO ConsoleLogger::warn("set transparency code");
 					DbConstants::TB_RC_TRANSPARENCY_CODE => $query->createNamedParameter(0),
+					// TODO ConsoleLogger::warn("set recommendation score");
 					DbConstants::TB_RC_RECOMMENDATION_SCORE => $query->createNamedParameter(0),
 					DbConstants::TB_RC_CREATION_TS => $query->createNamedParameter((new \DateTime())->getTimestamp()),
 				]
 			);
 			$executed = $query->execute();
-			ConsoleLogger::warn("executed: $executed");
+			if ($executed) {
+				$list->add($item->getId());
+			}
 		}
-		ConsoleLogger::warn("set transparency code");
-		ConsoleLogger::warn("set recommendation score");
+		return $list;
 	}
 
 	/**

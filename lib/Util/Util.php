@@ -47,6 +47,10 @@ class Util {
 		return $rater;
 	}
 
+	/**
+	 * @param int $unixTimestamp
+	 * @return int
+	 */
 	public static function toRating(int $unixTimestamp): int {
 		$then = new \DateTime();
 		$then->setTimestamp($unixTimestamp);
