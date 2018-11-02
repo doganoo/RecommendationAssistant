@@ -61,7 +61,7 @@ class RatingPredictor {
 
 			if (NumberUtil::compareFloat(0, $denominator)) continue;
 			$val = $numerator / $denominator;
-			if (NumberUtil::floatGreaterThan(Application::RECOMMENDATION_THRESHOLD, $val)) {
+			if (NumberUtil::floatGreaterThan($val, Application::RECOMMENDATION_THRESHOLD)) {
 				$recommendation->addRecommendation($item);
 			}
 

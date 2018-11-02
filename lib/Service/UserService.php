@@ -23,6 +23,7 @@
 namespace OCA\RecommendationAssistant\Service;
 
 
+use OCA\RecommendationAssistant\Util\NodeUtil;
 use OCP\Files\IRootFolder;
 use OCP\IUserManager;
 
@@ -53,7 +54,8 @@ class UserService {
 	 */
 	public function hasAccess($uid, $fileId): bool {
 		$nodes = $this->rootFolder->getUserFolder($uid)->getById($fileId);
-		return null !== $nodes && \count($nodes) > 1;
+		NodeUtil::getFile($fileId,$uid);
+		return null !== $nodes && \count($nodes) >= 1;
 	}
 
 }
