@@ -26,6 +26,8 @@ use OCP\Files\File;
 use OCP\Files\InvalidPathException;
 use OCP\Files\NotFoundException;
 use OCP\IDBConnection;
+use OCP\IUser;
+use OCP\IUserManager;
 
 /**
  * Class that servers as a interface to the datastorage that the latest changes
@@ -104,12 +106,12 @@ class ChangedFilesManager {
 	 * inserts information about a single file in the database
 	 *
 	 * @param File $file file whose information should be stored
-	 * @param string $userId the user that has made the change/tag
+	 * @param IUser $userId the user that has made the change/tag
 	 *
 	 * @return bool whether the insertation was successful or not
 	 * @since 1.0.0
 	 */
-	public function insertFile(File $file, string $userId): bool {
+	public function insertFile(File $file, IUser $user): bool {
 		$query = $this->dbConnection->getQueryBuilder();
 		try {
 			$query->insert(DbConstants::TABLE_NAME_CHANGED_FILES_LOG)->values(
@@ -117,7 +119,7 @@ class ChangedFilesManager {
 					DbConstants::TB_CFL_FILE_ID => $query->createNamedParameter($file->getId()),
 					DbConstants::TB_CFL_CHANGE_TS => $query->createNamedParameter(time()),
 					DbConstants::TB_CFL_CREATION_TS => $query->createNamedParameter(time()),
-					DbConstants::TB_CFL_USER_ID => $query->createNamedParameter($userId),
+					DbConstants::TB_CFL_USER_ID => $query->createNamedParameter($user->getUID()),
 					DbConstants::TB_CFL_TYPE => $query->createNamedParameter("file"),
 				]
 			);
