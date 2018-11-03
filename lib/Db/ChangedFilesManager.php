@@ -20,14 +20,13 @@ use doganoo\PHPAlgorithms\Datastructure\Lists\ArrayLists\ArrayList;
 use OCA\RecommendationAssistant\Log\ConsoleLogger;
 use OCA\RecommendationAssistant\Log\Logger;
 use OCA\RecommendationAssistant\Objects\Item;
-use OCA\RecommendationAssistant\Util\NodeUtil;
+use OCA\RecommendationAssistant\Service\NodeService;
 use OCA\RecommendationAssistant\Util\Util;
 use OCP\Files\File;
 use OCP\Files\InvalidPathException;
 use OCP\Files\NotFoundException;
 use OCP\IDBConnection;
 use OCP\IUser;
-use OCP\IUserManager;
 
 /**
  * Class that servers as a interface to the datastorage that the latest changes
@@ -85,7 +84,7 @@ class ChangedFilesManager {
 			$fileId = $row[DbConstants::TB_CFL_FILE_ID];
 			$userId = $row[DbConstants::TB_CFL_USER_ID];
 			$createTs = $row[DbConstants::TB_CFL_CREATION_TS];
-			$file = NodeUtil::getFile(
+			$file = NodeService::getFile(
 				$fileId
 				, $userId
 			);

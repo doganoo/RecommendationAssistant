@@ -18,10 +18,10 @@ namespace OCA\RecommendationAssistant\Hook;
 
 use OCA\RecommendationAssistant\Db\ChangedFilesManager;
 use OCA\RecommendationAssistant\Log\Logger;
+use OCA\RecommendationAssistant\Service\NodeService;
 use OCP\Files\File;
 use OCP\Files\IRootFolder;
 use OCP\Files\Node;
-use OCP\Files\NotFoundException;
 use OCP\IRequest;
 use OCP\IUser;
 use OCP\IUserSession;
@@ -58,6 +58,13 @@ class FileHook {
 	private $changedFilesManager = null;
 
 	/**
+	 * @var NodeService $nodeService the service for all node
+	 * related stuff
+	 *
+	 */
+	private $nodeService = null;
+
+	/**
 	 * Class constructor gets multiple instances injected
 	 *
 	 * @param IUserSession $userSession the current user session
@@ -67,19 +74,23 @@ class FileHook {
 	 * @param ChangedFilesManager $changedFilesManager database manager class
 	 *                                                     to query changed files
 	 *
+	 * @param NodeService $nodeService
 	 * @package OCA\RecommendationAssistant\AppInfo
 	 * @since   1.0.0
 	 */
 	public function __construct(
-		IUserSession $userSession,
-		IRequest $request,
-		IRootFolder $rootFolder,
-		ChangedFilesManager $changedFilesManager
+		IUserSession $userSession
+		, IRequest $request
+		, IRootFolder $rootFolder
+		, ChangedFilesManager $changedFilesManager
+		, NodeService $nodeService
+
 	) {
 		$this->userSession = $userSession;
 		$this->request = $request;
 		$this->rootFolder = $rootFolder;
 		$this->changedFilesManager = $changedFilesManager;
+		$this->nodeService = $nodeService;
 	}
 
 	/**
@@ -132,7 +143,7 @@ class FileHook {
 			return false;
 		}
 		/** @var Node $node */
-		$node = $this->getNode($path);
+		$node = $this->nodeService->getNode($path);
 		if (null === $node) {
 			Logger::info("node returned null. Cannot process file");
 			return false;
@@ -151,23 +162,5 @@ class FileHook {
 		return false;
 	}
 
-	/**
-	 * returns the Node instance that correspondents to $path
-	 *
-	 * @param string $path the path
-	 *
-	 * @return null|Node the node that is requested or null, if an error occures
-	 * @since 1.0.0
-	 */
-	private function getNode($path) {
-		$node = null;
-		try {
-			$currentUserId = $this->userSession->getUser()->getUID();
-			$userFolder = $this->rootFolder->getUserFolder($currentUserId);
-			$node = $userFolder->get($path);
-		} catch (NotFoundException $e) {
-			Logger::error($e->getMessage());
-		}
-		return $node;
-	}
+
 }

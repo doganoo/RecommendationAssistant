@@ -25,7 +25,7 @@ namespace OCA\RecommendationAssistant\Controller;
 use OCA\RecommendationAssistant\Db\Entity\Recommendation;
 use OCA\RecommendationAssistant\Db\Mapper\RecommendationMapper;
 use OCA\RecommendationAssistant\Log\Logger;
-use OCA\RecommendationAssistant\Util\NodeUtil;
+use OCA\RecommendationAssistant\Service\NodeService;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http\JSONResponse;
 use OCP\Files\File;
@@ -88,7 +88,7 @@ class RecommendationController extends Controller {
 		foreach ($entities as $key => &$entity) {
 			$id = $entity->fileId;
 			/** @var File $node */
-			$node = NodeUtil::getFile($id, $this->userId);
+			$node = NodeService::getFile($id, $this->userId);
 			if (null === $node) {
 				unset($entities[$key]);
 				continue;
