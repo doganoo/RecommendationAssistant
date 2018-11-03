@@ -20,6 +20,7 @@ use doganoo\PHPUtil\Util\ClassUtil;
 use OCA\RecommendationAssistant\Db\ChangedFilesManager;
 use OCA\RecommendationAssistant\Hook\FileHook;
 use OCA\RecommendationAssistant\Log\Logger;
+use OCA\RecommendationAssistant\Service\NodeService;
 use OCP\AppFramework\App;
 use OCP\AppFramework\QueryException;
 use OCP\IContainer;
@@ -66,10 +67,11 @@ class Application extends App {
 		$server = $container->getServer();
 		$container->registerService(FileHook::class, function (IContainer $c) use ($server) {
 			return new FileHook(
-				$server->getUserSession(),
-				$server->getRequest(),
-				$server->getRootFolder(),
-				$c->query(ChangedFilesManager::class)
+				$server->getUserSession()
+				, $server->getRequest()
+				, $server->getRootFolder()
+				, $c->query(ChangedFilesManager::class)
+				, $c->query(NodeService::class)
 			);
 		});
 	}
