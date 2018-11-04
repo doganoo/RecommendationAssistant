@@ -105,14 +105,15 @@ class RecommendationController extends Controller {
 				Logger::warn($e->getMessage());
 			}
 			$mime = $node->getMimeType();
+			$internalPath = $node->getInternalPath();
+			$internalPath = \str_replace("files/", "", $internalPath); //TODO until you know a better solution_!
 
 			$extension = pathinfo($name, PATHINFO_EXTENSION);
-			$fileNameAndExtension = $name;
 			$entity->fileName = pathinfo($name, PATHINFO_FILENAME);
 			$entity->mTime = $mTime;
 			$entity->fileSize = $size;
 			$entity->extension = $extension;
-			$entity->fileNameAndExtension = $fileNameAndExtension;
+			$entity->fileNameAndExtension = $internalPath;
 			$entity->mimeType = $mime;
 		}
 		$jsonResponse = new JSONResponse($entities);
